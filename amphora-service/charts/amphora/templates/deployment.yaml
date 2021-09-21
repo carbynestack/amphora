@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "amphora.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "amphora.name" . }}
+    helm.sh/chart: {{ include "amphora.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "amphora.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "amphora.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- if .Values.amphora.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.amphora.image.pullSecrets }}
+          - name: {{ . }}
+        {{- end}}
+      {{- end}}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.amphora.image.registry }}/{{ .Values.amphora.image.repository }}:{{ .Values.amphora.image.tag }}"
+          imagePullPolicy: {{ .Values.amphora.image.pullPolicy }}
+          env:
+            - name: AMPHORA_VC_PARTNERS
+              value: {{ .Values.amphora.vcPartner }}
+            - name: AMPHORA_OPENING_TIMEOUT
+              value: "{{ .Values.amphora.openingTimeout }}"
+            - name: PLAYER_ID
+              value: "{{ .Values.amphora.playerId }}"
+            - name: NO_SSL_VALIDATION
+              value: "{{ .Values.amphora.noSslValidation }}"
+            - name: TRUSTED_CERTIFICATES
+              value: {{ .Values.amphora.trustedCertificates }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.amphora.springActiveProfiles }}
+            - name: CASTOR_SERVICE_URI
+              value: "{{ .Values.amphora.castor.serviceUri }}"
+            - name: MAC_KEY
+              value: "{{ .Values.spdz.macKey }}"
+            - name: SPDZ_PRIME
+              value: "{{ .Values.spdz.prime }}"
+            - name: SPDZ_R
+              value: "{{ .Values.spdz.r }}"
+            - name: SPDZ_R_INV
+              value: "{{ .Values.spdz.rInv }}"
+            - name: REDIS_HOST
+              value: {{ .Values.amphora.redis.host }}
+            - name: REDIS_PORT
+              value:  "{{ .Values.amphora.redis.port }}"
+            - name: MINIO_ENDPOINT
+              value: {{ .Values.amphora.minio.endpoint }}
+            - name: DB_HOST
+              value: {{ .Values.amphora.db.host }}
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.amphora.db.userSecretName }}
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.amphora.db.passwordSecretName }}
+                  key: password
+            - name: DB_PORT
+              value: "{{ .Values.amphora.db.port }}"
+            - name: LOG_LEVEL
+              value: "{{ .Values.amphora.logLevel }}"
+          ports:
+            - name: mgmt
+              containerPort: 10000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 10000
+            periodSeconds: {{ .Values.amphora.probes.liveness.period }}
+            initialDelaySeconds: {{ .Values.amphora.probes.liveness.initialDelay }}
+            failureThreshold: {{ .Values.amphora.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 10000
+            periodSeconds: {{ .Values.amphora.probes.readiness.period }}
+            initialDelaySeconds: {{ .Values.amphora.probes.readiness.initialDelay }}
+            failureThreshold: {{ .Values.amphora.probes.readiness.failureThreshold }}

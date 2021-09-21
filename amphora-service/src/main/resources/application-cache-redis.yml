@@ -1,0 +1,8 @@
+spring:
+  profiles: cache-redis
+
+carbynestack:
+  amphora:
+    cache:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
