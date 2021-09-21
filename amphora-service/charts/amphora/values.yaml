@@ -1,0 +1,75 @@
+replicaCount: 1
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  annotations: []
+  type: ClusterIP
+  # port will be overwritten by helmfile
+  port: 10000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+amphora:
+  playerId: 0
+  vcPartner:
+  openingTimeout: 5000
+  noSslValidation: "false"
+  trustedCertificates:
+  image:
+    registry: ghcr.io
+    repository: carbynestack/amphora-service
+    tag: latest
+    pullPolicy: "IfNotPresent"
+    # Optionally specify an array of imagePullSecrets.
+    # Secrets must be created manually in the namespace.
+    # ref: https://kubernets.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    pullSecrets: []
+  springActiveProfiles: "k8s"
+  castor:
+    serviceUri: "castor.default.svc.cluster.local"
+  redis:
+    # helmfile overrides this var
+    host: "redis.default.svc.cluster.local"
+    port: "6379"
+  minio:
+    endpoint: http://minio.default.svc.cluster.local:9000
+  db:
+    host: "dbms-repl.default.svc.cluster.local"
+    port: "5432"
+    userSecretName: ""
+    passwordSecretName: ""
+  probes:
+    liveness:
+      initialDelay: 60
+      period: 10
+      failureThreshold: 3
+    readiness:
+      initialDelay: 0
+      period: 5
+      failureThreshold: 3
+  logLevel: INFO
+
+spdz:
+  macKey: ""
+  prime: ""
+  r: ""
+  rInv: ""
