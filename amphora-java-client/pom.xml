@@ -103,18 +103,10 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>com.github.jinnovations</groupId>
-                <artifactId>attribution-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <dependencyOverrides>
-                        <dependencyOverride>
-                            <forDependency>com.google.code.findbugs:jsr305</forDependency>
-                            <license>
-                                <name>BSD-2-Clause</name>
-                                <url>http://www.opensource.org/licenses/bsd-license.php</url>
-                            </license>
-                        </dependencyOverride>
-                    </dependencyOverrides>
+                    <fileTemplate>${project.parent.basedir}/.github/templates/sbom.ftl</fileTemplate>
                 </configuration>
             </plugin>
         </plugins>
