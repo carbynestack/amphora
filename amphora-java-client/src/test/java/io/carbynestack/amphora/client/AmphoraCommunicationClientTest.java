@@ -9,11 +9,12 @@ package io.carbynestack.amphora.client;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.carbynestack.amphora.common.exceptions.AmphoraClientException;
 import io.carbynestack.httpclient.CsHttpClient;
 import io.carbynestack.httpclient.CsHttpClientException;
 import io.vavr.control.Try;
@@ -24,16 +25,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
 import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedConstruction;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class AmphoraCommunicationClientTest {
+@ExtendWith(MockitoExtension.class)
+class AmphoraCommunicationClientTest {
 
   private final String testExceptionMessage = "Totally expected :O";
   private final URI testUri = new URI("https://amphora.carbynestack.io:8080");
@@ -49,9 +49,8 @@ public class AmphoraCommunicationClientTest {
 
   public AmphoraCommunicationClientTest() throws URISyntaxException {}
 
-  @SneakyThrows
-  @Before
-  public void setUp() {
+  @BeforeEach
+  public void setUp() throws AmphoraClientException {
     try (MockedConstruction<CsHttpClient> httpClientMockedConstruction =
         mockConstruction(CsHttpClient.class)) {
       amphoraCommunicationClient =
@@ -60,9 +59,9 @@ public class AmphoraCommunicationClientTest {
     }
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenFetchingDataFromOnePlayer_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenFetchingDataFromOnePlayer_thenReturnExpectedContent()
+      throws CsHttpClientException {
     when(specsHttpClient.getForObject(testUri, Collections.emptyList(), String.class))
         .thenReturn(response1);
     String result =
@@ -74,9 +73,9 @@ public class AmphoraCommunicationClientTest {
     assertEquals(response1, result);
   }
 
-  @SneakyThrows
   @Test
-  public void givenHttpClientThrowsException_whenFetchingDataFromOnePlayer_thenForwardException() {
+  void givenHttpClientThrowsException_whenFetchingDataFromOnePlayer_thenForwardException()
+      throws CsHttpClientException {
     CsHttpClientException expectedException = new CsHttpClientException(testExceptionMessage);
     when(specsHttpClient.getForObject(testUri, Collections.emptyList(), String.class))
         .thenThrow(expectedException);
@@ -93,10 +92,9 @@ public class AmphoraCommunicationClientTest {
     assertEquals(expectedException, sce);
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenFetchingDataFromMultiplePlayers_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenFetchingDataFromMultiplePlayers_thenReturnExpectedContent()
+      throws CsHttpClientException {
     int numberOfProviders = 2;
     when(specsHttpClient.getForObject(testUri, Collections.emptyList(), String.class))
         .thenReturn(response1);
@@ -111,10 +109,9 @@ public class AmphoraCommunicationClientTest {
     assertThat(result.get(testUri2), is(equalTo(Try.success(response2))));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenOneRequestFails_whenFetchingDataFromMultiplePlayers_thenReturnExpectedResultMap() {
+  void givenOneRequestFails_whenFetchingDataFromMultiplePlayers_thenReturnExpectedResultMap()
+      throws CsHttpClientException {
     when(specsHttpClient.getForObject(testUri, Collections.emptyList(), String.class))
         .thenReturn(response1);
     when(specsHttpClient.getForObject(testUri2, Collections.emptyList(), String.class))
@@ -137,9 +134,9 @@ public class AmphoraCommunicationClientTest {
         CoreMatchers.hasItems(testUri2));
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenUploadingToOnePlayer_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenUploadingToOnePlayer_thenReturnExpectedContent()
+      throws CsHttpClientException {
     when(specsHttpClient.postForObject(eq(testUri), anyList(), eq(body1), eq(String.class)))
         .thenReturn(response1);
     String result =
@@ -152,9 +149,9 @@ public class AmphoraCommunicationClientTest {
     assertEquals(response1, result);
   }
 
-  @SneakyThrows
   @Test
-  public void givenHttpClientThrowsException_whenUploadingToOnePlayer_thenForwardException() {
+  void givenHttpClientThrowsException_whenUploadingToOnePlayer_thenForwardException()
+      throws CsHttpClientException {
     CsHttpClientException expectedException = new CsHttpClientException(testExceptionMessage);
     when(specsHttpClient.postForObject(eq(testUri), any(List.class), eq(body1), eq(String.class)))
         .thenThrow(expectedException);
@@ -171,9 +168,9 @@ public class AmphoraCommunicationClientTest {
     assertEquals(expectedException, sce);
   }
 
-  @SneakyThrows
   @Test
-  public void givenOneRequestFails_whenUploadingToMultiplePlayers_thenReturnExpectedResultMap() {
+  void givenOneRequestFails_whenUploadingToMultiplePlayers_thenReturnExpectedResultMap()
+      throws CsHttpClientException {
     int numberOfProviders = 2;
     CsHttpClientException expectedException = new CsHttpClientException(testExceptionMessage);
     List<AmphoraCommunicationClient.RequestParametersWithBody<String>> params =
@@ -192,13 +189,13 @@ public class AmphoraCommunicationClientTest {
     assertThat(result.size(), is(equalTo(numberOfProviders)));
     assertThat(result.get(testUri), is(Try.success(null)));
     assertTrue(
-        String.format("Try for %s should've failed", testUri2), result.get(testUri2).isFailure());
+        result.get(testUri2).isFailure(), String.format("Try for %s should've failed", testUri2));
     assertEquals(expectedException, result.get(testUri2).getCause());
   }
 
-  @SneakyThrows
   @Test
-  public void givenOneRequestFails_whenUpdatingOnMultiplePlayers_thenReturnExpectedResultMap() {
+  void givenOneRequestFails_whenUpdatingOnMultiplePlayers_thenReturnExpectedResultMap()
+      throws CsHttpClientException {
     CsHttpClientException expectedException = new CsHttpClientException(testExceptionMessage);
     List<AmphoraCommunicationClient.RequestParametersWithBody<String>> params =
         Lists.newArrayList();
@@ -213,13 +210,12 @@ public class AmphoraCommunicationClientTest {
     assertEquals(params.size(), updateResults.size());
     List<Try<Void>> failedResults =
         updateResults.stream().filter(Try::isFailure).collect(Collectors.toList());
-    assertEquals("Exactly one request should've failed", 1, failedResults.size());
+    assertEquals(1, failedResults.size(), "Exactly one request should've failed");
     assertEquals(expectedException, failedResults.get(0).getCause());
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenDeletingOnOnePlayer_thenSucceed() {
+  void givenSuccessfulRequest_whenDeletingOnOnePlayer_thenSucceed() throws CsHttpClientException {
     amphoraCommunicationClient.delete(
         Lists.newArrayList(
             AmphoraCommunicationClient.RequestParameters.of(testUri, ImmutableList.of())));
@@ -227,22 +223,22 @@ public class AmphoraCommunicationClientTest {
     verifyNoMoreInteractions(specsHttpClient);
   }
 
-  @SneakyThrows
   @Test
-  public void givenRequestFails_whenDeletingOnOnePlayer_thenForwardException() {
+  void givenRequestFails_whenDeletingOnOnePlayer_thenForwardException()
+      throws CsHttpClientException {
     CsHttpClientException expectedException = new CsHttpClientException(testExceptionMessage);
     doThrow(expectedException).when(specsHttpClient).delete(testUri, Collections.emptyList());
     List<Try<Void>> deleteRequest =
         amphoraCommunicationClient.delete(
             Lists.newArrayList(
                 AmphoraCommunicationClient.RequestParameters.of(testUri, ImmutableList.of())));
-    assertTrue("Request should've failed", deleteRequest.get(0).isFailure());
+    assertTrue(deleteRequest.get(0).isFailure(), "Request should've failed");
     assertEquals(expectedException, deleteRequest.get(0).getCause());
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenDeletingFromMultiplePlayer_thenSucceed() {
+  void givenSuccessfulRequest_whenDeletingFromMultiplePlayer_thenSucceed()
+      throws CsHttpClientException {
     List<AmphoraCommunicationClient.RequestParameters> params = new ArrayList<>();
     params.add(AmphoraCommunicationClient.RequestParameters.of(testUri, ImmutableList.of()));
     params.add(AmphoraCommunicationClient.RequestParameters.of(testUri2, ImmutableList.of()));
@@ -250,12 +246,12 @@ public class AmphoraCommunicationClientTest {
     verify(specsHttpClient, times(1)).delete(testUri, Collections.emptyList());
     verify(specsHttpClient, times(1)).delete(testUri2, Collections.emptyList());
     verifyNoMoreInteractions(specsHttpClient);
-    actualResult.forEach(t -> assertTrue("Request should've been successful", t.isSuccess()));
+    actualResult.forEach(t -> assertTrue(t.isSuccess(), "Request should've been successful"));
   }
 
-  @SneakyThrows
   @Test
-  public void givenOneRequestFails_whenDeletingFromMultiplePlayers_thenReturnExpectedResult() {
+  void givenOneRequestFails_whenDeletingFromMultiplePlayers_thenReturnExpectedResult()
+      throws CsHttpClientException {
     CsHttpClientException expectedException = new CsHttpClientException(testExceptionMessage);
     doThrow(expectedException).when(specsHttpClient).delete(testUri2, Collections.emptyList());
     List<AmphoraCommunicationClient.RequestParameters> params = new ArrayList<>();
@@ -265,7 +261,7 @@ public class AmphoraCommunicationClientTest {
     assertEquals(params.size(), deleteRequests.size());
     List<Try<Void>> failedResults =
         deleteRequests.stream().filter(Try::isFailure).collect(Collectors.toList());
-    assertEquals("Exactly one request should've failed", 1, failedResults.size());
+    assertEquals(1, failedResults.size(), "Exactly one request should've failed");
     assertEquals(expectedException, failedResults.get(0).getCause());
   }
 }

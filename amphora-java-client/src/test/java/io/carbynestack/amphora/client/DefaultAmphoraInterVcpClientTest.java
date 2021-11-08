@@ -7,8 +7,8 @@
 package io.carbynestack.amphora.client;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -23,17 +23,16 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
 import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultAmphoraInterVcpClientTest {
+@ExtendWith(MockitoExtension.class)
+class DefaultAmphoraInterVcpClientTest {
   private final String testUrl1 = "https://amphora.carbynestack.io:8080";
   private final String testUrl2 = "https://amphora.carbynestack.io:8081";
   private final UUID testOperationId = UUID.fromString("72753ecc-464f-42c5-954c-9efa7a5b886c");
@@ -45,14 +44,14 @@ public class DefaultAmphoraInterVcpClientTest {
   private final List<AmphoraServiceUri> amphoraServiceUris =
       Arrays.asList(new AmphoraServiceUri(testUrl1), new AmphoraServiceUri(testUrl2));
 
-  @Before
+  @BeforeEach
   public void setUp() {
     this.amphoraInterVcpClient =
         new DefaultAmphoraInterVcpClient(amphoraServiceUris, amphoraCommunicationClient);
   }
 
   @Test
-  public void givenNoServiceUriDefined_whenBuildingInterVcClient_thenThrowException() {
+  void givenNoServiceUriDefined_whenBuildingInterVcClient_thenThrowException() {
     try (MockedStatic<AmphoraCommunicationClient> communicationClientMockedStatic =
         mockStatic(AmphoraCommunicationClient.class)) {
       DefaultAmphoraInterVcpClient.DefaultAmphoraInterVcpClientBuilder clientBuilder =
@@ -63,9 +62,8 @@ public class DefaultAmphoraInterVcpClientTest {
     }
   }
 
-  @SneakyThrows
   @Test
-  public void givenValidExchangeObject_whenOpeningValues_thenSucceed() {
+  void givenValidExchangeObject_whenOpeningValues_thenSucceed() throws AmphoraClientException {
     MultiplicationExchangeObject exchangeObject = getMultiplicationExchangeObject(testOperationId);
     List<AmphoraCommunicationClient.RequestParametersWithBody<MultiplicationExchangeObject>>
         params =
@@ -86,7 +84,7 @@ public class DefaultAmphoraInterVcpClientTest {
   }
 
   @Test
-  public void givenOnePlayerCannotBeReached_whenOpeningValues_thenThrowException() {
+  void givenOnePlayerCannotBeReached_whenOpeningValues_thenThrowException() {
     MultiplicationExchangeObject exchangeObject = getMultiplicationExchangeObject(testOperationId);
     List<AmphoraCommunicationClient.RequestParametersWithBody<MultiplicationExchangeObject>>
         params =
@@ -108,7 +106,7 @@ public class DefaultAmphoraInterVcpClientTest {
   }
 
   @Test
-  public void givenOnePlayerRespondsUnsuccessful_whenOpeningValues_thenThrowException() {
+  void givenOnePlayerRespondsUnsuccessful_whenOpeningValues_thenThrowException() {
     MultiplicationExchangeObject exchangeObject = getMultiplicationExchangeObject(testOperationId);
     List<AmphoraCommunicationClient.RequestParametersWithBody<MultiplicationExchangeObject>>
         params =
@@ -130,7 +128,7 @@ public class DefaultAmphoraInterVcpClientTest {
   }
 
   @Test
-  public void givenMissingOperationId_whenOpeningValues_thenThrowException() {
+  void givenMissingOperationId_whenOpeningValues_thenThrowException() {
     MultiplicationExchangeObject exchangeObject = getMultiplicationExchangeObject(null);
     NullPointerException npe =
         assertThrows(NullPointerException.class, () -> amphoraInterVcpClient.open(exchangeObject));

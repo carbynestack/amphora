@@ -16,7 +16,7 @@ import static io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils.WORD_WID
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -33,23 +33,24 @@ import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import lombok.SneakyThrows;
 import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultAmphoraClientTest {
+@ExtendWith(MockitoExtension.class)
+class DefaultAmphoraClientTest {
   private final String testUri = "https://dev.bar.com";
   private final String testUri2 = "https://dev.foo.com";
   private final List<AmphoraServiceUri> testServiceUris =
@@ -67,7 +68,7 @@ public class DefaultAmphoraClientTest {
 
   private MpSpdzIntegrationUtils spdzUtil;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     spdzUtil =
         MpSpdzIntegrationUtils.of(
@@ -85,9 +86,9 @@ public class DefaultAmphoraClientTest {
             amphoraCommunicationClient);
   }
 
-  @SneakyThrows
   @Test
-  public void givenBuilderConfiguration_whenCreatingClient_thenInstantiateAccordingly() {
+  void givenBuilderConfiguration_whenCreatingClient_thenInstantiateAccordingly()
+      throws IOException {
     List<AmphoraServiceUri> expectedServiceUriList =
         Arrays.asList(
             new AmphoraServiceUri("https://testUri:80"),
@@ -159,9 +160,8 @@ public class DefaultAmphoraClientTest {
     return mockedDefaultAmphoraClientBuilder;
   }
 
-  @SneakyThrows
   @Test
-  public void givenInvalidCertFile_whenCreatingClient_thenThrowException() {
+  void givenInvalidCertFile_whenCreatingClient_thenThrowException() throws CsHttpClientException {
     CsHttpClientException expectedException = new CsHttpClientException("Expectedly failed");
     DefaultAmphoraClientBuilder mockedDefaultAmphoraClientBuilder =
         mock(DefaultAmphoraClientBuilder.class);
@@ -190,9 +190,9 @@ public class DefaultAmphoraClientTest {
     }
   }
 
-  @SneakyThrows
   @Test
-  public void givenSecretsOfVariousSize_whenSharingAndRecombining_thenRecoverInitialData() {
+  void givenSecretsOfVariousSize_whenSharingAndRecombining_thenRecoverInitialData()
+      throws AmphoraClientException, URISyntaxException {
     ArgumentCaptor<List<RequestParametersWithBody<MaskedInput>>> requestCaptor =
         ArgumentCaptor.forClass(List.class);
     Map<URI, Try<UUID>> uriResponseMap = getSuccessUriResponseMap();
@@ -206,7 +206,6 @@ public class DefaultAmphoraClientTest {
       Map<URI, TupleList> inputMaskShares = getInputMaskShares(secretSize);
       when(amphoraCommunicationClient.download(anyList(), eq(TupleList.class)))
           .thenReturn(TestUtils.wrap(inputMaskShares));
-      when(amphoraCommunicationClient.upload(anyList(), eq(UUID.class))).thenReturn(uriResponseMap);
       UUID storeResult = amphoraClient.createSecret(getObject(secrets));
       assertNotNull(storeResult);
       verify(amphoraCommunicationClient, times(1)).upload(requestCaptor.capture(), any());
@@ -237,9 +236,9 @@ public class DefaultAmphoraClientTest {
     }
   }
 
-  @SneakyThrows
   @Test
-  public void givenUploadingMaskedInputFails_whenCreateObject_thenThrowAmphoraClientException() {
+  void givenUploadingMaskedInputFails_whenCreateObject_thenThrowAmphoraClientException()
+      throws URISyntaxException {
     Map<URI, Try<URI>> uriResponseMap = getErrorUriResponseMap();
     when(amphoraCommunicationClient.download(anyList(), eq(TupleList.class)))
         .thenReturn(TestUtils.wrap(getInputMaskShares(1)));
@@ -256,10 +255,9 @@ public class DefaultAmphoraClientTest {
             String.format(REQUEST_FOR_ENDPOINT_FAILED_EXCEPTION_MSG, testUri, 500)));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenOutPutDeliveryObjectsOfVariousSize_whenDownloadingObject_thenReturnExpectedContent() {
+  void givenOutPutDeliveryObjectsOfVariousSize_whenDownloadingObject_thenReturnExpectedContent()
+      throws AmphoraClientException, URISyntaxException {
     for (int i = 0; i < 100; i++) {
       int secretSize = random.nextInt(1000) + 1; // make sure it is no 0
       BigInteger[] secrets =
@@ -276,10 +274,9 @@ public class DefaultAmphoraClientTest {
     }
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenDownloadDataFromOnePlayerFails_whenDownloadingObject_thenThrowAmphoraClientException() {
+  void givenDownloadDataFromOnePlayerFails_whenDownloadingObject_thenThrowAmphoraClientException()
+      throws URISyntaxException {
     BigInteger[] secrets = new BigInteger[] {BigInteger.valueOf(42), BigInteger.valueOf(24)};
     Map<URI, Try<OutputDeliveryObject>> results =
         TestUtils.wrap(getOutputDeliveryObjectsForSecrets(testSecretId, secrets));
@@ -295,10 +292,9 @@ public class DefaultAmphoraClientTest {
     assertThat(ace.getMessage(), CoreMatchers.containsString("Call failed"));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjects_thenConstructExpectedRequestAndReturnResult() {
+  void givenSuccessfulRequest_whenListingObjects_thenConstructExpectedRequestAndReturnResult()
+      throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     when(amphoraCommunicationClient.download(any(RequestParameters.class), eq(MetadataPage.class)))
         .thenReturn(Try.success(metadataPage));
@@ -306,10 +302,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets, is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithEqualsFilter_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithEqualsFilter_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key = "key";
     String value = "value";
@@ -337,10 +333,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets, is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithLessThanFilter_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithLessThanFilter_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key = "key";
     String value = "123";
@@ -368,10 +364,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets, is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithTwoFilters_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithTwoFilters_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key1 = "key";
     String value1 = "value";
@@ -406,10 +402,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets, is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithFilterAndEmptyValue_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithFilterAndEmptyValue_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key1 = "key";
     String value1 = "";
@@ -444,10 +440,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets, is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithPagination_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithPagination_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
     int pageNumber = 3;
@@ -477,10 +473,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets.getContent(), is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithPaginationAndSorting_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithPaginationAndSorting_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
     int pageNumber = 3;
@@ -524,10 +520,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets.getContent(), is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithSorting_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithSorting_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     String property = "key1";
     Sort.Order direction = Sort.Order.ASC;
@@ -556,10 +552,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets, is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithFilterAndSorting_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithFilterAndSorting_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
     String key = "key";
@@ -598,10 +594,10 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets, is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjectsWithFiltersAndPaginationAndSorting_thenConstructExpectedRequestAndReturnResult() {
+  void
+      givenSuccessfulRequest_whenListingObjectsWithFiltersAndPaginationAndSorting_thenConstructExpectedRequestAndReturnResult()
+          throws AmphoraClientException {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
     String key = "key";
@@ -652,9 +648,9 @@ public class DefaultAmphoraClientTest {
     assertThat(secrets.getContent(), is(equalTo(metadataPage.getContent())));
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenListTags_thenReturnExpectedResult() {
+  void givenSuccessfulRequest_whenListTags_thenReturnExpectedResult()
+      throws AmphoraClientException {
     Tag[] tagArray = getTags().toArray(new Tag[0]);
     ArgumentCaptor<RequestParameters> requestCaptor =
         ArgumentCaptor.forClass(RequestParameters.class);
@@ -670,7 +666,7 @@ public class DefaultAmphoraClientTest {
   }
 
   @Test
-  public void givenCommunicationClientFails_whenGetTag_thenThrowAmphoraClientException() {
+  void givenCommunicationClientFails_whenGetTag_thenThrowAmphoraClientException() {
     String expectedRandomKey = "tagKey";
     when(amphoraCommunicationClient.download(any(RequestParameters.class), eq(Tag.class)))
         .thenReturn(Try.failure(new RuntimeException()));
@@ -684,9 +680,9 @@ public class DefaultAmphoraClientTest {
         actualAce.getMessage());
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenCreateTag_thenExecuteExpectedRequest() {
+  void givenSuccessfulRequest_whenCreateTag_thenExecuteExpectedRequest()
+      throws AmphoraClientException, URISyntaxException {
     when(amphoraCommunicationClient.upload(requestParamsWithBodyCaptor.capture(), eq(URI.class)))
         .thenReturn(getSuccessUriResponseMap());
     amphoraClient.createTag(testSecretId, testTag);
@@ -700,7 +696,8 @@ public class DefaultAmphoraClientTest {
   }
 
   @Test
-  public void givenRequestReturnsFailure_whenCreateTag_thenThrowAmphoraClientException() {
+  void givenRequestReturnsFailure_whenCreateTag_thenThrowAmphoraClientException()
+      throws URISyntaxException {
     when(amphoraCommunicationClient.upload(
             argThat(
                 (ArgumentMatcher<List<RequestParametersWithBody<Tag>>>)
@@ -716,9 +713,9 @@ public class DefaultAmphoraClientTest {
             String.format(REQUEST_FOR_ENDPOINT_FAILED_EXCEPTION_MSG, testUri, 500)));
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenOverwriteTags_thenPerformExpectedRequest() {
+  void givenSuccessfulRequest_whenOverwriteTags_thenPerformExpectedRequest()
+      throws AmphoraClientException {
     List<Tag> tags = new ArrayList<>();
     tags.add(testTag);
     amphoraClient.overwriteTags(testSecretId, tags);
@@ -731,9 +728,8 @@ public class DefaultAmphoraClientTest {
     assertThat(actualParams.get(1).getUri().getPath(), is(equalTo(expectedPath)));
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenGetTag_thenReturnExpectedResult() {
+  void givenSuccessfulRequest_whenGetTag_thenReturnExpectedResult() throws AmphoraClientException {
     String tagKey = testTag.getKey();
     ArgumentCaptor<RequestParameters> requestCaptor =
         ArgumentCaptor.forClass(RequestParameters.class);
@@ -746,9 +742,9 @@ public class DefaultAmphoraClientTest {
     assertThat(result, is(equalTo(testTag)));
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenUpdateTag_thenPerformExpectedRequest() {
+  void givenSuccessfulRequest_whenUpdateTag_thenPerformExpectedRequest()
+      throws AmphoraClientException {
     amphoraClient.updateTag(testSecretId, testTag);
     verify(amphoraCommunicationClient, times(1)).update(requestParamsWithBodyCaptor.capture());
     String expectedPath =
@@ -762,9 +758,9 @@ public class DefaultAmphoraClientTest {
     assertThat(actualParams.get(1).getUri().getPath(), is(equalTo(expectedPath)));
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenDeleteTag_thenPerformExpectedRequest() {
+  void givenSuccessfulRequest_whenDeleteTag_thenPerformExpectedRequest()
+      throws AmphoraClientException {
     String tagKey = testTag.getKey();
     ArgumentCaptor<List<RequestParameters>> requestCaptor = ArgumentCaptor.forClass(List.class);
     amphoraClient.deleteTag(testSecretId, tagKey);
@@ -777,7 +773,7 @@ public class DefaultAmphoraClientTest {
   }
 
   @Test
-  public void givenRequestReturnsFailure_whenDeleteTag_thenThrowAmphoraClientException() {
+  void givenRequestReturnsFailure_whenDeleteTag_thenThrowAmphoraClientException() {
     String expectedErrorDetails = "Secret Not found";
     when(amphoraCommunicationClient.delete(any()))
         .thenReturn(
@@ -792,9 +788,8 @@ public class DefaultAmphoraClientTest {
             CoreMatchers.containsString(expectedErrorDetails)));
   }
 
-  @SneakyThrows
   private Map<URI, OutputDeliveryObject> getOutputDeliveryObjectsForSecrets(
-      UUID id, BigInteger[] secrets) {
+      UUID id, BigInteger[] secrets) throws URISyntaxException {
     ByteBuffer p0ShareData = ByteBuffer.allocate(secrets.length * WORD_WIDTH);
     ByteBuffer p0Rs = ByteBuffer.allocate(secrets.length * WORD_WIDTH);
     ByteBuffer p0Us = ByteBuffer.allocate(secrets.length * WORD_WIDTH);
@@ -849,8 +844,7 @@ public class DefaultAmphoraClientTest {
     target2.put(spdzUtil.toGfp(secret.subtract(mask).mod(spdzUtil.getPrime())));
   }
 
-  @SneakyThrows
-  private Map<URI, TupleList> getInputMaskShares(int numberOfMasks) {
+  private Map<URI, TupleList> getInputMaskShares(int numberOfMasks) throws URISyntaxException {
     Map<URI, TupleList> inputMaskShares = new HashMap<>();
     TupleList inputMaskListA =
         new TupleList<>(
@@ -890,16 +884,14 @@ public class DefaultAmphoraClientTest {
             spdzUtil.toGfp(new BigInteger("48604663536222227589564560476962533035"))));
   }
 
-  @SneakyThrows
-  private <T> Map<URI, Try<T>> getSuccessUriResponseMap() {
+  private <T> Map<URI, Try<T>> getSuccessUriResponseMap() throws URISyntaxException {
     Map<URI, Try<T>> uriHttpStatusMap = new HashMap<>();
     uriHttpStatusMap.put(new URI(testUri), Try.success(null));
     uriHttpStatusMap.put(new URI(testUri2), Try.success(null));
     return uriHttpStatusMap;
   }
 
-  @SneakyThrows
-  private <T> Map<URI, Try<T>> getErrorUriResponseMap() {
+  private <T> Map<URI, Try<T>> getErrorUriResponseMap() throws URISyntaxException {
     Map<URI, Try<T>> uriHttpStatusMap = new HashMap<>();
     uriHttpStatusMap.put(new URI(testUri), Try.failure(new CsHttpClientException("500")));
     uriHttpStatusMap.put(new URI(testUri2), Try.success(null));
