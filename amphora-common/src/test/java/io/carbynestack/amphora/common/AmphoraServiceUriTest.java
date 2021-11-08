@@ -9,25 +9,24 @@ package io.carbynestack.amphora.common;
 
 import static io.carbynestack.amphora.common.AmphoraServiceUri.INVALID_SERVICE_ADDRESS_EXCEPTION_MSG;
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.URI;
-import lombok.SneakyThrows;
-import org.junit.Test;
+import java.net.URISyntaxException;
+import org.junit.jupiter.api.Test;
 
-public class AmphoraServiceUriTest {
+class AmphoraServiceUriTest {
 
   @Test
-  public void
-      givenNullAsServiceAddress_whenCreatingAmphoraServiceUri_thenThrowIllegalArgumentException() {
+  void givenNullAsServiceAddress_whenCreatingAmphoraServiceUri_thenThrowIllegalArgumentException() {
     IllegalArgumentException expectedException =
         assertThrows(IllegalArgumentException.class, () -> new AmphoraServiceUri(null));
     assertEquals("serviceAddress must not be empty!", expectedException.getMessage());
   }
 
   @Test
-  public void
+  void
       givenEmptyStringAsServiceAddress_whenCreatingAmphoraServiceUri_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(IllegalArgumentException.class, () -> new AmphoraServiceUri(""));
@@ -35,23 +34,21 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void
-      givenNoSchemeDefined_whenCreatingAmphoraServiceUri_thenThrowIllegalArgumentException() {
+  void givenNoSchemeDefined_whenCreatingAmphoraServiceUri_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(IllegalArgumentException.class, () -> new AmphoraServiceUri("localhost:8080"));
     assertEquals(INVALID_SERVICE_ADDRESS_EXCEPTION_MSG, iae.getMessage());
   }
 
   @Test
-  public void
-      givenInvalidUriString_whenCreatingAmphoraServiceUri_thenThrowIllegalArgumentException() {
+  void givenInvalidUriString_whenCreatingAmphoraServiceUri_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(IllegalArgumentException.class, () -> new AmphoraServiceUri("invalidUri"));
     assertEquals(INVALID_SERVICE_ADDRESS_EXCEPTION_MSG, iae.getMessage());
   }
 
   @Test
-  public void
+  void
       givenUriStringWithDomain_whenCreatingAmphoraServiceUri_thenCreateExpectedAmphoraServiceUri() {
     AmphoraServiceUri aUri = new AmphoraServiceUri("https://amphora.carbynestack.io:8080");
     assertEquals("https://amphora.carbynestack.io:8080", aUri.getServiceUri().toString());
@@ -60,7 +57,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void
+  void
       givenUriStringWithIpAndPort_whenCreatingAmphoraServiceUri_thenCreateExpectedAmphoraServiceUri() {
     AmphoraServiceUri aUri = new AmphoraServiceUri("http://127.0.0.1:8080");
     assertEquals("http://127.0.0.1:8080", aUri.getServiceUri().toString());
@@ -69,7 +66,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void
+  void
       givenUriStringWithoutPort_whenCreatingAmphoraServiceUri_thenCreateExpectedAmphoraServiceUri() {
     AmphoraServiceUri aUri = new AmphoraServiceUri("https://amphora.carbynestack.io");
     assertEquals("https://amphora.carbynestack.io", aUri.getServiceUri().toString());
@@ -77,8 +74,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void
-      givenUriStringWithPath_whenCreatingAmphoraServiceUri_thenCreateExpectedAmphoraServiceUri() {
+  void givenUriStringWithPath_whenCreatingAmphoraServiceUri_thenCreateExpectedAmphoraServiceUri() {
     AmphoraServiceUri aUri = new AmphoraServiceUri("https://amphora.carbynestack.io/myService");
     assertEquals("https://amphora.carbynestack.io/myService", aUri.getServiceUri().toString());
     assertEquals("amphora.carbynestack.io", aUri.getServiceUri().getHost());
@@ -86,7 +82,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void
+  void
       givenUriStringWithPortAndPath_whenCreatingAmphoraServiceUri_thenCreateExpectedAmphoraServiceUri() {
     AmphoraServiceUri aUri =
         new AmphoraServiceUri("https://amphora.carbynestack.io:8081/my/service");
@@ -98,7 +94,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void givenAmphoraServiceUri_whenGetSecretShareUri_thenReturnExpectedUri() {
+  void givenAmphoraServiceUri_whenGetSecretShareUri_thenReturnExpectedUri() {
     AmphoraServiceUri aUri =
         new AmphoraServiceUri("https://amphora.carbynestack.io:8081/my/service");
     URI secretShareUri = aUri.getSecretShareUri();
@@ -111,7 +107,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void givenAmphoraServiceUri_whenGetMaskedInputUri_thenReturnExpectedUri() {
+  void givenAmphoraServiceUri_whenGetMaskedInputUri_thenReturnExpectedUri() {
     AmphoraServiceUri aUri =
         new AmphoraServiceUri("https://amphora.carbynestack.io:8081/my/service");
     URI maskedInputUri = aUri.getMaskedInputUri();
@@ -126,7 +122,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void givenAmphoraServiceUri_whenGetInputMaskUri_thenReturnExpectedUri() {
+  void givenAmphoraServiceUri_whenGetInputMaskUri_thenReturnExpectedUri() {
     AmphoraServiceUri aUri =
         new AmphoraServiceUri("https://amphora.carbynestack.io:8081/my/service/");
     URI inputMaskUri = aUri.getInputMaskUri();
@@ -141,7 +137,7 @@ public class AmphoraServiceUriTest {
   }
 
   @Test
-  public void
+  void
       givenUriStringWithTrailingSlash_whenCreateAmphoraServiceUri_thenReturnExpectedAmphoraServiceUri() {
     AmphoraServiceUri aUri = new AmphoraServiceUri("https://amphora.carbynestack.io:8081/");
     URI inputMaskUri = aUri.getInputMaskUri();
@@ -153,9 +149,9 @@ public class AmphoraServiceUriTest {
     assertEquals(String.format("%s", DOWNLOAD_INPUT_MASKS_ENDPOINT), inputMaskUri.getPath());
   }
 
-  @SneakyThrows
   @Test
-  public void givenValidPathSegments_whenBuildingResourceUri_thenReturnExpectedUri() {
+  void givenValidPathSegments_whenBuildingResourceUri_thenReturnExpectedUri()
+      throws URISyntaxException {
     String baseUri = "https://amphora.carbynestack.io/amphora";
     String pathVariable = "1234";
     AmphoraServiceUri amphoraServiceUri = new AmphoraServiceUri(baseUri);

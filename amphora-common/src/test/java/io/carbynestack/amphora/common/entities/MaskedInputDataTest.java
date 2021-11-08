@@ -7,17 +7,17 @@
 
 package io.carbynestack.amphora.common.entities;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.carbynestack.amphora.common.MaskedInputData;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MaskedInputDataTest {
+class MaskedInputDataTest {
 
   @Test
-  public void givenInvalidValue_whenCreatingMaskedInputData_thenThrowException() {
+  void givenInvalidValue_whenCreatingMaskedInputData_thenThrowException() {
     IllegalArgumentException actualIae =
         assertThrows(
             IllegalArgumentException.class,

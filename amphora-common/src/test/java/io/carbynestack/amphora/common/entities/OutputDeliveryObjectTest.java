@@ -7,17 +7,17 @@
 
 package io.carbynestack.amphora.common.entities;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import java.util.UUID;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class OutputDeliveryObjectTest {
+class OutputDeliveryObjectTest {
   @Test
-  public void givenValidBuilderConfiguration_whenCallingBuildOnBuilder_thenReturnObject() {
+  void givenValidBuilderConfiguration_whenCallingBuildOnBuilder_thenReturnObject() {
     UUID secretId = UUID.fromString("80fbba1b-3da8-4b1e-8a2c-cebd65229fad");
     byte[] secretShares = new byte[MpSpdzIntegrationUtils.WORD_WIDTH];
     byte[] rShares = new byte[MpSpdzIntegrationUtils.WORD_WIDTH];
@@ -42,7 +42,7 @@ public class OutputDeliveryObjectTest {
   }
 
   @Test
-  public void
+  void
       givenRSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
     OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().rShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);
@@ -52,7 +52,7 @@ public class OutputDeliveryObjectTest {
   }
 
   @Test
-  public void
+  void
       givenWSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
     OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().wShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);
@@ -62,7 +62,7 @@ public class OutputDeliveryObjectTest {
   }
 
   @Test
-  public void
+  void
       givenUSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
     OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().uShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);
@@ -72,7 +72,7 @@ public class OutputDeliveryObjectTest {
   }
 
   @Test
-  public void
+  void
       givenVSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
     OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().vShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);

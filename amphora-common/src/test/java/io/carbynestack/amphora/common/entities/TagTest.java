@@ -11,24 +11,24 @@ import static io.carbynestack.amphora.common.Tag.INVALID_KEY_STRING_EXCEPTION_MS
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.common.TagFilter;
 import io.carbynestack.amphora.common.TagFilterOperator;
 import io.carbynestack.amphora.common.TagValueType;
 import java.util.Arrays;
-import lombok.SneakyThrows;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class TagTest {
+class TagTest {
   private final String dummyKey = "dummy-key";
   private final String dummyStringValue = "dummy-value";
   private final long dummyLongValue = 12345L;
 
   @Test
-  public void givenKeyWithTooManyCharacters_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenKeyWithTooManyCharacters_whenBuildingTag_thenThrowIllegalArgumentException() {
     char[] array = new char[129];
     Arrays.fill(array, 'a');
     String key = new String(array);
@@ -39,7 +39,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenKeyWithMaximumLength_whenBuildingTag_thenSucceed() {
+  void givenKeyWithMaximumLength_whenBuildingTag_thenSucceed() {
     char[] array = new char[128];
     Arrays.fill(array, 'a');
     String key = new String(array);
@@ -48,7 +48,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenKeyWithInvalidCharacter_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenKeyWithInvalidCharacter_whenBuildingTag_thenThrowIllegalArgumentException() {
     String key = "#123";
     Tag.TagBuilder tagBuilder = Tag.builder().key(key).value(dummyStringValue);
     IllegalArgumentException iae =
@@ -57,7 +57,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenNullAsKey_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenNullAsKey_whenBuildingTag_thenThrowIllegalArgumentException() {
     Tag.TagBuilder tagBuilder = Tag.builder();
     NullPointerException actualNpe =
         assertThrows(NullPointerException.class, () -> tagBuilder.key(null));
@@ -65,7 +65,7 @@ public class TagTest {
   }
 
   @Test
-  public void giveKeyIsEmptyString_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void giveKeyIsEmptyString_whenBuildingTag_thenThrowIllegalArgumentException() {
     Tag.TagBuilder tagBuilder = Tag.builder().key("").value(dummyStringValue);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, tagBuilder::build);
@@ -73,7 +73,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenNullAsValue_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenNullAsValue_whenBuildingTag_thenThrowIllegalArgumentException() {
     Tag.TagBuilder tagBuilder = Tag.builder().key(dummyKey);
     NullPointerException actualNpe =
         assertThrows(NullPointerException.class, () -> tagBuilder.value(null));
@@ -81,7 +81,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenValueIsEmptyString_whenBuildingTag_thenCreateExpectedTag() {
+  void givenValueIsEmptyString_whenBuildingTag_thenCreateExpectedTag() {
     String expectedTagValue = "";
     Tag tag = Tag.builder().key(dummyKey).value("").build();
     assertEquals(TagValueType.STRING, tag.getValueType());
@@ -90,7 +90,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenKeyWithSupportedCharacters_whenBuildingTag_thenSucceed() {
+  void givenKeyWithSupportedCharacters_whenBuildingTag_thenSucceed() {
     String expectedKey = "abcDEF456-.";
     Tag tag = Tag.builder().key(expectedKey).value(dummyStringValue).build();
     assertEquals(TagValueType.STRING, tag.getValueType());
@@ -99,7 +99,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenValueWithTooManyCharacters_whenBuildingTag_thenThrowIllegaArgumentException() {
+  void givenValueWithTooManyCharacters_whenBuildingTag_thenThrowIllegaArgumentException() {
     char[] array = new char[257];
     Arrays.fill(array, 'a');
     String value = new String(array);
@@ -112,7 +112,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenValueWithMaximumLength_whenBuildingTag_thenSucceed() {
+  void givenValueWithMaximumLength_whenBuildingTag_thenSucceed() {
     char[] array = new char[256];
     Arrays.fill(array, 'a');
     String expectedValue = new String(array);
@@ -123,7 +123,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenLongStringAsValueAndLongAsValueType_whenBuildingTag_thenCreateExpectedTag() {
+  void givenLongStringAsValueAndLongAsValueType_whenBuildingTag_thenCreateExpectedTag() {
     Tag tag =
         Tag.builder()
             .key(dummyKey)
@@ -136,16 +136,16 @@ public class TagTest {
   }
 
   @Test
-  public void givenOnlyKeyAsInput_whenBuildingTag_thenUseDefaultValues() {
+  void givenOnlyKeyAsInput_whenBuildingTag_thenUseDefaultValues() {
     Tag tag = Tag.builder().key(dummyKey).build();
     assertEquals(TagValueType.STRING, tag.getValueType());
     assertEquals(dummyKey, tag.getKey());
     assertEquals("", tag.getValue());
   }
 
-  @SneakyThrows
   @Test
-  public void givenTagObject_whenSerializingAndDeserializingData_thenRecreateOrigin() {
+  void givenTagObject_whenSerializingAndDeserializingData_thenRecreateOrigin()
+      throws JsonProcessingException {
     Tag tag =
         Tag.builder()
             .key(dummyKey)
@@ -156,9 +156,9 @@ public class TagTest {
     assertEquals(tag, om.readerFor(Tag.class).readValue(om.writeValueAsString(tag)));
   }
 
-  @SneakyThrows
   @Test
-  public void givenTagFilterObject_whenSerializingAndDeserializingData_thenRecreateOrigin() {
+  void givenTagFilterObject_whenSerializingAndDeserializingData_thenRecreateOrigin()
+      throws JsonProcessingException {
     TagFilter filter =
         TagFilter.with(dummyKey, Long.toString(dummyLongValue), TagFilterOperator.EQUALS);
     ObjectMapper om = new ObjectMapper();

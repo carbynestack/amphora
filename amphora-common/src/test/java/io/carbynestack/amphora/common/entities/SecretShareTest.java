@@ -9,24 +9,24 @@ package io.carbynestack.amphora.common.entities;
 
 import static io.carbynestack.amphora.common.SecretShare.INVALID_LENGTH_EXCEPTION_MSG;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import java.util.*;
-import lombok.SneakyThrows;
 import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SecretShareTest {
+class SecretShareTest {
   final Random random = new Random(42);
   final UUID testSecretId = UUID.fromString("80fbba1b-3da8-4b1e-8a2c-cebd65229fad");
 
   @Test
-  public void givenDataOfInvalidLength_whenBuildSecretShare_thenThrowIllegalArgumentException() {
+  void givenDataOfInvalidLength_whenBuildSecretShare_thenThrowIllegalArgumentException() {
     byte[] dataInvalidLength = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH - 1];
     SecretShare.SecretShareBuilder<?, ?> secretShareBuilder = SecretShare.builder();
     IllegalArgumentException iae =
@@ -38,7 +38,7 @@ public class SecretShareTest {
   }
 
   @Test
-  public void givenTwoSecretShareWithSameContent_whenCompareEqual_thenMatch() {
+  void givenTwoSecretShareWithSameContent_whenCompareEqual_thenMatch() {
     byte[] data = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH];
     random.nextBytes(data);
     SecretShare secretShare1 =
@@ -49,7 +49,7 @@ public class SecretShareTest {
   }
 
   @Test
-  public void givenDataOfVariableButValidLength_whenBuildSecretShare_thenSucceed() {
+  void givenDataOfVariableButValidLength_whenBuildSecretShare_thenSucceed() {
     for (int i = 0; i < 100; i++) {
       byte[] expectedData = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH * i];
       random.nextBytes(expectedData);
@@ -64,9 +64,9 @@ public class SecretShareTest {
     }
   }
 
-  @SneakyThrows
   @Test
-  public void givenSecretShareObject_whenSerialize_thenReturnExpectedJsonString() {
+  void givenSecretShareObject_whenSerialize_thenReturnExpectedJsonString()
+      throws JsonProcessingException {
     ObjectMapper om = new ObjectMapper();
     byte[] data = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH];
     random.nextBytes(data);
@@ -83,8 +83,8 @@ public class SecretShareTest {
   }
 
   @Test
-  @SneakyThrows
-  public void givenValidSecretShareJsonString_whenDeserialize_thenReturnExpectedObject() {
+  void givenValidSecretShareJsonString_whenDeserialize_thenReturnExpectedObject()
+      throws JsonProcessingException {
     ObjectMapper om = new ObjectMapper();
     byte[] data = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH];
     random.nextBytes(data);
