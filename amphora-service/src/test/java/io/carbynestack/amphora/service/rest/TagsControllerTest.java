@@ -10,8 +10,8 @@ import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.INTRA_
 import static io.carbynestack.amphora.service.util.ServletUriComponentsBuilderUtil.runInMockedHttpRequestContextForUri;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import io.carbynestack.amphora.common.Tag;
@@ -20,16 +20,16 @@ import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-@RunWith(MockitoJUnitRunner.class)
-public class TagsControllerTest {
+@ExtendWith(MockitoExtension.class)
+class TagsControllerTest {
   private final UUID testSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
   private final Tag testTag =
       Tag.builder().key("key").value("value").valueType(TagValueType.STRING).build();
@@ -39,7 +39,7 @@ public class TagsControllerTest {
   @InjectMocks private TagsController tagsController;
 
   @Test
-  public void givenSuccessfulRequest_whenGetTags_thenReturnOkWithExpectedContent() {
+  void givenSuccessfulRequest_whenGetTags_thenReturnOkWithExpectedContent() {
     List<Tag> expectedList = singletonList(testTag);
 
     when(storageService.retrieveTags(testSecretId)).thenReturn(expectedList);
@@ -50,7 +50,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenTagIsNull_whenCreateTag_thenThrowIllegalArgumentException() {
+  void givenTagIsNull_whenCreateTag_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class, () -> tagsController.createTag(testSecretId, null));
@@ -59,7 +59,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenCreateTag_thenReturnCreatedWithExpectedContent() {
+  void givenSuccessfulRequest_whenCreateTag_thenReturnCreatedWithExpectedContent() {
     URI expectedUri =
         URI.create(
             "https://amphora.carbynestack.io" + INTRA_VCP_OPERATIONS_SEGMENT + "/" + testSecretId);
@@ -74,7 +74,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenTagsAreEmpty_whenUpdateTags_thenThrowIllegalArgumentException() {
+  void givenTagsAreEmpty_whenUpdateTags_thenThrowIllegalArgumentException() {
     List<Tag> emptyTags = emptyList();
     IllegalArgumentException iae =
         assertThrows(
@@ -85,7 +85,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenUpdateTags_thenReturnCreatedWithExpectedContent() {
+  void givenSuccessfulRequest_whenUpdateTags_thenReturnCreatedWithExpectedContent() {
     List<Tag> newTagList = singletonList(testTag);
     ResponseEntity<Void> actualResponse = tagsController.updateTags(testSecretId, newTagList);
     verify(storageService, times(1)).replaceTags(testSecretId, newTagList);
@@ -93,7 +93,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenGetTag_thenReturnOkWithExpectedContent() {
+  void givenSuccessfulRequest_whenGetTag_thenReturnOkWithExpectedContent() {
     when(storageService.retrieveTag(testSecretId, testTag.getKey())).thenReturn(testTag);
 
     ResponseEntity<Tag> actualResponse = tagsController.getTag(testSecretId, testTag.getKey());
@@ -102,7 +102,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenTagIsNull_whenPutTag_thenTrowIllegalArgumentException() {
+  void givenTagIsNull_whenPutTag_thenTrowIllegalArgumentException() {
     String key = testTag.getKey();
     IllegalArgumentException iae =
         assertThrows(
@@ -112,8 +112,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void
-      givenTagConfigurationDoesNotMatchAddressedKey_whenPutTag_thenTrowIllegalArgumentException() {
+  void givenTagConfigurationDoesNotMatchAddressedKey_whenPutTag_thenTrowIllegalArgumentException() {
     String nonMatchingKey = testTag.getKey() + "_different";
     IllegalArgumentException iae =
         assertThrows(
@@ -127,7 +126,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenPutTag_thenReturnOk() {
+  void givenSuccessfulRequest_whenPutTag_thenReturnOk() {
     ResponseEntity<Void> actualResponse =
         tagsController.putTag(testSecretId, testTag.getKey(), testTag);
     verify(storageService, times(1)).updateTag(testSecretId, testTag);
@@ -135,7 +134,7 @@ public class TagsControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenDeleteTag_thenReturnOk() {
+  void givenSuccessfulRequest_whenDeleteTag_thenReturnOk() {
     ResponseEntity<Void> actualResponse = tagsController.deleteTag(testSecretId, testTag.getKey());
     verify(storageService, times(1)).deleteTag(testSecretId, testTag.getKey());
     assertEquals(HttpStatus.OK, actualResponse.getStatusCode());

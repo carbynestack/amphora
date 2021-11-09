@@ -11,9 +11,12 @@ import io.carbynestack.amphora.service.config.MinioProperties;
 import io.carbynestack.amphora.service.persistence.metadata.SecretEntityRepository;
 import io.carbynestack.amphora.service.persistence.metadata.TagRepository;
 import io.minio.*;
+import io.minio.errors.*;
 import io.vavr.control.Try;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
-import lombok.SneakyThrows;
 import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -33,31 +36,42 @@ public class PersistenceTestEnvironment {
 
   @Autowired private MinioProperties minioProperties;
 
-  @SneakyThrows
   public void clearAllData() {
-    secretEntityRepository.deleteAll();
-    tagRepository.deleteAll();
-    Objects.requireNonNull(cacheManager.getCache(cacheProperties.getInterimValueStore())).clear();
-    Objects.requireNonNull(cacheManager.getCache(cacheProperties.getInputMaskStore())).clear();
-    if (minioClient.bucketExists(
-        BucketExistsArgs.builder().bucket(minioProperties.getBucket()).build())) {
-      Lists.newArrayList(
-              minioClient
-                  .listObjects(
-                      ListObjectsArgs.builder().bucket(minioProperties.getBucket()).build())
-                  .iterator())
-          .forEach(
-              itemResult ->
-                  Try.run(
-                      () ->
-                          minioClient.removeObject(
-                              RemoveObjectArgs.builder()
-                                  .bucket(minioProperties.getBucket())
-                                  .object(itemResult.get().objectName())
-                                  .build())));
-      minioClient.removeBucket(
-          RemoveBucketArgs.builder().bucket(minioProperties.getBucket()).build());
+    try {
+      secretEntityRepository.deleteAll();
+      tagRepository.deleteAll();
+      Objects.requireNonNull(cacheManager.getCache(cacheProperties.getInterimValueStore())).clear();
+      Objects.requireNonNull(cacheManager.getCache(cacheProperties.getInputMaskStore())).clear();
+      if (minioClient.bucketExists(
+          BucketExistsArgs.builder().bucket(minioProperties.getBucket()).build())) {
+        Lists.newArrayList(
+                minioClient
+                    .listObjects(
+                        ListObjectsArgs.builder().bucket(minioProperties.getBucket()).build())
+                    .iterator())
+            .forEach(
+                itemResult ->
+                    Try.run(
+                        () ->
+                            minioClient.removeObject(
+                                RemoveObjectArgs.builder()
+                                    .bucket(minioProperties.getBucket())
+                                    .object(itemResult.get().objectName())
+                                    .build())));
+        minioClient.removeBucket(
+            RemoveBucketArgs.builder().bucket(minioProperties.getBucket()).build());
+      }
+      minioClient.makeBucket(MakeBucketArgs.builder().bucket(minioProperties.getBucket()).build());
+    } catch (ErrorResponseException
+        | InsufficientDataException
+        | InternalException
+        | InvalidKeyException
+        | InvalidResponseException
+        | NoSuchAlgorithmException
+        | ServerException
+        | XmlParserException
+        | IOException e) {
+      throw new IllegalStateException("Failed clearing persisted data.", e);
     }
-    minioClient.makeBucket(MakeBucketArgs.builder().bucket(minioProperties.getBucket()).build());
   }
 }

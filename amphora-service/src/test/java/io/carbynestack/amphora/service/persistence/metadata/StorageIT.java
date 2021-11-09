@@ -12,7 +12,7 @@ import static io.carbynestack.amphora.service.persistence.metadata.StorageServic
 import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.setFromTagList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -25,28 +25,31 @@ import io.carbynestack.amphora.service.AmphoraServiceApplication;
 import io.carbynestack.amphora.service.config.MinioProperties;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
 import io.carbynestack.amphora.service.testconfig.PersistenceTestEnvironment;
-import io.carbynestack.amphora.service.testconfig.ReusableMinioContainer;
-import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainer;
-import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
+import io.carbynestack.amphora.service.testconfig.ReusableMinioContainerExtension;
+import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainerExtension;
+import io.carbynestack.amphora.service.testconfig.ReusableRedisContainerExtension;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.errors.*;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = RANDOM_PORT,
     classes = {AmphoraServiceApplication.class})
@@ -57,17 +60,17 @@ public class StorageIT {
   private final UUID testSecretId2 = UUID.fromString("0e7cd962-d98e-4eea-82ae-4641399c9ad7");
   private final Tag testTag = Tag.builder().key("TEST_KEY").value("TEST_VALUE").build();
 
-  @ClassRule
-  public static ReusableRedisContainer reusableRedisContainer =
-      ReusableRedisContainer.getInstance();
+  @RegisterExtension
+  public static ReusableRedisContainerExtension reusableRedisContainer =
+      ReusableRedisContainerExtension.getInstance();
 
-  @ClassRule
-  public static ReusableMinioContainer reusableMinioContainer =
-      ReusableMinioContainer.getInstance();
+  @RegisterExtension
+  public static ReusableMinioContainerExtension reusableMinioContainer =
+      ReusableMinioContainerExtension.getInstance();
 
-  @ClassRule
-  public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =
-      ReusablePostgreSQLContainer.getInstance();
+  @RegisterExtension
+  public static ReusablePostgreSQLContainerExtension reusablePostgreSQLContainer =
+      ReusablePostgreSQLContainerExtension.getInstance();
 
   @Autowired private StorageService storageService;
 
@@ -80,7 +83,7 @@ public class StorageIT {
   @Autowired private MinioClient minioClient;
   @Autowired private MinioProperties minioProperties;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     testEnvironment.clearAllData();
   }
@@ -91,7 +94,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenStoreTag_thenPersist() {
+  void givenSuccessfulRequest_whenStoreTag_thenPersist() {
     persistObjectWithIdAndTags(testSecretId, testTag);
     storageService.storeTag(
         testSecretId, Tag.builder().key("ANOTHER_KEY").value(testTag.getValue()).build());
@@ -100,7 +103,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenGetObjectList_thenReturnExpectedResult() {
+  void givenSuccessfulRequest_whenGetObjectList_thenReturnExpectedResult() {
     Metadata expectedMetadata =
         Metadata.builder().secretId(testSecretId).tags(singletonList(testTag)).build();
     persistObjectWithIdAndTags(testSecretId, testTag);
@@ -109,7 +112,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenNoObjectWithReferencedIdDefined_whenRetrieveTags_thenThrowNotFoundException() {
+  void givenNoObjectWithReferencedIdDefined_whenRetrieveTags_thenThrowNotFoundException() {
     NotFoundException nfe =
         assertThrows(NotFoundException.class, () -> storageService.retrieveTags(testSecretId));
     assertEquals(
@@ -117,7 +120,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenSecretIdUnknown_whenStoreTag_thenThrowNotFoundException() {
+  void givenSecretIdUnknown_whenStoreTag_thenThrowNotFoundException() {
     NotFoundException nfe =
         assertThrows(NotFoundException.class, () -> storageService.storeTag(unknownId, testTag));
     assertEquals(
@@ -125,8 +128,7 @@ public class StorageIT {
   }
 
   @Test
-  public void
-      givenSuccessfulRequests_whenStoreAndRetrieveTag_thenPersistAndReturnExpectedContent() {
+  void givenSuccessfulRequests_whenStoreAndRetrieveTag_thenPersistAndReturnExpectedContent() {
     persistObjectWithIdAndTags(testSecretId);
     storageService.storeTag(testSecretId, testTag);
     List<Tag> tags = storageService.retrieveTags(testSecretId);
@@ -135,14 +137,16 @@ public class StorageIT {
   }
 
   @Test
-  public void givenObjectWithoutTagsDefined_whenRetrieveTags_thenReturnEmptyList() {
+  void givenObjectWithoutTagsDefined_whenRetrieveTags_thenReturnEmptyList() {
     persistObjectWithIdAndTags(testSecretId);
     assertEquals(Collections.emptyList(), storageService.retrieveTags(testSecretId));
   }
 
-  @SneakyThrows
   @Test
-  public void givenObjectWithoutTagsDefined_whenRetrieveSecretShare_thenReturnEmptyListForTags() {
+  void givenObjectWithoutTagsDefined_whenRetrieveSecretShare_thenReturnEmptyListForTags()
+      throws ServerException, InsufficientDataException, ErrorResponseException, IOException,
+          NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
+          XmlParserException, InternalException {
     persistObjectWithIdAndTags(testSecretId);
     minioClient.putObject(
         PutObjectArgs.builder()
@@ -155,7 +159,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenObjectHasNoDataPersisted_whenGetSecretShare_thenThrowAmphoraServiceException() {
+  void givenObjectHasNoDataPersisted_whenGetSecretShare_thenThrowAmphoraServiceException() {
     persistObjectWithIdAndTags(testSecretId);
     AmphoraServiceException ase =
         assertThrows(
@@ -167,7 +171,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenSecretIdUnknown_whenReplaceTags_thenThrowNotFoundException() {
+  void givenSecretIdUnknown_whenReplaceTags_thenThrowNotFoundException() {
     List<Tag> tags = singletonList(testTag);
     NotFoundException nfe =
         assertThrows(
@@ -180,7 +184,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenDeleteTag_thenDoNoLongerReturn() {
+  void givenSuccessfulRequest_whenDeleteTag_thenDoNoLongerReturn() {
     SecretEntity secretEntity = persistObjectWithIdAndTags(testSecretId, testTag);
     Tag expectedTag = Tag.builder().key(testTag.getKey() + "new").value(testTag.getValue()).build();
     TagEntity expectedTagEntity = TagEntity.fromTag(expectedTag).setSecret(secretEntity);
@@ -204,7 +208,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenObjectHasNoTagWithRequestedKey_whenDeleteKey_thenThrowNotFoundException() {
+  void givenObjectHasNoTagWithRequestedKey_whenDeleteKey_thenThrowNotFoundException() {
     String unknownKey = "unknown_key";
     persistObjectWithIdAndTags(testSecretId, testTag);
     persistObjectWithIdAndTags(testSecretId2, testTag);
@@ -219,8 +223,7 @@ public class StorageIT {
   }
 
   @Test
-  public void
-      givenMultipleObjectsWIthIdenticalTag_whenDeleteTagOnOneObject_thenKeepTagForOtherObjects() {
+  void givenMultipleObjectsWIthIdenticalTag_whenDeleteTagOnOneObject_thenKeepTagForOtherObjects() {
     persistObjectWithIdAndTags(testSecretId, testTag);
     persistObjectWithIdAndTags(testSecretId2, testTag);
     storageService.deleteTag(testSecretId, testTag.getKey());
@@ -238,7 +241,7 @@ public class StorageIT {
   }
 
   @Test
-  public void givenAnUnknownId_whenStoringATag_thenThrow() {
+  void givenAnUnknownId_whenStoringATag_thenThrow() {
     NotFoundException nfe =
         assertThrows(NotFoundException.class, () -> storageService.storeTag(testSecretId, testTag));
     assertEquals(

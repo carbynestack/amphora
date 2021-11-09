@@ -8,23 +8,23 @@
 package io.carbynestack.amphora.service.config;
 
 import static io.carbynestack.amphora.service.config.BigIntegerConverter.INVALID_VALUE_EXCEPTION_MSG;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigInteger;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class BigIntegerConverterTest {
+class BigIntegerConverterTest {
 
   @Test
-  public void givenValidBigIntegerAsString_whenConvert_thenReturnBigIntegerObject() {
+  void givenValidBigIntegerAsString_whenConvert_thenReturnBigIntegerObject() {
     BigInteger expected = BigInteger.valueOf(42);
     BigIntegerConverter bigIntegerConverter = new BigIntegerConverter();
     assertEquals(expected, bigIntegerConverter.convert(expected.toString()));
   }
 
   @Test
-  public void givenNull_whenConvert_thenThrowException() {
+  void givenNull_whenConvert_thenThrowException() {
     BigIntegerConverter bigIntegerConverter = new BigIntegerConverter();
     IllegalArgumentException iae =
         assertThrows(IllegalArgumentException.class, () -> bigIntegerConverter.convert(null));
@@ -32,7 +32,7 @@ public class BigIntegerConverterTest {
   }
 
   @Test
-  public void givenEmptyString_whenConvert_thenThrowException() {
+  void givenEmptyString_whenConvert_thenThrowException() {
     String illegalInput = "";
     BigIntegerConverter converter = new BigIntegerConverter();
     IllegalArgumentException iae =

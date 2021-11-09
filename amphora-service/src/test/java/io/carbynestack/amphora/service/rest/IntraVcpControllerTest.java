@@ -8,31 +8,31 @@ package io.carbynestack.amphora.service.rest;
 
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.INTRA_VCP_OPERATIONS_SEGMENT;
 import static io.carbynestack.amphora.service.util.ServletUriComponentsBuilderUtil.runInMockedHttpRequestContextForUri;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
 import java.util.UUID;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-@RunWith(MockitoJUnitRunner.class)
-public class IntraVcpControllerTest {
+@ExtendWith(MockitoExtension.class)
+class IntraVcpControllerTest {
 
   @Mock private StorageService storageService;
 
   @InjectMocks private IntraVcpController intraVcpController;
 
   @Test
-  public void givenArgumentIsNull_whenUploadSecretShare_thenThrowIllegalArgumentException() {
+  void givenArgumentIsNull_whenUploadSecretShare_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class, () -> intraVcpController.uploadSecretShare(null));
@@ -40,7 +40,7 @@ public class IntraVcpControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenUploadSecretShare_thenReturnCreatedWithExpectedContent() {
+  void givenSuccessfulRequest_whenUploadSecretShare_thenReturnCreatedWithExpectedContent() {
     UUID secretShareId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     URI expectedUri =
         URI.create(
@@ -59,7 +59,7 @@ public class IntraVcpControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenDownloadSecretShare_thenReturnOkWithExpectedContent() {
+  void givenSuccessfulRequest_whenDownloadSecretShare_thenReturnOkWithExpectedContent() {
     UUID secretShareId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     SecretShare expectedSecretShare = SecretShare.builder().secretId(secretShareId).build();
 

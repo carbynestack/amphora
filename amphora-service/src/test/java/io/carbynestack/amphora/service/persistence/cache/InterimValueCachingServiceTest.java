@@ -7,7 +7,7 @@
 package io.carbynestack.amphora.service.persistence.cache;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import io.carbynestack.amphora.common.FactorPair;
@@ -20,17 +20,17 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.cache.CacheKeyPrefix;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
-@RunWith(MockitoJUnitRunner.class)
-public class InterimValueCachingServiceTest {
+@ExtendWith(MockitoExtension.class)
+class InterimValueCachingServiceTest {
   @Mock RedisTemplate<String, Object> redisTemplateMock;
   @Mock AmphoraCacheProperties amphoraCachePropertiesMock;
   @Mock private ValueOperations<String, Object> valueOperationsMock;
@@ -41,7 +41,7 @@ public class InterimValueCachingServiceTest {
 
   private InterimValueCachingService interimValueCachingService;
 
-  @Before
+  @BeforeEach
   public void setup() {
     when(amphoraCachePropertiesMock.getInterimValueStore()).thenReturn(testCacheName);
     when(redisTemplateMock.opsForValue()).thenReturn(valueOperationsMock);
@@ -50,14 +50,14 @@ public class InterimValueCachingServiceTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenPuttingInterimValue_thenStoreInCacheWithCorrectKey() {
+  void givenSuccessfulRequest_whenPuttingInterimValue_thenStoreInCacheWithCorrectKey() {
     MultiplicationExchangeObject exchangeObject = createExchangeObject();
     interimValueCachingService.putInterimValues(exchangeObject);
     verify(valueOperationsMock, times(1)).set(getCacheKey(exchangeObject), exchangeObject);
   }
 
   @Test
-  public void
+  void
       givenValuesPresentForIdAndPlayer_whenGettingInterimValues_thenReturnOptionWithObjectAndEvict() {
     MultiplicationExchangeObject exchangeObject = createExchangeObject();
     when(redisTemplateMock.hasKey(getCacheKey(exchangeObject))).thenReturn(true);
@@ -73,7 +73,7 @@ public class InterimValueCachingServiceTest {
   }
 
   @Test
-  public void
+  void
       givenValuesNotPresentForIdAndPlayer_whenGettingInterimValues_thenReturnFailedOptionAndDontCallEvict() {
     UUID operationId = UUID.fromString("a7d4970c-36de-4880-b91b-6656dff3bac9");
     int playerId = 0;

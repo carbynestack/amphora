@@ -11,7 +11,7 @@ import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.SECRET
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import io.carbynestack.amphora.common.Metadata;
@@ -19,50 +19,50 @@ import io.carbynestack.amphora.common.MetadataPage;
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.service.testconfig.PersistenceTestEnvironment;
-import io.carbynestack.amphora.service.testconfig.ReusableMinioContainer;
-import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainer;
-import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
+import io.carbynestack.amphora.service.testconfig.ReusableMinioContainerExtension;
+import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainerExtension;
+import io.carbynestack.amphora.service.testconfig.ReusableRedisContainerExtension;
 import io.carbynestack.amphora.service.util.MetadataMatchers;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.UUID;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = RANDOM_PORT,
     classes = {AmphoraServiceApplication.class})
 @ActiveProfiles(profiles = {"test"})
 @Slf4j
-public class AmphoraServiceSystemTest {
+class AmphoraServiceSystemTest {
   private final UUID testSecretId1 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb26");
   private final UUID testSecretId2 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb27");
   private final UUID testSecretId3 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb28");
   private final UUID testSecretId4 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb29");
 
-  @ClassRule
-  public static ReusableRedisContainer reusableRedisContainer =
-      ReusableRedisContainer.getInstance();
+  @RegisterExtension
+  public static ReusableRedisContainerExtension reusableRedisContainer =
+      ReusableRedisContainerExtension.getInstance();
 
-  @ClassRule
-  public static ReusableMinioContainer reusableMinioContainer =
-      ReusableMinioContainer.getInstance();
+  @RegisterExtension
+  public static ReusableMinioContainerExtension reusableMinioContainer =
+      ReusableMinioContainerExtension.getInstance();
 
-  @ClassRule
-  public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =
-      ReusablePostgreSQLContainer.getInstance();
+  @RegisterExtension
+  public static ReusablePostgreSQLContainerExtension reusablePostgreSQLContainer =
+      ReusablePostgreSQLContainerExtension.getInstance();
 
   @Autowired private TestRestTemplate restTemplate;
 
@@ -109,13 +109,13 @@ public class AmphoraServiceSystemTest {
           .tags(Collections.singletonList(Tag.builder().key("empty-value").value("").build()))
           .build();
 
-  @Before
+  @BeforeEach
   public void setUp() {
     testEnvironment.clearAllData();
   }
 
   @Test
-  public void givenSuccessfulRequest_whenPostSecretShares_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenPostSecretShares_thenReturnExpectedContent() {
     String expectedPath =
         INTRA_VCP_OPERATIONS_SEGMENT
             + SECRET_SHARES_ENDPOINT
@@ -128,102 +128,100 @@ public class AmphoraServiceSystemTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenListSecrets_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecrets_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response = restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results!", 4L, response.getTotalElements());
+        4L, response.getTotalElements(), "Response contains wrong total number of results!");
     assertThat(
         response.getContent().get(0),
         MetadataMatchers.equalsButIgnoreReservedTags(getMetadataForSecretShare(testSecretShare1)));
   }
 
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListSecretsWithNumberComparisonFilter_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(
             SECRET_SHARES_ENDPOINT + "?filter=number>100,number<120", MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results!", 1L, response.getTotalElements());
+        1L, response.getTotalElements(), "Response contains wrong total number of results!");
     assertThat(
         response.getContent().get(0),
         MetadataMatchers.equalsButIgnoreReservedTags(getMetadataForSecretShare(secretShare3)));
   }
 
   @Test
-  public void
-      givenSuccessfulRequest_whenListSecretsWithStringEqualFilter_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecretsWithStringEqualFilter_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(
             SECRET_SHARES_ENDPOINT + "?filter=key1:value2%2C", MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results!", 1L, response.getTotalElements());
+        1L, response.getTotalElements(), "Response contains wrong total number of results!");
     assertThat(
         response.getContent().get(0),
         MetadataMatchers.equalsButIgnoreReservedTags(getMetadataForSecretShare(secretShare2)));
   }
 
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListSecretsWithStringAndNumberComparisonFilters_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(
             SECRET_SHARES_ENDPOINT + "?filter=key1:value1%25%2C%24,number>120", MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results!", 1L, response.getTotalElements());
+        1L, response.getTotalElements(), "Response contains wrong total number of results!");
     assertThat(
         response.getContent().get(0),
         MetadataMatchers.equalsButIgnoreReservedTags(getMetadataForSecretShare(testSecretShare1)));
   }
 
   @Test
-  public void
-      givenSuccessfulRequest_whenListSecretsWithNPaginationConfig_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecretsWithNPaginationConfig_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(
             SECRET_SHARES_ENDPOINT + "?pageNumber=1&pageSize=1", MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results!", 4L, response.getTotalElements());
+        4L, response.getTotalElements(), "Response contains wrong total number of results!");
     assertThat(
         response.getContent().get(0),
         MetadataMatchers.equalsButIgnoreReservedTags(getMetadataForSecretShare(secretShare2)));
   }
 
-  @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenDeleteSecret_thenReturnRemoveAndDoNoLongerReturn() {
+  void givenSuccessfulRequest_whenDeleteSecret_thenReturnRemoveAndDoNoLongerReturn()
+      throws URISyntaxException {
     createTestSecretShares();
     MetadataPage responsePreDel =
         restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results prior to deletion!",
         4L,
-        responsePreDel.getTotalElements());
+        responsePreDel.getTotalElements(),
+        "Response contains wrong total number of results prior to deletion!");
     restTemplate.delete(
         new URI(String.format("/secret-shares/%s", testSecretShare1.getSecretId())));
     MetadataPage responsePostDel =
         restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results after deletion!",
         3L,
-        responsePostDel.getTotalElements());
+        responsePostDel.getTotalElements(),
+        "Response contains wrong total number of results after deletion!");
   }
 
-  @SneakyThrows
   @Test
-  public void givenUnknownSecretId_whenDeleteSecretShare_thenDoNotTouchOtherSecrets() {
+  void givenUnknownSecretId_whenDeleteSecretShare_thenDoNotTouchOtherSecrets()
+      throws URISyntaxException {
     createTestSecretShares();
     MetadataPage responsePreDel =
         restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results prior to deletion!",
         4L,
-        responsePreDel.getTotalElements());
+        responsePreDel.getTotalElements(),
+        "Response contains wrong total number of results prior to deletion!");
 
     restTemplate.delete(
         new URI(String.format("/secret-shares/%s", "82a73814-321c-4261-abcd-27c6c0ebfb20")));
@@ -231,19 +229,19 @@ public class AmphoraServiceSystemTest {
     MetadataPage responsePostDel =
         restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results after fake deletion!",
         4L,
-        responsePostDel.getTotalElements());
+        responsePostDel.getTotalElements(),
+        "Response contains wrong total number of results after fake deletion!");
   }
 
   @Test
-  public void givenSuccessfulRequest_whenListSecretsWithNSorting_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecretsWithNSorting_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(
             SECRET_SHARES_ENDPOINT + "?sort=key1&dir=DESC", MetadataPage.class);
     assertEquals(
-        "Response contains wrong total number of results!", 4L, response.getTotalElements());
+        4L, response.getTotalElements(), "Response contains wrong total number of results!");
     assertThat(
         response.getContent(),
         hasItems(

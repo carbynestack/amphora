@@ -10,8 +10,8 @@ import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.INTRA_
 import static io.carbynestack.amphora.service.util.ServletUriComponentsBuilderUtil.runInMockedHttpRequestContextForUri;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import io.carbynestack.amphora.common.MaskedInput;
@@ -19,30 +19,30 @@ import io.carbynestack.amphora.common.MaskedInputData;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
 import java.util.UUID;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MaskedInputControllerTest {
+@ExtendWith(MockitoExtension.class)
+class MaskedInputControllerTest {
 
   @Mock private StorageService storageService;
 
   @InjectMocks private MaskedInputController maskedInputController;
 
   @Test
-  public void givenArgumentIsNull_whenUpload_thenThrowIllegalArgumentException() {
+  void givenArgumentIsNull_whenUpload_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(IllegalArgumentException.class, () -> maskedInputController.upload(null));
     assertEquals("MaskedInput must not be null", iae.getMessage());
   }
 
   @Test
-  public void givenMaskedInputDataIsEmpty_whenUpload_thenThrowIllegalArgumentException() {
+  void givenMaskedInputDataIsEmpty_whenUpload_thenThrowIllegalArgumentException() {
     UUID expectedId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     MaskedInput maskedInput = new MaskedInput(expectedId, emptyList(), emptyList());
 
@@ -53,7 +53,7 @@ public class MaskedInputControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenUpload_thenReturnCreatedWithExpectedContent() {
+  void givenSuccessfulRequest_whenUpload_thenReturnCreatedWithExpectedContent() {
     UUID secretShareId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     URI expectedUri =
         URI.create(

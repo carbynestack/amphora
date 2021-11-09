@@ -7,8 +7,8 @@
 package io.carbynestack.amphora.service.calculation;
 
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.carbynestack.amphora.common.MaskedInput;
 import io.carbynestack.amphora.common.MaskedInputData;
@@ -23,17 +23,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SecretShareUtilTest {
+class SecretShareUtilTest {
   private final UUID testSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
 
   private SpdzProperties spdzProperties;
   private SecretShareUtil secretShareUtil;
   private MpSpdzIntegrationUtils spdzUtil;
 
-  @Before
+  @BeforeEach
   public void prepare() {
     spdzProperties = new SpdzProperties();
     spdzProperties.setPrime(new BigInteger("198766463529478683931867765928436695041"));
@@ -46,7 +46,7 @@ public class SecretShareUtilTest {
   }
 
   @Test
-  public void
+  void
       givenLessInputMasksThanMaskedInput_whenConvertToSecretShare_thenThrowIllegalArgumentException() {
     List<MaskedInputData> maskedInputDataList = new ArrayList<>();
     maskedInputDataList.add(MaskedInputData.of(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]));
@@ -66,7 +66,7 @@ public class SecretShareUtilTest {
   }
 
   @Test
-  public void givenCorrectArguments_whenConvertToSecretShare_thenReturnExpectedResult() {
+  void givenCorrectArguments_whenConvertToSecretShare_thenReturnExpectedResult() {
     List<Tag> tags =
         Arrays.asList(
             Tag.builder().key("key1").value("value1").build(),
