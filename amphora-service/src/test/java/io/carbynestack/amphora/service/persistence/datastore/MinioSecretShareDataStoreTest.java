@@ -115,7 +115,8 @@ public class MinioSecretShareDataStoreTest {
             AmphoraServiceException.class,
             () -> secretShareDataStore.getSecretShareData(unknownSecretId));
     assertEquals(
-        String.format(GET_DATA_FOR_SECRET_EXCEPTION_MSG, unknownSecretId, "inputStream"), ase.getMessage());
+        String.format(GET_DATA_FOR_SECRET_EXCEPTION_MSG, unknownSecretId, "inputStream"),
+        ase.getMessage());
   }
 
   @SneakyThrows
