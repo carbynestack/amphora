@@ -118,7 +118,7 @@
          <name>castor-common</name>
          <groupId>io.carbynestack</groupId>
          <artifactId>castor-common</artifactId>
-         <version>0.1-SNAPSHOT-1257597392-1-6853da7</version>
+         <version>0.1-SNAPSHOT-1576642733-7-72de814</version>
          <licenses>
             <license>
                <name>Apache-2.0</name>
