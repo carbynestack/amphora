@@ -13,6 +13,12 @@ server:
   servlet:
     context-path: /
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info,health,prometheus
+
 carbynestack:
   spdz:
     mac-key: ${MAC_KEY:""}
