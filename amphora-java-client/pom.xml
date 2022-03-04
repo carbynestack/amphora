@@ -18,7 +18,7 @@
     </parent>
     <properties>
         <!-- external dependencies -->
-        <guava.version>29.0-jre</guava.version>
+        <guava.version>31.1-jre</guava.version>
         <jaxb-api.version>2.3.0</jaxb-api.version>
     </properties>
     <dependencies>

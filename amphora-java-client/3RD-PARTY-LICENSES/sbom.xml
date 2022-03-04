@@ -130,7 +130,7 @@
          <name>Checker Qual</name>
          <groupId>org.checkerframework</groupId>
          <artifactId>checker-qual</artifactId>
-         <version>2.11.1</version>
+         <version>3.12.0</version>
          <projectUrl>https://checkerframework.org</projectUrl>
          <licenses>
             <license>
@@ -143,8 +143,8 @@
          <name>error-prone annotations</name>
          <groupId>com.google.errorprone</groupId>
          <artifactId>error_prone_annotations</artifactId>
-         <version>2.3.4</version>
-         <projectUrl>http://nexus.sonatype.org/oss-repository-hosting.html/error_prone_parent/error_prone_annotations</projectUrl>
+         <version>2.11.0</version>
+         <projectUrl>https://errorprone.info/error_prone_annotations</projectUrl>
          <licenses>
             <license>
                <name>Apache 2.0</name>
@@ -195,8 +195,8 @@
          <name>Guava: Google Core Libraries for Java</name>
          <groupId>com.google.guava</groupId>
          <artifactId>guava</artifactId>
-         <version>29.0-jre</version>
-         <projectUrl>https://github.com/google/guava/guava</projectUrl>
+         <version>31.1-jre</version>
+         <projectUrl>https://github.com/google/guava</projectUrl>
          <licenses>
             <license>
                <name>Apache License, Version 2.0</name>
