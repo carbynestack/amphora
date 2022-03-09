@@ -16,11 +16,11 @@ file in the Carbyne Stack
 
 ### Honda Research Institute Europe GmbH
 
-- Kalman Graffi [Kalman.Graffi@honda-ri.de](mailto:Kalman.Graffi@honda-ri.de)
-- Nikolay Matyunin [Nikolay.Matyunin@honda-ri.de](mailto:Nikolay.Matyunin@honda-ri.de)
-- Johannes Graf (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
-- Petra Scherer (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
-- Timo Klenk (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
+- Graf Johannes (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
+- Graffi Kalman [Kalman.Graffi@honda-ri.de](mailto:Kalman.Graffi@honda-ri.de)
+- Klenk Timo (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
+- Matyunin Nikolay [Nikolay.Matyunin@honda-ri.de](mailto:Nikolay.Matyunin@honda-ri.de)
+- Scherer Petra (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
 
 ### Robert Bosch GmbH
 
