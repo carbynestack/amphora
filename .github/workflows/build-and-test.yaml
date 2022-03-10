@@ -24,16 +24,6 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
           cache: 'maven'
-      - name: Setting up Github Package Repository as Maven Repository
-        uses: s4u/maven-settings-action@v2
-        with:
-          githubServer: false
-          servers: |
-            [{
-              "id": "github",
-              "username": "${{ secrets.GHPR_USERNAME }}",
-              "password": "${{ secrets.GHPR_TOKEN }}"
-            }]
       - name: Build with Maven
         run: mvn install -Dskip.tests --batch-mode --update-snapshots --no-transfer-progress
       - name: Run Tests
