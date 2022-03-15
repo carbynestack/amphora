@@ -19,7 +19,8 @@ file in the Carbyne Stack
 - Graf Johannes (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
 - Graffi Kalman [Kalman.Graffi@honda-ri.de](mailto:Kalman.Graffi@honda-ri.de)
 - Klenk Timo (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
-- Matyunin Nikolay [Nikolay.Matyunin@honda-ri.de](mailto:Nikolay.Matyunin@honda-ri.de)
+- Matyunin Nikolay
+  [Nikolay.Matyunin@honda-ri.de](mailto:Nikolay.Matyunin@honda-ri.de)
 - Scherer Petra (synyx) [info@honda-ri.de](mailto:info@honda-ri.de)
 
 ### Robert Bosch GmbH
