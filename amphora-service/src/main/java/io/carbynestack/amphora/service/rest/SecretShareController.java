@@ -16,14 +16,7 @@ import io.carbynestack.amphora.service.exceptions.NotFoundException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import io.vavr.control.Try;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -148,24 +141,9 @@ public class SecretShareController {
 
   List<TagFilter> parseTagFilters(String filter) throws UnsupportedEncodingException {
     List<TagFilter> tagFilters = new ArrayList<>();
-
-    String operatorGroup =
-        String.format(
-            "(%s|%s|%s)",
-            TagFilterOperator.EQUALS, TagFilterOperator.LESS_THAN, TagFilterOperator.GREATER_THAN);
-
-    Pattern pattern =
-        Pattern.compile("([\\w-.%]+?)" + operatorGroup + "([\\w-.%]*?)" + CRITERIA_SEPARATOR);
-    Matcher matcher = pattern.matcher(filter + CRITERIA_SEPARATOR);
-
-    while (matcher.find()) {
-      tagFilters.add(
-          TagFilter.with(
-              URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8.name()),
-              URLDecoder.decode(matcher.group(3), StandardCharsets.UTF_8.name()),
-              TagFilterOperator.fromString(matcher.group(2))));
+    for (String tagFilterString : filter.split(CRITERIA_SEPARATOR)) {
+      tagFilters.add(TagFilter.fromString(tagFilterString));
     }
-
     return tagFilters;
   }
 }
