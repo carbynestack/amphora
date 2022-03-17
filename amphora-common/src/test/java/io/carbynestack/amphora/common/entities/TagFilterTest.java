@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 - for information on the respective copyright owner
+ * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.carbynestack.amphora.common.entities;
 
 import static io.carbynestack.amphora.common.TagFilter.ILLEGAL_TAGFILTER_FORMAT_EXCEPTION_MSG;
