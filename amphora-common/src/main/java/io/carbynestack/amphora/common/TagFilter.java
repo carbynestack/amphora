@@ -8,6 +8,13 @@
 package io.carbynestack.amphora.common;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -29,6 +36,8 @@ import lombok.Value;
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TagFilter implements Serializable {
+  public static final String ILLEGAL_TAGFILTER_FORMAT_EXCEPTION_MSG =
+      "The given String cannot be parsed as a TagFilter: \"%s\".";
   private static final long serialVersionUID = -728049498488774915L;
 
   /** The key on whose value the filter is applied on */
@@ -70,5 +79,38 @@ public class TagFilter implements Serializable {
         break;
     }
     return new TagFilter(key, value, operator);
+  }
+
+  /**
+   * Parses a string and creates a new {@link TagFilter} with the derived configuration.
+   *
+   * <p>String format is expected to match the following pattern:<br>
+   *
+   * <pre>    &lt;key&gt;&lt;operator&gt;&lt;value&gt;</pre>
+   *
+   * <p>This method accepts and decodes URL encoded strings for key and value (see {@link
+   * URLDecoder}).
+   *
+   * @return the new {@link TagFilter}
+   * @throws IllegalArgumentException if the given string cannot be parsed to a valid {@link
+   *     TagFilter}.
+   */
+  public static TagFilter fromString(String filterString) throws UnsupportedEncodingException {
+    String operatorGroup =
+        "("
+            + Arrays.stream(TagFilterOperator.values())
+                .map(TagFilterOperator::toString)
+                .collect(Collectors.joining("|"))
+            + ")";
+    Pattern filterPattern = Pattern.compile("^([\\w-.%]+?)" + operatorGroup + "([\\w-.%]+?)$");
+    Matcher matcher = filterPattern.matcher(filterString);
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException(
+          String.format(ILLEGAL_TAGFILTER_FORMAT_EXCEPTION_MSG, filterString));
+    }
+    return TagFilter.with(
+        URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8.name()),
+        URLDecoder.decode(matcher.group(3), StandardCharsets.UTF_8.name()),
+        TagFilterOperator.fromString(matcher.group(2)));
   }
 }
