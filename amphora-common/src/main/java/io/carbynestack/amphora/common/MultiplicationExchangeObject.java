@@ -13,7 +13,7 @@ import java.util.UUID;
 import lombok.Value;
 
 /**
- * A dedicated object used to share a single party's interim values from a MPC multiplication with
+ * A dedicated object used to share a single party's interim values from an MPC multiplication with
  * the other participating players of the MPC cluster.
  */
 @Value
