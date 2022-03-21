@@ -214,5 +214,5 @@ The _AmphoraClient_ library can be build and installed into the local maven
 repository using:
 
 ```bash
-mvn install
+../mvnw install
 ```
