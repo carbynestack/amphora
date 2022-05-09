@@ -18,7 +18,7 @@
     </parent>
     <properties>
         <!-- external dependencies -->
-        <jackson.version>2.12.6</jackson.version>
+        <jackson.version>2.13.0</jackson.version>
         <httpclient.version>4.5.13</httpclient.version>
     </properties>
     <dependencies>
