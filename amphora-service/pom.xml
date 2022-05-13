@@ -39,7 +39,7 @@
         <postgresql-java-client.version>42.3.3</postgresql-java-client.version>
         <spring-boot.version>2.2.4.RELEASE</spring-boot.version>
         <spring-cloud.version>Hoxton.RELEASE</spring-cloud.version>
-        <spring-data-redis.version>2.2.4.RELEASE</spring-data-redis.version>
+        <spring-data-redis.version>2.7.0</spring-data-redis.version>
 
         <!-- test dependencies -->
         <testcontainer.postgresql.version>1.15.3</testcontainer.postgresql.version>
