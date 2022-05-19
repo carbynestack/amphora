@@ -426,6 +426,35 @@ public class StorageServiceTest {
   }
 
   @Test
+  public void givenSuccessfulRequest_whenGetSecretShareDataList_thenReturnContent() {
+    List<TagFilter> tagFilters =
+        singletonList(
+            TagFilter.with(testTag.getKey(), testTag.getValue(), TagFilterOperator.EQUALS));
+    Sort sort = Sort.by(Sort.Direction.DESC, "SortProperty");
+
+    SecretEntitySpecification expectedSpecification = SecretEntitySpecification.with(tagFilters);
+    PageRequest expectedPageRequest = PageRequest.of(0, Integer.MAX_VALUE, sort);
+    byte[] expectedTestSecretData = RandomUtils.nextBytes(42);
+    byte[] expectedTestSecret2Data = RandomUtils.nextBytes(30);
+
+    Page<SecretEntity> expectedObjectEntityPage =
+        new PageImpl<>(
+            Arrays.asList(
+                new SecretEntity(testSecretId.toString(), emptySet()),
+                new SecretEntity(testSecretId2.toString(), emptySet())));
+
+    when(secretEntityRepository.findAll(expectedSpecification, expectedPageRequest))
+        .thenReturn(expectedObjectEntityPage);
+    when(secretShareDataStore.getSecretShareData(testSecretId)).thenReturn(expectedTestSecretData);
+    when(secretShareDataStore.getSecretShareData(testSecretId2))
+        .thenReturn(expectedTestSecret2Data);
+
+    assertEquals(
+        Arrays.asList(expectedTestSecretData, expectedTestSecret2Data),
+        storageService.getSecretShareDataList(tagFilters, sort));
+  }
+
+  @Test
   public void
       givenNoSecretShareWithGivenIdInDatabase_whenDeleteObject_thenThrowNotFoundException() {
     when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(0L);

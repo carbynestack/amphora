@@ -7,6 +7,8 @@
 package io.carbynestack.amphora.service.rest;
 
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
+import static io.carbynestack.amphora.service.Utils.getSortConfig;
+import static io.carbynestack.amphora.service.Utils.parseStringAsTagFilterLists;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 import io.carbynestack.amphora.common.*;
@@ -14,7 +16,6 @@ import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
-import io.vavr.control.Try;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import lombok.NonNull;
@@ -65,8 +66,10 @@ public class SecretShareController {
       @RequestParam(required = false, value = SORT_DIRECTION_PARAMETER) String sortDirection)
       throws UnsupportedEncodingException {
     List<TagFilter> tagFilters =
-        StringUtils.isEmpty(filter) ? Collections.emptyList() : parseTagFilters(filter);
-    Sort sort = getSort(sortProperty, sortDirection);
+        StringUtils.isEmpty(filter)
+            ? Collections.emptyList()
+            : parseStringAsTagFilterLists(filter, CRITERIA_SEPARATOR);
+    Sort sort = getSortConfig(sortProperty, sortDirection);
     Page<Metadata> secretSpringPage;
     if (isEmpty(tagFilters)) {
       secretSpringPage =
@@ -126,24 +129,7 @@ public class SecretShareController {
     return new ResponseEntity<>(HttpStatus.OK);
   }
 
-  Sort getSort(String sortProperty, String sortDirection) {
-    if (!StringUtils.isEmpty(sortProperty)) {
-      return Try.of(() -> Sort.Direction.fromString(sortDirection))
-          .map(direction -> Sort.by(direction, sortProperty))
-          .getOrElse(Sort.by(sortProperty));
-    }
-    return Sort.unsorted();
-  }
-
   PageRequest getPageRequest(int pageNumber, int pageSize, @NonNull Sort sort) {
     return PageRequest.of(Math.max(0, pageNumber), Math.max(1, pageSize), sort);
-  }
-
-  List<TagFilter> parseTagFilters(String filter) throws UnsupportedEncodingException {
-    List<TagFilter> tagFilters = new ArrayList<>();
-    for (String tagFilterString : filter.split(CRITERIA_SEPARATOR)) {
-      tagFilters.add(TagFilter.fromString(tagFilterString));
-    }
-    return tagFilters;
   }
 }

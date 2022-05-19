@@ -176,29 +176,4 @@ public class SecretShareControllerTest {
     ResponseEntity<Void> actualResponse = secretShareController.deleteSecretShare(secretId);
     assertEquals(HttpStatus.OK, actualResponse.getStatusCode());
   }
-
-  @Test
-  public void givenSortPropertyButInvalidDirection_whenGetSort_thenReturnSortAsc() {
-    String expectedProperty = "key";
-    String invalidDirection = "invalid";
-    assertEquals(
-        Sort.by(Sort.Direction.ASC, expectedProperty),
-        secretShareController.getSort(expectedProperty, invalidDirection));
-  }
-
-  @Test
-  public void givenNoSortProperty_whenGetSort_thenReturnUnsorted() {
-    String emptyProperty = "";
-    String direction = Sort.Direction.ASC.toString();
-    assertEquals(Sort.unsorted(), secretShareController.getSort(emptyProperty, direction));
-  }
-
-  @Test
-  public void givenValidConfiguration_whenGetSort_thenReturnExpectedContent() {
-    String expectedProperty = "key";
-    Sort.Direction expectedDirection = Sort.Direction.DESC;
-    assertEquals(
-        Sort.by(expectedDirection, expectedProperty),
-        secretShareController.getSort(expectedProperty, expectedDirection.toString()));
-  }
 }

@@ -7,22 +7,31 @@
 package io.carbynestack.amphora.service.rest;
 
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
+import static io.carbynestack.amphora.service.Utils.getSortConfig;
+import static io.carbynestack.amphora.service.Utils.parseStringAsTagFilterLists;
 
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
+import io.carbynestack.amphora.common.TagFilter;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -68,5 +77,32 @@ public class IntraVcpController {
   @GetMapping(path = "/{" + SECRET_ID_PARAMETER + "}")
   public ResponseEntity<SecretShare> downloadSecretShare(@PathVariable UUID secretId) {
     return new ResponseEntity<>(storageService.getSecretShare(secretId), HttpStatus.OK);
+  }
+
+  /**
+   * Retrieves a list of {@link SecretShare} data matching the given filters sorted by the defined
+   * attribute.
+   *
+   * <p>Content will be returned unsorted by default, unless sort criteria is specified.
+   *
+   * @param filter filter configuration to be applied
+   * @param sortProperty the {@link Tag#getKey()} to sort on
+   * @param sortDirection sort direction
+   * @return a list of {@link SecretShare}s
+   * @throws UnsupportedEncodingException if the given filters cannot be decoded
+   */
+  @GetMapping
+  public ResponseEntity<List<byte[]>> getSecretShareDataList(
+      @RequestParam(required = false, value = FILTER_PARAMETER) String filter,
+      @RequestParam(required = false, value = SORT_PROPERTY_PARAMETER) String sortProperty,
+      @RequestParam(required = false, value = SORT_DIRECTION_PARAMETER) String sortDirection)
+      throws UnsupportedEncodingException {
+    List<TagFilter> tagFilters =
+        StringUtils.isEmpty(filter)
+            ? Collections.emptyList()
+            : parseStringAsTagFilterLists(filter, CRITERIA_SEPARATOR);
+    Sort sort = getSortConfig(sortProperty, sortDirection);
+    return new ResponseEntity<>(
+        storageService.getSecretShareDataList(tagFilters, sort), new HttpHeaders(), HttpStatus.OK);
   }
 }

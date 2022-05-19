@@ -200,6 +200,15 @@ public class StorageService {
     return getSecretList(tagFilters, PageRequest.of(0, Integer.MAX_VALUE, sort));
   }
 
+  @Transactional(readOnly = true)
+  public List<byte[]> getSecretShareDataList(List<TagFilter> tagFilters, Sort sort) {
+    return secretEntityRepository
+        .findAll(
+            SecretEntitySpecification.with(tagFilters), PageRequest.of(0, Integer.MAX_VALUE, sort))
+        .map(se -> secretShareDataStore.getSecretShareData(UUID.fromString(se.getSecretId())))
+        .toList();
+  }
+
   /**
    * Retrieves an {@link SecretShare} with a given id.
    *
