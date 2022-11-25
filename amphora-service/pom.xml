@@ -36,7 +36,7 @@
         <jedis.version>3.2.0</jedis.version>
         <mariadb-java-client.version>2.2.0</mariadb-java-client.version>
         <minio-sdk.version>8.2.1</minio-sdk.version>
-        <postgresql-java-client.version>42.3.3</postgresql-java-client.version>
+        <postgresql-java-client.version>42.3.8</postgresql-java-client.version>
         <spring-boot.version>2.2.4.RELEASE</spring-boot.version>
         <spring-cloud.version>Hoxton.RELEASE</spring-cloud.version>
         <spring-data-redis.version>2.2.4.RELEASE</spring-data-redis.version>
