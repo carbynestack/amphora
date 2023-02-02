@@ -26,20 +26,20 @@
 
         <!-- Plugin versions -->
         <spotify.dockerfile-maven.version>1.4.13</spotify.dockerfile-maven.version>
+        <docker-maven-plugin.version>0.34.1</docker-maven-plugin.version>
 
         <!-- external lib versions -->
-        <aspectj-weaver.version>1.9.7</aspectj-weaver.version>
+        <aspectj-weaver.version>1.9.19</aspectj-weaver.version>
         <commons-io.version>2.11.0</commons-io.version>
-        <docker-maven-plugin.version>0.34.1</docker-maven-plugin.version>
         <findbugs.version>3.0.2</findbugs.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
-        <jedis.version>3.2.0</jedis.version>
+        <jedis.version>3.9.0</jedis.version>
         <mariadb-java-client.version>2.2.0</mariadb-java-client.version>
         <minio-sdk.version>8.2.1</minio-sdk.version>
-        <postgresql-java-client.version>42.3.3</postgresql-java-client.version>
-        <spring-boot.version>2.2.4.RELEASE</spring-boot.version>
-        <spring-cloud.version>Hoxton.RELEASE</spring-cloud.version>
-        <spring-data-redis.version>2.2.4.RELEASE</spring-data-redis.version>
+        <postgresql-java-client.version>42.5.1</postgresql-java-client.version>
+        <spring-boot.version>2.5.14</spring-boot.version>
+        <spring-cloud.version>Hoxton.SR12</spring-cloud.version>
+        <spring-data-redis.version>2.7.7</spring-data-redis.version>
 
         <!-- test dependencies -->
         <testcontainer.postgresql.version>1.15.3</testcontainer.postgresql.version>

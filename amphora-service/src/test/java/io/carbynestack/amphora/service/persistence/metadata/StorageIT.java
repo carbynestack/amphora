@@ -149,7 +149,6 @@ public class StorageIT {
             .bucket(minioProperties.getBucket())
             .object(testSecretId.toString())
             .stream(new ByteArrayInputStream(new byte[0]), 0, -1)
-            .contentType("ByteArray")
             .build());
     assertEquals(Collections.emptyList(), storageService.getSecretShare(testSecretId).getTags());
   }

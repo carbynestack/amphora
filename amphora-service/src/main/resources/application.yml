@@ -1,3 +1,8 @@
+spring:
+  profiles:
+    group:
+      k8s: secretsharestore-minio, entitystore-postgres, cache-redis
+
 # Configuration of Acutator info endpoint
 info:
   name: "@project.name@"
