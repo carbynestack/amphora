@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2021 - for information on the respective copyright owner
+  ~ Copyright (c) 2023 - for information on the respective copyright owner
   ~ see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
   ~
   ~ SPDX-License-Identifier: Apache-2.0
@@ -18,8 +18,8 @@
     </parent>
     <properties>
         <!-- external dependencies -->
-        <jackson.version>2.12.6</jackson.version>
-        <httpclient.version>4.5.13</httpclient.version>
+        <jackson.version>2.14.1</jackson.version>
+        <httpclient.version>4.5.14</httpclient.version>
     </properties>
     <dependencies>
         <!-- internal dependencies -->
@@ -46,6 +46,11 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <!-- Test dependencies -->

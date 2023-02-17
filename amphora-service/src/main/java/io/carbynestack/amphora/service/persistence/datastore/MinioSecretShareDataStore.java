@@ -63,7 +63,6 @@ public class MinioSecretShareDataStore implements SecretShareDataStore {
       minioClient.putObject(
           PutObjectArgs.builder().bucket(minioProperties.getBucket()).object(id.toString()).stream(
                   inputStream, data.length, -1)
-              .contentType("ByteArray")
               .build());
     } catch (InvalidKeyException
         | IOException

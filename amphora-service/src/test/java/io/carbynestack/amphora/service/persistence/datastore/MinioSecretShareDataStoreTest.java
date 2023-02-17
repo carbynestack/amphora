@@ -79,7 +79,7 @@ public class MinioSecretShareDataStoreTest {
     PutObjectArgs actualPoa = poaCaptor.getValue();
     assertEquals(BUCKET, actualPoa.bucket());
     assertEquals(secretShare.getSecretId().toString(), actualPoa.object());
-    assertEquals("ByteArray", actualPoa.contentType());
+    assertEquals("application/octet-stream", actualPoa.contentType());
     assertArrayEquals(secretShare.getData(), IOUtils.toByteArray(actualPoa.stream()));
   }
 

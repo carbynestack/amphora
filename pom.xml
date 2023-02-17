@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2021 - for information on the respective copyright owner
+  ~ Copyright (c) 2023 - for information on the respective copyright owner
   ~ see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
   ~
   ~ SPDX-License-Identifier: Apache-2.0
@@ -64,18 +64,18 @@
         <maven-license-plugin.version>2.0.0</maven-license-plugin.version>
 
         <!-- internal dependency versions -->
-        <castor.version>0.1-SNAPSHOT-1576642733-7-72de814</castor.version>
-        <cs-spdz-integration.version>0.1-SNAPSHOT-1257545971-1-d751c28</cs-spdz-integration.version>
-        <cs-java-client.version>0.1-SNAPSHOT-1257534854-1-46815a7</cs-java-client.version>
+        <castor.version>0.1-SNAPSHOT-4191841095-22-1721229</castor.version>
+        <cs-spdz-integration.version>0.2-SNAPSHOT-3541842672-11-c754bbb</cs-spdz-integration.version>
+        <cs-java-client.version>0.1-SNAPSHOT-4075044562-9-8ffab9c</cs-java-client.version>
 
 
         <!-- external dependency versions -->
-        <junit.version>4.13</junit.version>
-        <log4j.version>2.17.1</log4j.version>
-        <lombok.version>1.18.18</lombok.version>
-        <mockito.version>3.8.0</mockito.version>
-        <slf4j.version>1.7.30</slf4j.version>
-        <vavr.version>0.10.3</vavr.version>
+        <junit.version>4.13.2</junit.version>
+        <log4j.version>2.19.0</log4j.version>
+        <lombok.version>1.18.24</lombok.version>
+        <mockito.version>3.11.2</mockito.version>
+        <slf4j.version>2.0.6</slf4j.version>
+        <vavr.version>0.10.4</vavr.version>
     </properties>
     <build>
         <plugins>

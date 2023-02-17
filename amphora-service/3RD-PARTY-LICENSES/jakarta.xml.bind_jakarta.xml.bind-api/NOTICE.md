@@ -1,4 +1,4 @@
-[//]: # " Copyright (c) 2018, 2021 Oracle and/or its affiliates. All rights reserved. "
+[//]: # " Copyright (c) 2018, 2019 Oracle and/or its affiliates. All rights reserved. "
 [//]: # "  "
 [//]: # " This program and the accompanying materials are made available under the "
 [//]: # " terms of the Eclipse Distribution License v. 1.0, which is available at "
@@ -55,7 +55,7 @@ ASM 7 (n/a)
 
 JTHarness (5.0)
 
-* License: (GPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0)	
+* License: (GPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0)
 * Project: https://wiki.openjdk.java.net/display/CodeTools/JT+Harness
 * Source: http://hg.openjdk.java.net/code-tools/jtharness/
 
