@@ -33,12 +33,14 @@
         <findbugs.version>3.0.2</findbugs.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
         <jedis.version>3.9.0</jedis.version>
+        <kotlin-stdlib.version>1.6.10</kotlin-stdlib.version>
         <minio-sdk.version>8.5.1</minio-sdk.version>
         <okhttp3.version>4.10.0</okhttp3.version>
         <postgresql-java-client.version>42.5.1</postgresql-java-client.version>
         <spring-boot.version>2.5.14</spring-boot.version>
         <spring-cloud.version>Hoxton.SR12</spring-cloud.version>
         <spring-data-redis.version>2.7.7</spring-data-redis.version>
+        <tomcat-embed.version>9.0.71</tomcat-embed.version>
 
         <!-- test dependencies -->
         <testcontainer.postgresql.version>1.15.3</testcontainer.postgresql.version>
@@ -96,6 +98,25 @@
             <artifactId>okhttp</artifactId>
             <version>${okhttp3.version}</version>
         </dependency>
+        <dependency>
+            <!-- enforce version to avoid vulnerabilities-->
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin-stdlib.version}</version>
+        </dependency>
+        <dependency>
+            <!-- enforce version to avoid vulnerabilities-->
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>${tomcat-embed.version}</version>
+        </dependency>
+        <dependency>
+            <!-- enforce version to avoid vulnerabilities-->
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-websocket</artifactId>
+            <version>${tomcat-embed.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
