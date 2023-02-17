@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2021 - for information on the respective copyright owner
+  ~ Copyright (c) 2023 - for information on the respective copyright owner
   ~ see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
   ~
   ~ SPDX-License-Identifier: Apache-2.0
@@ -26,7 +26,6 @@
 
         <!-- Plugin versions -->
         <spotify.dockerfile-maven.version>1.4.13</spotify.dockerfile-maven.version>
-        <docker-maven-plugin.version>0.34.1</docker-maven-plugin.version>
 
         <!-- external lib versions -->
         <aspectj-weaver.version>1.9.19</aspectj-weaver.version>
@@ -34,8 +33,8 @@
         <findbugs.version>3.0.2</findbugs.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
         <jedis.version>3.9.0</jedis.version>
-        <mariadb-java-client.version>2.2.0</mariadb-java-client.version>
-        <minio-sdk.version>8.2.1</minio-sdk.version>
+        <minio-sdk.version>8.5.1</minio-sdk.version>
+        <okhttp3.version>4.10.0</okhttp3.version>
         <postgresql-java-client.version>42.5.1</postgresql-java-client.version>
         <spring-boot.version>2.5.14</spring-boot.version>
         <spring-cloud.version>Hoxton.SR12</spring-cloud.version>
@@ -89,6 +88,14 @@
         </dependency>
 
         <!-- external dependencies -->
+        <dependency>
+            <!-- enforce version as spring dependency management declares an old version
+              see: https://stackoverflow.com/questions/72599713/spring-boot-with-minio-clientokhttp3-requestbody-createblokhttp3-mediatypel
+            -->
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp3.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
