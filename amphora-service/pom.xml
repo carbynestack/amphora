@@ -44,7 +44,7 @@
         <tomcat-embed.version>9.0.71</tomcat-embed.version>
 
         <!-- test dependencies -->
-        <testcontainer.postgresql.version>1.15.3</testcontainer.postgresql.version>
+        <testcontainer.version>1.17.6</testcontainer.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -254,13 +254,13 @@
 
         <!--test dependencies -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -272,7 +272,13 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${testcontainer.postgresql.version}</version>
+            <version>${testcontainer.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainer.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

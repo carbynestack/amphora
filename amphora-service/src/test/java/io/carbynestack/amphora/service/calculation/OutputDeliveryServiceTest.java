@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -9,8 +9,8 @@ package io.carbynestack.amphora.service.calculation;
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 import static io.carbynestack.castor.common.entities.TupleType.MULTIPLICATION_TRIPLE_GFP;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
@@ -43,15 +43,15 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @Slf4j
-@RunWith(MockitoJUnitRunner.class)
-public class OutputDeliveryServiceTest {
+@ExtendWith(MockitoExtension.class)
+class OutputDeliveryServiceTest {
   private final MpSpdzIntegrationUtils spdzUtil =
       MpSpdzIntegrationUtils.of(
           new BigInteger("198766463529478683931867765928436695041"),
@@ -197,11 +197,8 @@ public class OutputDeliveryServiceTest {
             .toArray(Byte[]::new));
   }
 
-  @Before
+  @BeforeEach
   public void setup() {
-    when(amphoraServicePropertiesMock.getPlayerId()).thenReturn(testPlayerId);
-    when(amphoraServicePropertiesMock.getVcPartners()).thenReturn(testVcPartners);
-    when(amphoraServicePropertiesMock.getOpeningTimeout()).thenReturn(10);
     outputDeliveryService =
         new OutputDeliveryService(
             amphoraServicePropertiesMock,
@@ -213,7 +210,7 @@ public class OutputDeliveryServiceTest {
 
   @Test
   @SneakyThrows
-  public void given_FetchingTriplesFails_whenMultiplyingShares_thenThrowException() {
+  void given_FetchingTriplesFails_whenMultiplyingShares_thenThrowException() {
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
@@ -230,7 +227,7 @@ public class OutputDeliveryServiceTest {
 
   @Test
   @SneakyThrows
-  public void givenDistributingValuesFails_whenMultiplyingShares_thenThrowException() {
+  void givenDistributingValuesFails_whenMultiplyingShares_thenThrowException() {
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
@@ -254,7 +251,10 @@ public class OutputDeliveryServiceTest {
 
   @Test
   @SneakyThrows
-  public void givenReceivingAllOpenedSharesFails_whenMultiplyingShares_thenThrowException() {
+  void givenReceivingAllOpenedSharesFails_whenMultiplyingShares_thenThrowException() {
+    when(amphoraServicePropertiesMock.getPlayerId()).thenReturn(testPlayerId);
+    when(amphoraServicePropertiesMock.getVcPartners()).thenReturn(testVcPartners);
+    when(amphoraServicePropertiesMock.getOpeningTimeout()).thenReturn(10);
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
@@ -284,7 +284,10 @@ public class OutputDeliveryServiceTest {
 
   @Test
   @SneakyThrows
-  public void givenSuccessfulRequest_whenMultiplyingShares_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenMultiplyingShares_thenReturnExpectedContent() {
+    when(amphoraServicePropertiesMock.getPlayerId()).thenReturn(testPlayerId);
+    when(amphoraServicePropertiesMock.getVcPartners()).thenReturn(testVcPartners);
+    when(amphoraServicePropertiesMock.getOpeningTimeout()).thenReturn(10);
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
@@ -309,7 +312,7 @@ public class OutputDeliveryServiceTest {
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenCastorClientDoesNotReturnInputMasks_whenComputingOutputDeliveryObject_thenThrowException() {
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedRequestId, INPUT_MASK_GFP, testSecretShareDataSize * 2))
@@ -324,7 +327,7 @@ public class OutputDeliveryServiceTest {
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenComputingOutputDeliveryObject_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenComputingOutputDeliveryObject_thenReturnExpectedContent() {
     final OutputDeliveryObject expectedOutputDeliveryObject =
         OutputDeliveryObject.builder()
             .secretId(SECRET_SHARE.getSecretId())
@@ -356,6 +359,9 @@ public class OutputDeliveryServiceTest {
             .tags(SECRET_SHARE.getTags())
             .build();
 
+    when(amphoraServicePropertiesMock.getPlayerId()).thenReturn(testPlayerId);
+    when(amphoraServicePropertiesMock.getVcPartners()).thenReturn(testVcPartners);
+    when(amphoraServicePropertiesMock.getOpeningTimeout()).thenReturn(10);
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedRequestId, INPUT_MASK_GFP, testSecretShareDataSize * 2))
         .thenReturn(testInputMasks);

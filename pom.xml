@@ -57,10 +57,10 @@
         <!-- Plugin versions -->
         <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0-M9</maven-failsafe-plugin.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M9</maven-surefire-plugin.version>
         <maven-license-plugin.version>2.0.0</maven-license-plugin.version>
 
         <!-- internal dependency versions -->
@@ -70,8 +70,10 @@
 
 
         <!-- external dependency versions -->
+        <assertj.version>3.24.2</assertj.version>
         <jackson.version>2.14.2</jackson.version>
         <junit.version>4.13.2</junit.version>
+        <junit-jupiter.version>5.9.2</junit-jupiter.version>
         <log4j.version>2.20.0</log4j.version>
         <lombok.version>1.18.24</lombok.version>
         <mockito.version>3.11.2</mockito.version>
@@ -222,6 +224,12 @@
 
             <!-- Test dependencies -->
             <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
@@ -234,9 +242,27 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit-jupiter.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

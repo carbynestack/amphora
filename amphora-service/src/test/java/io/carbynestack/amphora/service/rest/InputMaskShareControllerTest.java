@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -12,8 +12,8 @@ import static io.carbynestack.amphora.service.rest.InputMaskShareController.TOO_
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import io.carbynestack.amphora.service.AmphoraTestData;
@@ -26,41 +26,37 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-@RunWith(MockitoJUnitRunner.class)
-public class InputMaskShareControllerTest {
+@ExtendWith(MockitoExtension.class)
+class InputMaskShareControllerTest {
   private final UUID testRequestId = UUID.fromString("7520e090-1437-44da-9e4e-eea5b2200fea");
   private final long validNumberOfTuples = 1;
   private final long invalidNumberOfTuples = -1;
-  private final String testCastorServiceUri = "https://castor.carbynestack.io";
-  private final TupleList<InputMask<Field.Gfp>, Field.Gfp> testInputMasks =
-      AmphoraTestData.getRandomInputMaskList(validNumberOfTuples);
 
   @Mock private InputMaskCachingService inputMaskStore;
 
   @InjectMocks private InputMaskShareController inputMaskShareController;
 
-  @Before
-  public void prepareMocks() {
+  @SneakyThrows
+  @Test
+  void givenSuccessfulRequest_whenGetInputMasks_thenReturnExpectedResult() {
+    String testCastorServiceUri = "https://castor.carbynestack.io";
+    TupleList<InputMask<Field.Gfp>, Field.Gfp> testInputMasks =
+        AmphoraTestData.getRandomInputMaskList(validNumberOfTuples);
     Map<CastorServiceUri, TupleList> inputMaskListMap = new HashMap<>();
-    CastorServiceUri castorServiceUri = new CastorServiceUri(this.testCastorServiceUri);
+    CastorServiceUri castorServiceUri = new CastorServiceUri(testCastorServiceUri);
     inputMaskListMap.put(castorServiceUri, testInputMasks);
 
     when(inputMaskStore.fetchAndCacheInputMasks(testRequestId, testInputMasks.size()))
         .thenReturn(testInputMasks);
-  }
 
-  @SneakyThrows
-  @Test
-  public void givenSuccessfulRequest_whenGetInputMasks_thenReturnExpectedResult() {
     ResponseEntity<TupleList<InputMask<Field.Gfp>, Field.Gfp>> responseEntity =
         inputMaskShareController.getInputMasks(testRequestId, validNumberOfTuples);
 
@@ -69,7 +65,7 @@ public class InputMaskShareControllerTest {
   }
 
   @Test
-  public void givenEmptyStringAsRequestId_whenGetInputMasks_thenThrowIllegalArgumentException() {
+  void givenEmptyStringAsRequestId_whenGetInputMasks_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
@@ -78,7 +74,7 @@ public class InputMaskShareControllerTest {
   }
 
   @Test
-  public void givenInvalidCountArgument_whenGetInputMasks_thenThrowIllegalArgumentException() {
+  void givenInvalidCountArgument_whenGetInputMasks_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
