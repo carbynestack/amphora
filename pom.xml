@@ -70,8 +70,9 @@
 
 
         <!-- external dependency versions -->
+        <jackson.version>2.14.2</jackson.version>
         <junit.version>4.13.2</junit.version>
-        <log4j.version>2.19.0</log4j.version>
+        <log4j.version>2.20.0</log4j.version>
         <lombok.version>1.18.24</lombok.version>
         <mockito.version>3.11.2</mockito.version>
         <slf4j.version>2.0.6</slf4j.version>
@@ -191,6 +192,16 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-slf4j-impl</artifactId>
                 <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-jul</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jul-to-slf4j</artifactId>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.vavr</groupId>

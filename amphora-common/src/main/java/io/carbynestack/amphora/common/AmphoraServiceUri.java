@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -15,7 +15,7 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.net.URIBuilder;
 
 /**
  * A class, that manages an Amphora Service's URI and provides correct paths for all endpoints. Uses
@@ -131,8 +131,8 @@ public class AmphoraServiceUri {
     path =
         String.format(
             "%s%s%s",
-            path == null || path.length() == 0 ? "" : path,
-            path != null && path.length() > 0 && path.lastIndexOf('/') == path.length() ? "" : "/",
+            path == null || path.isEmpty() ? "" : path,
+            path != null && path.endsWith("/") ? "" : "/",
             param);
     uriBuilder.setPath(path);
     return Try.of(uriBuilder::build)
