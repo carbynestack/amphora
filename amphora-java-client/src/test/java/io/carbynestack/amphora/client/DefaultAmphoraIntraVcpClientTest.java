@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -8,9 +8,9 @@ package io.carbynestack.amphora.client;
 
 import static io.carbynestack.amphora.client.TestData.getTags;
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.SECRET_SHARES_ENDPOINT;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -28,16 +28,15 @@ import java.util.Random;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ArrayUtils;
-import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultAmphoraIntraVcpClientTest {
+@ExtendWith(MockitoExtension.class)
+class DefaultAmphoraIntraVcpClientTest {
   private final String testUrl = "https://amphora.carbynestack.io";
   private final UUID testSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
 
@@ -51,7 +50,7 @@ public class DefaultAmphoraIntraVcpClientTest {
 
   private final Random rnd = new Random(42);
 
-  @Before
+  @BeforeEach
   public void setUp() {
     spdzUtil =
         MpSpdzIntegrationUtils.of(
@@ -63,21 +62,20 @@ public class DefaultAmphoraIntraVcpClientTest {
   }
 
   @Test
-  public void givenNoServiceUriDefined_whenBuildingInterVcClient_thenThrowException() {
+  void givenNoServiceUriDefined_whenBuildingInterVcClient_thenThrowException() {
     try (MockedStatic<AmphoraCommunicationClient> communicationClientMockedStatic =
         mockStatic(AmphoraCommunicationClient.class)) {
       DefaultAmphoraIntraVcpClient.DefaultAmphoraIntraVcpClientBuilder clientBuilder =
           DefaultAmphoraIntraVcpClient.Builder();
       NullPointerException actualNpe =
-          assertThrows(NullPointerException.class, () -> clientBuilder.build());
-      assertThat(
-          actualNpe.getMessage(), CoreMatchers.containsString("Service URI must not be null"));
+          assertThrows(NullPointerException.class, clientBuilder::build);
+      assertThat(actualNpe.getMessage()).contains("Service URI must not be null");
     }
   }
 
   @SneakyThrows
   @Test
-  public void givenShareIsValid_whenUploadSecretShare_thenSucceed() {
+  void givenShareIsValid_whenUploadSecretShare_thenSucceed() {
     URI expectedUri = URI.create(testUrl + SECRET_SHARES_ENDPOINT + "/" + testSecretId);
     SecretShare secretShare = getSecretShare(testSecretId);
     when(amphoraCommunicationClient.upload(
@@ -90,7 +88,7 @@ public class DefaultAmphoraIntraVcpClientTest {
 
   @SneakyThrows
   @Test
-  public void givenIdIsValid_whenDownloadingSecretShare_thenReturnSecretShare() {
+  void givenIdIsValid_whenDownloadingSecretShare_thenReturnSecretShare() {
     SecretShare secretShare = getSecretShare(testSecretId);
     when(amphoraCommunicationClient.download(
             RequestParameters.of(
@@ -101,15 +99,15 @@ public class DefaultAmphoraIntraVcpClientTest {
   }
 
   @Test
-  public void givenIdIsNull_whenDownloadingSecretShare_thenThrowException() {
+  void givenIdIsNull_whenDownloadingSecretShare_thenThrowException() {
     NullPointerException npe =
         assertThrows(NullPointerException.class, () -> amphoraIntraVcpClient.getSecretShare(null));
-    assertThat(npe.getMessage(), CoreMatchers.containsString("SecretId must not be null"));
+    assertThat(npe.getMessage()).contains("SecretId must not be null");
     verify(amphoraCommunicationClient, never()).download(any(RequestParameters.class), any());
   }
 
   @Test
-  public void givenSecretShareWithIdDoesNotExist_whenDownloadingSecretShare_thenThrowException() {
+  void givenSecretShareWithIdDoesNotExist_whenDownloadingSecretShare_thenThrowException() {
     when(amphoraCommunicationClient.download(
             RequestParameters.of(
                 amphoraServiceUri.getS2SSecretShareResourceUri(testSecretId), ImmutableList.of()),

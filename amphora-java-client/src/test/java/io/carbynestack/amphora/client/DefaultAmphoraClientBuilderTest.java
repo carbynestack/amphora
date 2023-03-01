@@ -1,41 +1,33 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 package io.carbynestack.amphora.client;
 
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mockConstruction;
-import static org.mockito.Mockito.times;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import com.google.common.collect.Lists;
 import io.carbynestack.amphora.common.AmphoraServiceUri;
 import java.io.File;
 import java.math.BigInteger;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.SneakyThrows;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedConstruction;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(DefaultAmphoraClientBuilder.class)
-public class DefaultAmphoraClientBuilderTest {
+@ExtendWith(MockitoExtension.class)
+class DefaultAmphoraClientBuilderTest {
   @SneakyThrows
   @Test
-  public void givenEndpointsNotDefined_whenBuildingClient_thenThrowException() {
+  void givenEndpointsNotDefined_whenBuildingClient_thenThrowException() {
     DefaultAmphoraClientBuilder builder = DefaultAmphoraClient.builder();
     builder.r(BigInteger.ZERO).rInv(BigInteger.ONE).prime(BigInteger.TEN);
     IllegalArgumentException iae =
@@ -45,7 +37,7 @@ public class DefaultAmphoraClientBuilderTest {
 
   @SneakyThrows
   @Test
-  public void givenPrimeOmitted_whenBuildingClient_thenThrowNullPointerException() {
+  void givenPrimeOmitted_whenBuildingClient_thenThrowNullPointerException() {
     DefaultAmphoraClientBuilder builder = DefaultAmphoraClient.builder();
     builder
         .r(BigInteger.ZERO)
@@ -57,7 +49,7 @@ public class DefaultAmphoraClientBuilderTest {
 
   @SneakyThrows
   @Test
-  public void givenRInvOmitted_whenBuildingClient_thenThrowNullPointerException() {
+  void givenRInvOmitted_whenBuildingClient_thenThrowNullPointerException() {
     DefaultAmphoraClientBuilder builder = DefaultAmphoraClient.builder();
     builder
         .prime(BigInteger.TEN)
@@ -70,7 +62,7 @@ public class DefaultAmphoraClientBuilderTest {
 
   @SneakyThrows
   @Test
-  public void givenROmitted_whenBuildingClient_thenThrowNullPointerException() {
+  void givenROmitted_whenBuildingClient_thenThrowNullPointerException() {
     DefaultAmphoraClientBuilder builder = DefaultAmphoraClient.builder();
     builder
         .prime(BigInteger.TEN)
@@ -82,10 +74,7 @@ public class DefaultAmphoraClientBuilderTest {
 
   @SneakyThrows
   @Test
-  public void givenValidConfiguration_whenBuildingClient_thenCallConstructorWithBuilder() {
-    ArgumentCaptor<DefaultAmphoraClientBuilder> builderArgumentCaptor =
-        ArgumentCaptor.forClass(DefaultAmphoraClientBuilder.class);
-
+  void givenValidConfiguration_whenBuildingClient_thenCallConstructorWithBuilder() {
     List<AmphoraServiceUri> endpointList =
         Arrays.asList(
             new AmphoraServiceUri("https://amphora.carbynestack.io:80"),
@@ -102,9 +91,29 @@ public class DefaultAmphoraClientBuilderTest {
     BigInteger rInv = BigInteger.TEN;
     BearerTokenProvider<AmphoraServiceUri> bearerTokenProvider = o -> null;
 
-    try (MockedConstruction<DefaultAmphoraClient> ignored =
-        mockConstruction(DefaultAmphoraClient.class)) {
-      whenNew(DefaultAmphoraClient.class).withAnyArguments().thenReturn(null);
+    try (MockedConstruction<DefaultAmphoraClient> mockedConstruction =
+        mockConstruction(
+            DefaultAmphoraClient.class,
+            (context, settings) -> {
+              DefaultAmphoraClientBuilder actualBuilder =
+                  (DefaultAmphoraClientBuilder) settings.arguments().get(0);
+              assertEquals(prime, actualBuilder.prime());
+              assertEquals(r, actualBuilder.r());
+              assertEquals(rInv, actualBuilder.rInv());
+              assertEquals(bearerTokenProvider, actualBuilder.bearerTokenProvider());
+              assertEquals(3, actualBuilder.trustedCertificates().size());
+              assertEquals(3, actualBuilder.serviceUris().size());
+              assertTrue(actualBuilder.noSslValidation());
+              assertThat(actualBuilder.trustedCertificates())
+                  .containsOnly(
+                      Lists.asList(
+                              singleTrustedCertificate, trustedCertificateList.toArray(new File[0]))
+                          .toArray(new File[0]));
+              assertThat(actualBuilder.serviceUris())
+                  .containsOnly(
+                      Lists.asList(singleEndpoint, endpointList.toArray(new AmphoraServiceUri[0]))
+                          .toArray(new AmphoraServiceUri[0]));
+            })) {
       DefaultAmphoraClient.builder()
           .prime(prime)
           .r(r)
@@ -116,26 +125,7 @@ public class DefaultAmphoraClientBuilderTest {
           .bearerTokenProvider(bearerTokenProvider)
           .withoutSslCertificateValidation()
           .build();
-      PowerMockito.verifyNew(DefaultAmphoraClient.class, times(1))
-          .withArguments(builderArgumentCaptor.capture());
+      assertEquals(1, mockedConstruction.constructed().size());
     }
-    DefaultAmphoraClientBuilder actualBuilder = builderArgumentCaptor.getValue();
-    assertEquals(prime, actualBuilder.prime());
-    assertEquals(r, actualBuilder.r());
-    assertEquals(rInv, actualBuilder.rInv());
-    assertEquals(bearerTokenProvider, actualBuilder.bearerTokenProvider());
-    assertEquals(3, actualBuilder.trustedCertificates().size());
-    assertEquals(3, actualBuilder.serviceUris().size());
-    assertTrue(actualBuilder.noSslValidation());
-    assertThat(
-        (ArrayList<File>) actualBuilder.trustedCertificates(),
-        hasItems(
-            Lists.asList(singleTrustedCertificate, trustedCertificateList.toArray(new File[0]))
-                .toArray(new File[0])));
-    assertThat(
-        actualBuilder.serviceUris(),
-        hasItems(
-            Lists.asList(singleEndpoint, endpointList.toArray(new AmphoraServiceUri[0]))
-                .toArray(new AmphoraServiceUri[0])));
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -13,10 +13,8 @@ import static io.carbynestack.amphora.common.TagFilterOperator.EQUALS;
 import static io.carbynestack.amphora.common.TagFilterOperator.LESS_THAN;
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
 import static io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils.WORD_WIDTH;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -41,15 +39,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.SneakyThrows;
-import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultAmphoraClientTest {
+@ExtendWith(MockitoExtension.class)
+class DefaultAmphoraClientTest {
   private final String testUri = "https://dev.bar.com";
   private final String testUri2 = "https://dev.foo.com";
   private final List<AmphoraServiceUri> testServiceUris =
@@ -67,7 +64,7 @@ public class DefaultAmphoraClientTest {
 
   private MpSpdzIntegrationUtils spdzUtil;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     spdzUtil =
         MpSpdzIntegrationUtils.of(
@@ -87,7 +84,7 @@ public class DefaultAmphoraClientTest {
 
   @SneakyThrows
   @Test
-  public void givenBuilderConfiguration_whenCreatingClient_thenInstantiateAccordingly() {
+  void givenBuilderConfiguration_whenCreatingClient_thenInstantiateAccordingly() {
     List<AmphoraServiceUri> expectedServiceUriList =
         Arrays.asList(
             new AmphoraServiceUri("https://testUri:80"),
@@ -161,7 +158,7 @@ public class DefaultAmphoraClientTest {
 
   @SneakyThrows
   @Test
-  public void givenInvalidCertFile_whenCreatingClient_thenThrowException() {
+  void givenInvalidCertFile_whenCreatingClient_thenThrowException() {
     CsHttpClientException expectedException = new CsHttpClientException("Expectedly failed");
     DefaultAmphoraClientBuilder mockedDefaultAmphoraClientBuilder =
         mock(DefaultAmphoraClientBuilder.class);
@@ -192,7 +189,7 @@ public class DefaultAmphoraClientTest {
 
   @SneakyThrows
   @Test
-  public void givenSecretsOfVariousSize_whenSharingAndRecombining_thenRecoverInitialData() {
+  void givenSecretsOfVariousSize_whenSharingAndRecombining_thenRecoverInitialData() {
     ArgumentCaptor<List<RequestParametersWithBody<MaskedInput>>> requestCaptor =
         ArgumentCaptor.forClass(List.class);
     Map<URI, Try<UUID>> uriResponseMap = getSuccessUriResponseMap();
@@ -206,7 +203,6 @@ public class DefaultAmphoraClientTest {
       Map<URI, TupleList> inputMaskShares = getInputMaskShares(secretSize);
       when(amphoraCommunicationClient.download(anyList(), eq(TupleList.class)))
           .thenReturn(TestUtils.wrap(inputMaskShares));
-      when(amphoraCommunicationClient.upload(anyList(), eq(UUID.class))).thenReturn(uriResponseMap);
       UUID storeResult = amphoraClient.createSecret(getObject(secrets));
       assertNotNull(storeResult);
       verify(amphoraCommunicationClient, times(1)).upload(requestCaptor.capture(), any());
@@ -239,7 +235,7 @@ public class DefaultAmphoraClientTest {
 
   @SneakyThrows
   @Test
-  public void givenUploadingMaskedInputFails_whenCreateObject_thenThrowAmphoraClientException() {
+  void givenUploadingMaskedInputFails_whenCreateObject_thenThrowAmphoraClientException() {
     Map<URI, Try<URI>> uriResponseMap = getErrorUriResponseMap();
     when(amphoraCommunicationClient.download(anyList(), eq(TupleList.class)))
         .thenReturn(TestUtils.wrap(getInputMaskShares(1)));
@@ -250,16 +246,13 @@ public class DefaultAmphoraClientTest {
             () ->
                 amphoraClient.createSecret(
                     getObject(new BigInteger[] {BigInteger.valueOf(secret)})));
-    assertThat(
-        actualAce.getMessage(),
-        CoreMatchers.endsWith(
-            String.format(REQUEST_FOR_ENDPOINT_FAILED_EXCEPTION_MSG, testUri, 500)));
+    assertThat(actualAce.getMessage())
+        .endsWith(String.format(REQUEST_FOR_ENDPOINT_FAILED_EXCEPTION_MSG, testUri, 500));
   }
 
   @SneakyThrows
   @Test
-  public void
-      givenOutPutDeliveryObjectsOfVariousSize_whenDownloadingObject_thenReturnExpectedContent() {
+  void givenOutPutDeliveryObjectsOfVariousSize_whenDownloadingObject_thenReturnExpectedContent() {
     for (int i = 0; i < 100; i++) {
       int secretSize = random.nextInt(1000) + 1; // make sure it is no 0
       BigInteger[] secrets =
@@ -272,14 +265,13 @@ public class DefaultAmphoraClientTest {
           .thenReturn(TestUtils.wrap(getOutputDeliveryObjectsForSecrets(testSecretId, secrets)));
       Secret result = amphoraClient.getSecret(testSecretId);
       assertEquals(secretSize, result.getData().length);
-      assertThat(Arrays.asList(result.getData()), CoreMatchers.hasItems(secrets));
+      assertThat(result.getData()).containsExactly(secrets);
     }
   }
 
   @SneakyThrows
   @Test
-  public void
-      givenDownloadDataFromOnePlayerFails_whenDownloadingObject_thenThrowAmphoraClientException() {
+  void givenDownloadDataFromOnePlayerFails_whenDownloadingObject_thenThrowAmphoraClientException() {
     BigInteger[] secrets = new BigInteger[] {BigInteger.valueOf(42), BigInteger.valueOf(24)};
     Map<URI, Try<OutputDeliveryObject>> results =
         TestUtils.wrap(getOutputDeliveryObjectsForSecrets(testSecretId, secrets));
@@ -290,25 +282,23 @@ public class DefaultAmphoraClientTest {
         .thenReturn(results);
     AmphoraClientException ace =
         assertThrows(AmphoraClientException.class, () -> amphoraClient.getSecret(testSecretId));
-    assertThat(
-        ace.getMessage(), CoreMatchers.startsWith("Error(s) occurred while processing responses"));
-    assertThat(ace.getMessage(), CoreMatchers.containsString("Call failed"));
+    assertThat(ace.getMessage()).startsWith("Error(s) occurred while processing responses");
+    assertThat(ace.getMessage()).contains("Call failed");
   }
 
   @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequest_whenListingObjects_thenConstructExpectedRequestAndReturnResult() {
+  void givenSuccessfulRequest_whenListingObjects_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     when(amphoraCommunicationClient.download(any(RequestParameters.class), eq(MetadataPage.class)))
         .thenReturn(Try.success(metadataPage));
     List<Metadata> secrets = amphoraClient.getSecrets();
-    assertThat(secrets, is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets);
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithEqualsFilter_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key = "key";
@@ -334,12 +324,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets, is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets);
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithLessThanFilter_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key = "key";
@@ -365,12 +355,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets, is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets);
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithTwoFilters_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key1 = "key";
@@ -403,12 +393,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets, is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets);
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithFilterAndEmptyValue_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     String key1 = "key";
@@ -441,12 +431,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets, is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets);
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithPagination_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
@@ -474,12 +464,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets.getContent(), is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets.getContent());
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithPaginationAndSorting_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
@@ -521,12 +511,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets.getContent(), is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets.getContent());
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithSorting_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     String property = "key1";
@@ -553,12 +543,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets, is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets);
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithFilterAndSorting_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
@@ -595,12 +585,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets, is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets);
   }
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListingObjectsWithFiltersAndPaginationAndSorting_thenConstructExpectedRequestAndReturnResult() {
     MetadataPage metadataPage = getObjectMetadataPage();
     ArrayList<TagFilter> filters = new ArrayList<>();
@@ -649,12 +639,12 @@ public class DefaultAmphoraClientTest {
             argThat(
                 (ArgumentMatcher<RequestParameters>) r -> r.getUri().toString().equals(uriString)),
             eq(MetadataPage.class));
-    assertThat(secrets.getContent(), is(equalTo(metadataPage.getContent())));
+    assertEquals(metadataPage.getContent(), secrets.getContent());
   }
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenListTags_thenReturnExpectedResult() {
+  void givenSuccessfulRequest_whenListTags_thenReturnExpectedResult() {
     Tag[] tagArray = getTags().toArray(new Tag[0]);
     ArgumentCaptor<RequestParameters> requestCaptor =
         ArgumentCaptor.forClass(RequestParameters.class);
@@ -663,14 +653,14 @@ public class DefaultAmphoraClientTest {
     List<Tag> result = amphoraClient.getTags(testSecretId);
     String expectedPath =
         testServiceUris.get(0).getSecretShareResourceTagsUri(testSecretId).getPath();
-    assertThat(requestCaptor.getValue().getUri().getPath(), is(equalTo(expectedPath)));
-    assertThat(result.size(), is(equalTo(getTags().size())));
-    assertThat(result.get(0), is(equalTo(getTags().get(0))));
-    assertThat(result.get(1), is(equalTo(getTags().get(1))));
+    assertEquals(expectedPath, requestCaptor.getValue().getUri().getPath());
+    assertEquals(getTags().size(), result.size());
+    assertEquals(getTags().get(0), result.get(0));
+    assertEquals(getTags().get(1), result.get(1));
   }
 
   @Test
-  public void givenCommunicationClientFails_whenGetTag_thenThrowAmphoraClientException() {
+  void givenCommunicationClientFails_whenGetTag_thenThrowAmphoraClientException() {
     String expectedRandomKey = "tagKey";
     when(amphoraCommunicationClient.download(any(RequestParameters.class), eq(Tag.class)))
         .thenReturn(Try.failure(new RuntimeException()));
@@ -686,21 +676,21 @@ public class DefaultAmphoraClientTest {
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenCreateTag_thenExecuteExpectedRequest() {
+  void givenSuccessfulRequest_whenCreateTag_thenExecuteExpectedRequest() {
     when(amphoraCommunicationClient.upload(requestParamsWithBodyCaptor.capture(), eq(URI.class)))
         .thenReturn(getSuccessUriResponseMap());
     amphoraClient.createTag(testSecretId, testTag);
     String expectedPath =
         testServiceUris.get(0).getSecretShareResourceTagsUri(testSecretId).getPath();
     List<RequestParametersWithBody<Tag>> actualParams = requestParamsWithBodyCaptor.getValue();
-    assertThat(actualParams.size(), is(equalTo(testServiceUris.size())));
+    assertEquals(testServiceUris.size(), actualParams.size());
     assertTrue(actualParams.stream().allMatch(r -> r.getBody().equals(testTag)));
-    assertThat(actualParams.get(0).getUri().getPath(), is(equalTo(expectedPath)));
-    assertThat(actualParams.get(1).getUri().getPath(), is(equalTo(expectedPath)));
+    assertEquals(expectedPath, actualParams.get(0).getUri().getPath());
+    assertEquals(expectedPath, actualParams.get(1).getUri().getPath());
   }
 
   @Test
-  public void givenRequestReturnsFailure_whenCreateTag_thenThrowAmphoraClientException() {
+  void givenRequestReturnsFailure_whenCreateTag_thenThrowAmphoraClientException() {
     when(amphoraCommunicationClient.upload(
             argThat(
                 (ArgumentMatcher<List<RequestParametersWithBody<Tag>>>)
@@ -710,15 +700,13 @@ public class DefaultAmphoraClientTest {
     AmphoraClientException actualAce =
         assertThrows(
             AmphoraClientException.class, () -> amphoraClient.createTag(testSecretId, testTag));
-    assertThat(
-        actualAce.getMessage(),
-        CoreMatchers.endsWith(
-            String.format(REQUEST_FOR_ENDPOINT_FAILED_EXCEPTION_MSG, testUri, 500)));
+    assertThat(actualAce.getMessage())
+        .endsWith(String.format(REQUEST_FOR_ENDPOINT_FAILED_EXCEPTION_MSG, testUri, 500));
   }
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenOverwriteTags_thenPerformExpectedRequest() {
+  void givenSuccessfulRequest_whenOverwriteTags_thenPerformExpectedRequest() {
     List<Tag> tags = new ArrayList<>();
     tags.add(testTag);
     amphoraClient.overwriteTags(testSecretId, tags);
@@ -726,14 +714,14 @@ public class DefaultAmphoraClientTest {
     String expectedPath =
         testServiceUris.get(0).getSecretShareResourceTagsUri(testSecretId).getPath();
     List<RequestParametersWithBody<Tag>> actualParams = requestParamsWithBodyCaptor.getValue();
-    assertThat(actualParams.size(), is(equalTo(testServiceUris.size())));
-    assertThat(actualParams.get(0).getUri().getPath(), is(equalTo(expectedPath)));
-    assertThat(actualParams.get(1).getUri().getPath(), is(equalTo(expectedPath)));
+    assertEquals(testServiceUris.size(), actualParams.size());
+    assertEquals(expectedPath, actualParams.get(0).getUri().getPath());
+    assertEquals(expectedPath, actualParams.get(1).getUri().getPath());
   }
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenGetTag_thenReturnExpectedResult() {
+  void givenSuccessfulRequest_whenGetTag_thenReturnExpectedResult() {
     String tagKey = testTag.getKey();
     ArgumentCaptor<RequestParameters> requestCaptor =
         ArgumentCaptor.forClass(RequestParameters.class);
@@ -742,13 +730,13 @@ public class DefaultAmphoraClientTest {
     Tag result = amphoraClient.getTag(testSecretId, tagKey);
     String expectedPath =
         testServiceUris.get(0).getSecretShareResourceUriTagResource(testSecretId, tagKey).getPath();
-    assertThat(requestCaptor.getValue().getUri().getPath(), is(equalTo(expectedPath)));
-    assertThat(result, is(equalTo(testTag)));
+    assertEquals(expectedPath, requestCaptor.getValue().getUri().getPath());
+    assertEquals(testTag, result);
   }
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenUpdateTag_thenPerformExpectedRequest() {
+  void givenSuccessfulRequest_whenUpdateTag_thenPerformExpectedRequest() {
     amphoraClient.updateTag(testSecretId, testTag);
     verify(amphoraCommunicationClient, times(1)).update(requestParamsWithBodyCaptor.capture());
     String expectedPath =
@@ -757,27 +745,27 @@ public class DefaultAmphoraClientTest {
             .getSecretShareResourceUriTagResource(testSecretId, testTag.getKey())
             .getPath();
     List<RequestParametersWithBody<Tag>> actualParams = requestParamsWithBodyCaptor.getValue();
-    assertThat(actualParams.size(), is(equalTo(testServiceUris.size())));
-    assertThat(actualParams.get(0).getUri().getPath(), is(equalTo(expectedPath)));
-    assertThat(actualParams.get(1).getUri().getPath(), is(equalTo(expectedPath)));
+    assertEquals(testServiceUris.size(), actualParams.size());
+    assertEquals(expectedPath, actualParams.get(0).getUri().getPath());
+    assertEquals(expectedPath, actualParams.get(1).getUri().getPath());
   }
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenDeleteTag_thenPerformExpectedRequest() {
+  void givenSuccessfulRequest_whenDeleteTag_thenPerformExpectedRequest() {
     String tagKey = testTag.getKey();
     ArgumentCaptor<List<RequestParameters>> requestCaptor = ArgumentCaptor.forClass(List.class);
     amphoraClient.deleteTag(testSecretId, tagKey);
     verify(amphoraCommunicationClient, times(1)).delete(requestCaptor.capture());
     String expectedPath =
         testServiceUris.get(0).getSecretShareResourceUriTagResource(testSecretId, tagKey).getPath();
-    assertThat(requestCaptor.getValue().size(), is(equalTo(testServiceUris.size())));
-    assertThat(requestCaptor.getValue().get(0).getUri().getPath(), is(equalTo(expectedPath)));
-    assertThat(requestCaptor.getValue().get(1).getUri().getPath(), is(equalTo(expectedPath)));
+    assertEquals(testServiceUris.size(), requestCaptor.getValue().size());
+    assertEquals(expectedPath, requestCaptor.getValue().get(0).getUri().getPath());
+    assertEquals(expectedPath, requestCaptor.getValue().get(1).getUri().getPath());
   }
 
   @Test
-  public void givenRequestReturnsFailure_whenDeleteTag_thenThrowAmphoraClientException() {
+  void givenRequestReturnsFailure_whenDeleteTag_thenThrowAmphoraClientException() {
     String expectedErrorDetails = "Secret Not found";
     when(amphoraCommunicationClient.delete(any()))
         .thenReturn(
@@ -785,11 +773,9 @@ public class DefaultAmphoraClientTest {
                 Try.failure(new AmphoraClientException(expectedErrorDetails))));
     AmphoraClientException actualAce =
         assertThrows(AmphoraClientException.class, () -> amphoraClient.deleteSecret(testSecretId));
-    assertThat(
-        actualAce.getMessage(),
-        CoreMatchers.allOf(
-            CoreMatchers.startsWith("At least one request has failed"),
-            CoreMatchers.containsString(expectedErrorDetails)));
+    assertThat(actualAce.getMessage())
+        .startsWith("At least one request has failed")
+        .contains(expectedErrorDetails);
   }
 
   @SneakyThrows
