@@ -68,11 +68,9 @@
         <cs-spdz-integration.version>0.2-SNAPSHOT-3541842672-11-c754bbb</cs-spdz-integration.version>
         <cs-java-client.version>0.1-SNAPSHOT-4075044562-9-8ffab9c</cs-java-client.version>
 
-
         <!-- external dependency versions -->
         <assertj.version>3.24.2</assertj.version>
         <jackson.version>2.14.2</jackson.version>
-        <junit.version>4.13.2</junit.version>
         <junit-jupiter.version>5.9.2</junit-jupiter.version>
         <log4j.version>2.20.0</log4j.version>
         <lombok.version>1.18.24</lombok.version>
@@ -245,12 +243,6 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-junit-jupiter</artifactId>
                 <version>${mockito.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
