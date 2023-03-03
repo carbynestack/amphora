@@ -18,20 +18,13 @@
     </parent>
     <properties>
         <!-- external dependencies -->
-        <jackson.version>2.14.1</jackson.version>
-        <httpclient.version>4.5.14</httpclient.version>
+        <httpclient.version>5.2.1</httpclient.version>
     </properties>
     <dependencies>
         <!-- internal dependencies -->
         <dependency>
             <groupId>io.carbynestack</groupId>
             <artifactId>mp-spdz-integration</artifactId>
-        </dependency>
-        <!-- external dependencies -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -43,8 +36,8 @@
             <artifactId>vavr</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
             <version>${httpclient.version}</version>
         </dependency>
         <dependency>
@@ -55,9 +48,14 @@
 
         <!-- Test dependencies -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

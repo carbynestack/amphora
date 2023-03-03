@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -8,7 +8,7 @@
 package io.carbynestack.amphora.service.persistence.datastore;
 
 import static io.carbynestack.amphora.service.persistence.datastore.MinioSecretShareDataStore.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -25,15 +25,15 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MinioSecretShareDataStoreTest {
+@ExtendWith(MockitoExtension.class)
+class MinioSecretShareDataStoreTest {
   private final UUID testSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
 
   @Mock private MinioClient minioClientMock;
@@ -42,7 +42,7 @@ public class MinioSecretShareDataStoreTest {
 
   private SecretShareDataStore secretShareDataStore;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     secretShareDataStore =
         new MinioSecretShareDataStore(minioClientMock, new MinioProperties().setBucket(BUCKET));
@@ -50,7 +50,7 @@ public class MinioSecretShareDataStoreTest {
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenMakingMinioBucketFails_whenInstantiatingMinioSecretShareDataStore_thenThrowAmphoraServiceException() {
     MinioProperties minioProperties = new MinioProperties().setBucket(BUCKET);
     InternalException expectedCause = new InternalException(BUCKET, "");
@@ -70,7 +70,7 @@ public class MinioSecretShareDataStoreTest {
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenStoreSecretShareData_thenWriteExpectedDataToMinio() {
+  void givenSuccessfulRequest_whenStoreSecretShareData_thenWriteExpectedDataToMinio() {
     SecretShare secretShare = AmphoraTestData.getRandomSecretShare(testSecretId);
     secretShareDataStore.storeSecretShareData(secretShare.getSecretId(), secretShare.getData());
 
@@ -85,7 +85,7 @@ public class MinioSecretShareDataStoreTest {
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenGetSecretShareData_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenGetSecretShareData_thenReturnExpectedContent() {
     SecretShare secretShare = AmphoraTestData.getRandomSecretShare(testSecretId);
     doReturn(
             new GetObjectResponse(
@@ -107,8 +107,7 @@ public class MinioSecretShareDataStoreTest {
   }
 
   @Test
-  public void
-      givenNoDataAvailableForGivenId_whenGetSecretShareData_thenThrowAmphoraServiceException() {
+  void givenNoDataAvailableForGivenId_whenGetSecretShareData_thenThrowAmphoraServiceException() {
     UUID unknownSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     AmphoraServiceException ase =
         assertThrows(
@@ -121,8 +120,7 @@ public class MinioSecretShareDataStoreTest {
 
   @SneakyThrows
   @Test
-  public void
-      givenMinioThrowsException_whenStoreSecretShareData_thenWrapInAmphoraServiceException() {
+  void givenMinioThrowsException_whenStoreSecretShareData_thenWrapInAmphoraServiceException() {
     SecretShare secretShare = AmphoraTestData.getRandomSecretShare(testSecretId);
     byte[] shareData = secretShare.getData();
     IOException expectedCause = new IOException("Totally expected that move..");
@@ -139,7 +137,7 @@ public class MinioSecretShareDataStoreTest {
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenDeleteSecretShareData_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenDeleteSecretShareData_thenReturnExpectedContent() {
     SecretShare secretShare = AmphoraTestData.getRandomSecretShare(testSecretId);
 
     doReturn(
@@ -162,7 +160,7 @@ public class MinioSecretShareDataStoreTest {
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenDeleteCallOnMinioClientFails_whenDeleteSecretShareData_thenWrapExceptionInAmphoraServiceException() {
     SecretShare secretShare = AmphoraTestData.getRandomSecretShare(testSecretId);
     IOException expectedCause = new IOException("Totally expected that move..");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -12,8 +12,8 @@ import static io.carbynestack.amphora.common.TagFilterOperator.LESS_THAN;
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.CRITERIA_SEPARATOR;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,17 +23,17 @@ import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.util.List;
 import java.util.UUID;
 import lombok.SneakyThrows;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-@RunWith(MockitoJUnitRunner.class)
-public class SecretShareControllerTest {
+@ExtendWith(MockitoExtension.class)
+class SecretShareControllerTest {
 
   @Mock private OutputDeliveryService outputDeliveryService;
 
@@ -43,7 +43,7 @@ public class SecretShareControllerTest {
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequestWithoutFilterAndWithoutPaging_whenGetObjectList_thenReturnExpectedContent() {
     List<Metadata> expectedMetadataList = emptyList();
     Page<Metadata> metadataSpringPage = new PageImpl<>(expectedMetadataList, Pageable.unpaged(), 0);
@@ -67,7 +67,7 @@ public class SecretShareControllerTest {
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequestWithoutFilterButWithPaging_whenGetObjectList_thenReturnExpectedContent() {
     List<Metadata> expectedMetadataList = emptyList();
     Page<Metadata> metadataSpringPage = new PageImpl<>(expectedMetadataList, Pageable.unpaged(), 0);
@@ -92,7 +92,7 @@ public class SecretShareControllerTest {
 
   @SneakyThrows
   @Test
-  public void
+  void
       givenSuccessfulRequestWithFilterAndWithoutPaging_whenGetObjectList_thenReturnExpectedContent() {
     List<Metadata> expectedMetadataList = emptyList();
     Page<Metadata> metadataSpringPage = new PageImpl<>(expectedMetadataList, Pageable.unpaged(), 0);
@@ -119,8 +119,7 @@ public class SecretShareControllerTest {
 
   @SneakyThrows
   @Test
-  public void
-      givenSuccessfulRequestWithFilterButWithPaging_whenGetObjectList_thenReturnExpectedContent() {
+  void givenSuccessfulRequestWithFilterButWithPaging_whenGetObjectList_thenReturnExpectedContent() {
     List<Metadata> expectedMetadataList = emptyList();
     Page<Metadata> metadataSpringPage = new PageImpl<>(expectedMetadataList, Pageable.unpaged(), 0);
     String filter = "key" + EQUALS + "value" + CRITERIA_SEPARATOR + "key2" + LESS_THAN + "42";
@@ -145,7 +144,7 @@ public class SecretShareControllerTest {
   }
 
   @Test
-  public void givenRequestIdArgumentIsNull_whenGetSecretShare_thenThrowIllegalArgumentException() {
+  void givenRequestIdArgumentIsNull_whenGetSecretShare_thenThrowIllegalArgumentException() {
     UUID secretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     IllegalArgumentException iae =
         assertThrows(
@@ -155,7 +154,7 @@ public class SecretShareControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenGetSecretShare_thenReturnOkAndExpectedContent() {
+  void givenSuccessfulRequest_whenGetSecretShare_thenReturnOkAndExpectedContent() {
     UUID secretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     UUID requestId = UUID.fromString("d6d0f4ff-df28-4c96-b7df-95170320eaee");
     SecretShare secretShare = SecretShare.builder().secretId(requestId).build();
@@ -171,14 +170,14 @@ public class SecretShareControllerTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenDeleteSecretShare_thenReturnOk() {
+  void givenSuccessfulRequest_whenDeleteSecretShare_thenReturnOk() {
     UUID secretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     ResponseEntity<Void> actualResponse = secretShareController.deleteSecretShare(secretId);
     assertEquals(HttpStatus.OK, actualResponse.getStatusCode());
   }
 
   @Test
-  public void givenSortPropertyButInvalidDirection_whenGetSort_thenReturnSortAsc() {
+  void givenSortPropertyButInvalidDirection_whenGetSort_thenReturnSortAsc() {
     String expectedProperty = "key";
     String invalidDirection = "invalid";
     assertEquals(
@@ -187,14 +186,14 @@ public class SecretShareControllerTest {
   }
 
   @Test
-  public void givenNoSortProperty_whenGetSort_thenReturnUnsorted() {
+  void givenNoSortProperty_whenGetSort_thenReturnUnsorted() {
     String emptyProperty = "";
     String direction = Sort.Direction.ASC.toString();
     assertEquals(Sort.unsorted(), secretShareController.getSort(emptyProperty, direction));
   }
 
   @Test
-  public void givenValidConfiguration_whenGetSort_thenReturnExpectedContent() {
+  void givenValidConfiguration_whenGetSort_thenReturnExpectedContent() {
     String expectedProperty = "key";
     Sort.Direction expectedDirection = Sort.Direction.DESC;
     assertEquals(

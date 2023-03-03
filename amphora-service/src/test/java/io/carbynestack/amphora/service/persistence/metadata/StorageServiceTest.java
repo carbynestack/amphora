@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -14,7 +14,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 
@@ -34,16 +34,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomUtils;
 import org.hamcrest.MatcherAssert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class StorageServiceTest {
+@ExtendWith(MockitoExtension.class)
+class StorageServiceTest {
   private final UUID testSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
   private final UUID testSecretId2 = UUID.fromString("0e7cd962-d98e-4eea-82ae-4641399c9ad7");
   private final Tag testTag = Tag.builder().key("TEST_KEY").value("TEST_VALUE").build();
@@ -62,7 +62,7 @@ public class StorageServiceTest {
   @InjectMocks private StorageService storageService;
 
   @Test
-  public void givenIdIsAlreadyInUse_whenCreateSecret_thenThrowAlreadyExistsException() {
+  void givenIdIsAlreadyInUse_whenCreateSecret_thenThrowAlreadyExistsException() {
     MaskedInput testMaskedInput =
         new MaskedInput(
             testSecretId,
@@ -80,8 +80,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenMaskedInputHasTagsWithSameKey_whenCreateObject_thenThrowIllegalArgumentException() {
+  void givenMaskedInputHasTagsWithSameKey_whenCreateObject_thenThrowIllegalArgumentException() {
     Tag tagWithSameKeyAsTestTag =
         Tag.builder()
             .key(testTag.getKey())
@@ -103,7 +102,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenMaskedInputWithReservedKey_whenCreateObject_thenReplaceReservedKey() {
+  void givenMaskedInputWithReservedKey_whenCreateObject_thenReplaceReservedKey() {
     MaskedInput maskedInput =
         new MaskedInput(
             testSecretId,
@@ -128,9 +127,9 @@ public class StorageServiceTest {
         .thenThrow(expectedAbortTestException);
 
     assertThrows(
-        expectedAbortTestException.getMessage(),
         RuntimeException.class,
-        () -> storageService.createSecret(maskedInput));
+        () -> storageService.createSecret(maskedInput),
+        expectedAbortTestException.getMessage());
     SecretEntity capturedSecretEntity = secretEntityArgumentCaptor.getValue();
     List<Tag> actualTags = TagEntity.setToTagList(capturedSecretEntity.getTags());
     assertEquals(2, actualTags.size());
@@ -144,7 +143,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenCreateObject_thenReturnSecretId() {
+  void givenSuccessfulRequest_whenCreateObject_thenReturnSecretId() {
     MaskedInput maskedInput =
         new MaskedInput(
             testSecretId,
@@ -188,7 +187,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenIdIsAlreadyInUse_whenStoreSecretShare_thenThrowAlreadyExistsException() {
+  void givenIdIsAlreadyInUse_whenStoreSecretShare_thenThrowAlreadyExistsException() {
     SecretShare secretShare =
         SecretShare.builder()
             .secretId(testSecretId)
@@ -205,8 +204,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenSecretShareHasTagsWithSameKey_whenStoreObject_thenThrowIllegalArgumentException() {
+  void givenSecretShareHasTagsWithSameKey_whenStoreObject_thenThrowIllegalArgumentException() {
     Tag tagWithSameKeyAsTestTag =
         Tag.builder()
             .key(testTag.getKey())
@@ -227,7 +225,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenSecretShareWithReservedKey_whenStoreSecretShare_thenReplaceReservedKey() {
+  void givenSecretShareWithReservedKey_whenStoreSecretShare_thenReplaceReservedKey() {
     SecretShare secretShare =
         SecretShare.builder()
             .secretId(testSecretId)
@@ -242,9 +240,9 @@ public class StorageServiceTest {
         .thenThrow(expectedAbortTestException);
 
     assertThrows(
-        expectedAbortTestException.getMessage(),
         RuntimeException.class,
-        () -> storageService.storeSecretShare(secretShare));
+        () -> storageService.storeSecretShare(secretShare),
+        expectedAbortTestException.getMessage());
     SecretEntity capturedSecretEntity = secretEntityArgumentCaptor.getValue();
     List<Tag> actualTags = TagEntity.setToTagList(capturedSecretEntity.getTags());
     assertEquals(2, actualTags.size());
@@ -259,7 +257,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenStoreSecretShare_thenReturnSecretId() {
+  void givenSuccessfulRequest_whenStoreSecretShare_thenReturnSecretId() {
     SecretShare secretShare =
         SecretShare.builder()
             .secretId(testSecretId)
@@ -275,7 +273,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenGetObjectListWithPageable_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenGetObjectListWithPageable_thenReturnExpectedContent() {
     List<Metadata> expectedMetadataList =
         asList(
             Metadata.builder().secretId(testSecretId).tags(singletonList(testTag)).build(),
@@ -296,7 +294,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenGetObjectListWithSortConfig_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenGetObjectListWithSortConfig_thenReturnExpectedContent() {
     List<Metadata> expectedMetadataList =
         asList(
             Metadata.builder().secretId(testSecretId).tags(singletonList(testTag)).build(),
@@ -321,8 +319,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenSuccessfulRequest_whenGetObjectListWithFilterAndPageable_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenGetObjectListWithFilterAndPageable_thenReturnExpectedContent() {
     List<TagFilter> tagFilters =
         singletonList(
             TagFilter.with(testTag.getKey(), testTag.getValue(), TagFilterOperator.EQUALS));
@@ -349,8 +346,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenSuccessfulRequest_whenGetObjectListWithFilterAndSortConfig_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenGetObjectListWithFilterAndSortConfig_thenReturnExpectedContent() {
     List<TagFilter> tagFilters =
         singletonList(
             TagFilter.with(testTag.getKey(), testTag.getValue(), TagFilterOperator.EQUALS));
@@ -380,8 +376,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenNoSecretShareWithGivenIdInDatabase_whenGetSecretShare_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenGetSecretShare_thenThrowNotFoundException() {
     when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.empty());
 
     NotFoundException nfe =
@@ -391,7 +386,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenDataCannotBeRetrieved_whenGetSecretShare_thenThrowAmphoraServiceException() {
+  void givenDataCannotBeRetrieved_whenGetSecretShare_thenThrowAmphoraServiceException() {
     AmphoraServiceException expectedAse = new AmphoraServiceException("Expected this one");
     SecretEntity secretEntity = new SecretEntity();
     when(secretEntityRepository.findById(testSecretId.toString()))
@@ -399,13 +394,13 @@ public class StorageServiceTest {
     when(secretShareDataStore.getSecretShareData(testSecretId)).thenThrow(expectedAse);
 
     assertThrows(
-        expectedAse.getMessage(),
         AmphoraServiceException.class,
-        () -> storageService.getSecretShare(testSecretId));
+        () -> storageService.getSecretShare(testSecretId),
+        expectedAse.getMessage());
   }
 
   @Test
-  public void givenSuccessfulRequest_whenGetSecretShare_thenReturnContent() {
+  void givenSuccessfulRequest_whenGetSecretShare_thenReturnContent() {
     List<Tag> expectedTags = singletonList(testTag);
     byte[] expectedData = RandomUtils.nextBytes(MpSpdzIntegrationUtils.SHARE_WIDTH);
     SecretEntity existingSecretEntity =
@@ -426,8 +421,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenNoSecretShareWithGivenIdInDatabase_whenDeleteObject_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenDeleteObject_thenThrowNotFoundException() {
     when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(0L);
 
     NotFoundException nfe =
@@ -437,19 +431,19 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenDeleteObjectDataFails_whenDeleteObject_thenThrowGivenException() {
+  void givenDeleteObjectDataFails_whenDeleteObject_thenThrowGivenException() {
     AmphoraServiceException expectedAse = new AmphoraServiceException("Expected this one");
     when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(1L);
     when(secretShareDataStore.deleteSecretShareData(testSecretId)).thenThrow(expectedAse);
 
     assertThrows(
-        expectedAse.getMessage(),
         AmphoraServiceException.class,
-        () -> storageService.deleteSecret(testSecretId));
+        () -> storageService.deleteSecret(testSecretId),
+        expectedAse.getMessage());
   }
 
   @Test
-  public void givenSuccessfulRequest_whenDeleteObject_thenDeleteObjectAndData() {
+  void givenSuccessfulRequest_whenDeleteObject_thenDeleteObjectAndData() {
     when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(1L);
 
     storageService.deleteSecret(testSecretId);
@@ -457,7 +451,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenTagHasReservedKey_whenStoreTag_thenThrowIllegalArgumentException() {
+  void givenTagHasReservedKey_whenStoreTag_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
@@ -468,7 +462,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenNoSecretShareWithGivenIdInDatabase_whenStoreTag_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenStoreTag_thenThrowNotFoundException() {
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
     NotFoundException nfe =
         assertThrows(NotFoundException.class, () -> storageService.storeTag(testSecretId, testTag));
@@ -477,7 +471,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenObjectAlreadyHasTagWithGivenKey_whenStoreTag_thenThrowAlreadyExistsException() {
+  void givenObjectAlreadyHasTagWithGivenKey_whenStoreTag_thenThrowAlreadyExistsException() {
     SecretEntity existingSecretEntity = new SecretEntity().setSecretId(testSecretId.toString());
     TagEntity existingTagEntity = TagEntity.fromTag(testTag);
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
@@ -497,7 +491,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenStoreTag_thenPersistTag() {
+  void givenSuccessfulRequest_whenStoreTag_thenPersistTag() {
     SecretEntity existingSecretEntity = new SecretEntity().setSecretId(testSecretId.toString());
     TagEntity expectedTagEntity = TagEntity.fromTag(testTag);
     ArgumentCaptor<TagEntity> tagEntityArgumentCaptor = ArgumentCaptor.forClass(TagEntity.class);
@@ -520,7 +514,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenListHasTagsWithSameKey_whenReplaceTags_thenThrowIllegalArgumentException() {
+  void givenListHasTagsWithSameKey_whenReplaceTags_thenThrowIllegalArgumentException() {
     Tag tagWithSameKeyAsTestTag =
         Tag.builder()
             .key(testTag.getKey())
@@ -537,7 +531,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenNoSecretShareWithGivenIdInDatabase_whenReplaceTags_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenReplaceTags_thenThrowNotFoundException() {
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
     List<Tag> emptyTags = emptyList();
     NotFoundException nfe =
@@ -548,7 +542,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenListHasTagWithReservedKey_whenReplaceTags_thenReplaceByExistingTagAndPersist() {
+  void givenListHasTagWithReservedKey_whenReplaceTags_thenReplaceByExistingTagAndPersist() {
     List<Tag> tagListWithReservedKey = asList(testTag, testTagReservedCreationDateKey);
     TagEntity existingCreationTagEntity =
         TagEntity.fromTag(
@@ -581,8 +575,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenNoSecretShareWithGivenIdInDatabase_whenRetrieveTags_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenRetrieveTags_thenThrowNotFoundException() {
     when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.empty());
 
     NotFoundException nfe =
@@ -592,7 +585,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenRetrieveTags_thenReturnContent() {
+  void givenSuccessfulRequest_whenRetrieveTags_thenReturnContent() {
     List<Tag> expectedTags = asList(testTag, testTag2);
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), TagEntity.setFromTagList(expectedTags));
@@ -605,7 +598,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenNoSecretShareWithGivenIdInDatabase_whenRetrieveTag_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenRetrieveTag_thenThrowNotFoundException() {
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
     String key = testTag.getKey();
     NotFoundException nfe =
@@ -615,8 +608,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenNoTagWithGivenKeyInDatabaseForGivenObject_whenRetrieveTag_thenThrowNotFoundException() {
+  void givenNoTagWithGivenKeyInDatabaseForGivenObject_whenRetrieveTag_thenThrowNotFoundException() {
     String key = testTag.getKey();
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
@@ -624,18 +616,17 @@ public class StorageServiceTest {
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.empty());
 
-    NotFoundException nfe =
-        assertThrows(
-            String.format(
-                NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
-                testTag.getKey(),
-                existingSecretEntity.getSecretId()),
-            NotFoundException.class,
-            () -> storageService.retrieveTag(testSecretId, key));
+    assertThrows(
+        NotFoundException.class,
+        () -> storageService.retrieveTag(testSecretId, key),
+        String.format(
+            NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
+            testTag.getKey(),
+            existingSecretEntity.getSecretId()));
   }
 
   @Test
-  public void givenSuccessfulRequest_whenRetrieveTag_thenReturnContent() {
+  void givenSuccessfulRequest_whenRetrieveTag_thenReturnContent() {
     TagEntity existingTagEntity = TagEntity.fromTag(testTag);
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), singleton(existingTagEntity));
@@ -648,7 +639,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenTagHasReservedKey_whenUpdateTag_thenThrowIllegalArgumentException() {
+  void givenTagHasReservedKey_whenUpdateTag_thenThrowIllegalArgumentException() {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
@@ -659,7 +650,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenNoSecretShareWithGivenIdInDatabase_whenUpdateTag_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenUpdateTag_thenThrowNotFoundException() {
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
 
     NotFoundException nfe =
@@ -670,8 +661,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenNoTagWithGivenKeyInDatabaseForGivenObject_whenUpdateTag_thenThrowNotFoundException() {
+  void givenNoTagWithGivenKeyInDatabaseForGivenObject_whenUpdateTag_thenThrowNotFoundException() {
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
     when(secretEntityRepository.existsById(existingSecretEntity.getSecretId())).thenReturn(true);
     when(secretEntityRepository.getOne(existingSecretEntity.getSecretId()))
@@ -680,16 +670,16 @@ public class StorageServiceTest {
         .thenReturn(Optional.empty());
 
     assertThrows(
+        NotFoundException.class,
+        () -> storageService.updateTag(testSecretId, testTag),
         String.format(
             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
             testTag.getKey(),
-            existingSecretEntity.getSecretId()),
-        NotFoundException.class,
-        () -> storageService.updateTag(testSecretId, testTag));
+            existingSecretEntity.getSecretId()));
   }
 
   @Test
-  public void givenSuccessfulRequest_whenUpdateTag_thenUpdateTag() {
+  void givenSuccessfulRequest_whenUpdateTag_thenUpdateTag() {
     Tag newTag =
         Tag.builder().key(testTag.getKey()).value("123").valueType(TagValueType.LONG).build();
     TagEntity existingTagEntity = TagEntity.fromTag(testTag);
@@ -710,7 +700,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenTagHasReservedKey_whenDeleteTag_thenThrowIllegalArgumentException() {
+  void givenTagHasReservedKey_whenDeleteTag_thenThrowIllegalArgumentException() {
     String reservedKey = testTagReservedCreationDateKey.getKey();
     IllegalArgumentException iae =
         assertThrows(
@@ -720,7 +710,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void givenNoSecretShareWithGivenIdInDatabase_whenDeleteTag_thenThrowNotFoundException() {
+  void givenNoSecretShareWithGivenIdInDatabase_whenDeleteTag_thenThrowNotFoundException() {
     String key = testTag.getKey();
 
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
@@ -732,8 +722,7 @@ public class StorageServiceTest {
   }
 
   @Test
-  public void
-      givenNoTagWithGivenKeyInDatabaseForGivenObject_whenDeleteTag_thenThrowNotFoundException() {
+  void givenNoTagWithGivenKeyInDatabaseForGivenObject_whenDeleteTag_thenThrowNotFoundException() {
     String key = testTag.getKey();
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
@@ -741,16 +730,16 @@ public class StorageServiceTest {
     when(tagRepository.findBySecretAndKey(existingSecretEntity, key)).thenReturn(Optional.empty());
 
     assertThrows(
+        NotFoundException.class,
+        () -> storageService.deleteTag(testSecretId, key),
         String.format(
             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
             testTag.getKey(),
-            existingSecretEntity.getSecretId()),
-        NotFoundException.class,
-        () -> storageService.deleteTag(testSecretId, key));
+            existingSecretEntity.getSecretId()));
   }
 
   @Test
-  public void givenSuccessfulRequest_whenDeleteTag_thenDelete() {
+  void givenSuccessfulRequest_whenDeleteTag_thenDelete() {
     TagEntity tagEntityToDelete = TagEntity.fromTag(testTag);
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), singleton(tagEntityToDelete));

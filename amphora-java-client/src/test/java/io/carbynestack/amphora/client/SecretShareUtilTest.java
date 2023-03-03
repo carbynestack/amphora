@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 package io.carbynestack.amphora.client;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.carbynestack.amphora.common.exceptions.SecretVerificationException;
 import java.math.BigInteger;
@@ -15,10 +16,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SecretShareUtilTest {
+class SecretShareUtilTest {
   private final Random rnd = new Random(42);
 
   private final SecretShareUtil secretShareUtil =
@@ -28,7 +28,7 @@ public class SecretShareUtilTest {
           new BigInteger("133854242216446749056083838363708373830"));
 
   @Test
-  public void givenAllValid_whenVerifyingSecrets_thenDontThrowException() {
+  void givenAllValid_whenVerifyingSecrets_thenDontThrowException() {
     int numberOfValues = 5;
     List<BigInteger> secrets =
         IntStream.range(0, numberOfValues)
@@ -50,11 +50,11 @@ public class SecretShareUtilTest {
         IntStream.range(0, numberOfValues)
             .mapToObj(i -> vs.get(i).multiply(rs.get(i)))
             .collect(Collectors.toList());
-    secretShareUtil.verifySecrets(secrets, rs, us, vs, ws);
+    assertDoesNotThrow(() -> secretShareUtil.verifySecrets(secrets, rs, us, vs, ws));
   }
 
   @Test
-  public void givenWsContainingInvalidValue_whenVerifyingSecrets_thenThrowException() {
+  void givenWsContainingInvalidValue_whenVerifyingSecrets_thenThrowException() {
     int numberOfValues = 5;
     List<BigInteger> secrets =
         IntStream.range(0, numberOfValues)
@@ -81,6 +81,6 @@ public class SecretShareUtilTest {
         assertThrows(
             SecretVerificationException.class,
             () -> secretShareUtil.verifySecrets(secrets, rs, us, vs, ws));
-    assertThat(ove.getMessage(), CoreMatchers.startsWith("Verification of secret has failed"));
+    assertThat(ove.getMessage()).startsWith("Verification of secret has failed");
   }
 }

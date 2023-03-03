@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -8,7 +8,7 @@
 package io.carbynestack.amphora.common.entities;
 
 import static java.util.Collections.emptyList;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import io.carbynestack.amphora.common.MaskedInput;
 import io.carbynestack.amphora.common.MaskedInputData;
@@ -17,12 +17,12 @@ import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MaskedInputTest {
 
   @Test
-  public void givenIdIsNull_whenCreatingNewSecret_thenThrowException() {
+  void givenIdIsNull_whenCreatingNewSecret_thenThrowException() {
     UUID nullId = null;
     List<MaskedInputData> maskedInputData = emptyList();
     List<Tag> tags = emptyList();
@@ -33,14 +33,14 @@ public class MaskedInputTest {
   }
 
   @Test
-  public void givenTagsAreNull_whenCreatingMaskedInput_thenUseEmptyListInstead() {
+  void givenTagsAreNull_whenCreatingMaskedInput_thenUseEmptyListInstead() {
     UUID secretId = UUID.fromString("80fbba1b-3da8-4b1e-8a2c-cebd65229fad");
     List<MaskedInputData> maskedInputData =
         Collections.singletonList(MaskedInputData.of(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]));
     MaskedInput maskedInput = new MaskedInput(secretId, maskedInputData, emptyList());
     assertEquals(secretId, maskedInput.getSecretId());
     assertEquals(maskedInputData, maskedInput.getData());
-    assertNotNull("Tags must be replaced by empty list", maskedInput.getTags());
-    assertTrue("Tags must be empty", maskedInput.getTags().isEmpty());
+    assertNotNull(maskedInput.getTags(), "Tags must be replaced by empty list");
+    assertTrue(maskedInput.getTags().isEmpty(), "Tags must be empty");
   }
 }

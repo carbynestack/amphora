@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -8,10 +8,8 @@
 package io.carbynestack.amphora.common.entities;
 
 import static io.carbynestack.amphora.common.Tag.INVALID_KEY_STRING_EXCEPTION_MSG;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.carbynestack.amphora.common.Tag;
@@ -20,7 +18,7 @@ import io.carbynestack.amphora.common.TagFilterOperator;
 import io.carbynestack.amphora.common.TagValueType;
 import java.util.Arrays;
 import lombok.SneakyThrows;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TagTest {
   private final String dummyKey = "dummy-key";
@@ -28,18 +26,18 @@ public class TagTest {
   private final long dummyLongValue = 12345L;
 
   @Test
-  public void givenKeyWithTooManyCharacters_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenKeyWithTooManyCharacters_whenBuildingTag_thenThrowIllegalArgumentException() {
     char[] array = new char[129];
     Arrays.fill(array, 'a');
     String key = new String(array);
     Tag.TagBuilder tagBuilder = Tag.builder().key(key).value(dummyStringValue);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, () -> tagBuilder.build());
-    assertThat(actualIae.getMessage(), containsString("longer then 128 characters"));
+    assertThat(actualIae.getMessage()).contains("longer then 128 characters");
   }
 
   @Test
-  public void givenKeyWithMaximumLength_whenBuildingTag_thenSucceed() {
+  void givenKeyWithMaximumLength_whenBuildingTag_thenSucceed() {
     char[] array = new char[128];
     Arrays.fill(array, 'a');
     String key = new String(array);
@@ -48,7 +46,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenKeyWithInvalidCharacter_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenKeyWithInvalidCharacter_whenBuildingTag_thenThrowIllegalArgumentException() {
     String key = "#123";
     Tag.TagBuilder tagBuilder = Tag.builder().key(key).value(dummyStringValue);
     IllegalArgumentException iae =
@@ -57,7 +55,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenNullAsKey_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenNullAsKey_whenBuildingTag_thenThrowIllegalArgumentException() {
     Tag.TagBuilder tagBuilder = Tag.builder();
     NullPointerException actualNpe =
         assertThrows(NullPointerException.class, () -> tagBuilder.key(null));
@@ -65,7 +63,7 @@ public class TagTest {
   }
 
   @Test
-  public void giveKeyIsEmptyString_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void giveKeyIsEmptyString_whenBuildingTag_thenThrowIllegalArgumentException() {
     Tag.TagBuilder tagBuilder = Tag.builder().key("").value(dummyStringValue);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, tagBuilder::build);
@@ -73,7 +71,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenNullAsValue_whenBuildingTag_thenThrowIllegalArgumentException() {
+  void givenNullAsValue_whenBuildingTag_thenThrowIllegalArgumentException() {
     Tag.TagBuilder tagBuilder = Tag.builder().key(dummyKey);
     NullPointerException actualNpe =
         assertThrows(NullPointerException.class, () -> tagBuilder.value(null));
@@ -81,7 +79,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenValueIsEmptyString_whenBuildingTag_thenCreateExpectedTag() {
+  void givenValueIsEmptyString_whenBuildingTag_thenCreateExpectedTag() {
     String expectedTagValue = "";
     Tag tag = Tag.builder().key(dummyKey).value("").build();
     assertEquals(TagValueType.STRING, tag.getValueType());
@@ -90,7 +88,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenKeyWithSupportedCharacters_whenBuildingTag_thenSucceed() {
+  void givenKeyWithSupportedCharacters_whenBuildingTag_thenSucceed() {
     String expectedKey = "abcDEF456-.";
     Tag tag = Tag.builder().key(expectedKey).value(dummyStringValue).build();
     assertEquals(TagValueType.STRING, tag.getValueType());
@@ -99,20 +97,19 @@ public class TagTest {
   }
 
   @Test
-  public void givenValueWithTooManyCharacters_whenBuildingTag_thenThrowIllegaArgumentException() {
+  void givenValueWithTooManyCharacters_whenBuildingTag_thenThrowIllegaArgumentException() {
     char[] array = new char[257];
     Arrays.fill(array, 'a');
     String value = new String(array);
     Tag.TagBuilder tagBuilder = Tag.builder().key(dummyKey).value(value);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, tagBuilder::build);
-    assertThat(
-        actualIae.getMessage(),
-        startsWith("The given value exceeds the maximum length of 256: (257)"));
+    assertThat(actualIae.getMessage())
+        .startsWith("The given value exceeds the maximum length of 256: (257)");
   }
 
   @Test
-  public void givenValueWithMaximumLength_whenBuildingTag_thenSucceed() {
+  void givenValueWithMaximumLength_whenBuildingTag_thenSucceed() {
     char[] array = new char[256];
     Arrays.fill(array, 'a');
     String expectedValue = new String(array);
@@ -123,7 +120,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenLongStringAsValueAndLongAsValueType_whenBuildingTag_thenCreateExpectedTag() {
+  void givenLongStringAsValueAndLongAsValueType_whenBuildingTag_thenCreateExpectedTag() {
     Tag tag =
         Tag.builder()
             .key(dummyKey)
@@ -136,7 +133,7 @@ public class TagTest {
   }
 
   @Test
-  public void givenOnlyKeyAsInput_whenBuildingTag_thenUseDefaultValues() {
+  void givenOnlyKeyAsInput_whenBuildingTag_thenUseDefaultValues() {
     Tag tag = Tag.builder().key(dummyKey).build();
     assertEquals(TagValueType.STRING, tag.getValueType());
     assertEquals(dummyKey, tag.getKey());
@@ -145,7 +142,7 @@ public class TagTest {
 
   @SneakyThrows
   @Test
-  public void givenTagObject_whenSerializingAndDeserializingData_thenRecreateOrigin() {
+  void givenTagObject_whenSerializingAndDeserializingData_thenRecreateOrigin() {
     Tag tag =
         Tag.builder()
             .key(dummyKey)
@@ -158,7 +155,7 @@ public class TagTest {
 
   @SneakyThrows
   @Test
-  public void givenTagFilterObject_whenSerializingAndDeserializingData_thenRecreateOrigin() {
+  void givenTagFilterObject_whenSerializingAndDeserializingData_thenRecreateOrigin() {
     TagFilter filter =
         TagFilter.with(dummyKey, Long.toString(dummyLongValue), TagFilterOperator.EQUALS);
     ObjectMapper om = new ObjectMapper();

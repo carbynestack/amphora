@@ -20,7 +20,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = SecretEntity.TABLE_NAME)
 @EntityListeners(AuditingEntityListener.class)
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SecretEntity implements Serializable {

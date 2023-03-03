@@ -57,21 +57,22 @@
         <!-- Plugin versions -->
         <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0-M9</maven-failsafe-plugin.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M9</maven-surefire-plugin.version>
         <maven-license-plugin.version>2.0.0</maven-license-plugin.version>
 
         <!-- internal dependency versions -->
-        <castor.version>0.1-SNAPSHOT-4191841095-22-1721229</castor.version>
+        <castor.version>0.1-SNAPSHOT-4321261594-23-40a9faa</castor.version>
         <cs-spdz-integration.version>0.2-SNAPSHOT-3541842672-11-c754bbb</cs-spdz-integration.version>
         <cs-java-client.version>0.1-SNAPSHOT-4075044562-9-8ffab9c</cs-java-client.version>
 
-
         <!-- external dependency versions -->
-        <junit.version>4.13.2</junit.version>
-        <log4j.version>2.19.0</log4j.version>
+        <assertj.version>3.24.2</assertj.version>
+        <jackson.version>2.14.2</jackson.version>
+        <junit-jupiter.version>5.9.2</junit-jupiter.version>
+        <log4j.version>2.20.0</log4j.version>
         <lombok.version>1.18.24</lombok.version>
         <mockito.version>3.11.2</mockito.version>
         <slf4j.version>2.0.6</slf4j.version>
@@ -193,6 +194,16 @@
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-jul</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jul-to-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.vavr</groupId>
                 <artifactId>vavr</artifactId>
                 <version>${vavr.version}</version>
@@ -211,6 +222,12 @@
 
             <!-- Test dependencies -->
             <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
@@ -223,9 +240,21 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit-jupiter.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

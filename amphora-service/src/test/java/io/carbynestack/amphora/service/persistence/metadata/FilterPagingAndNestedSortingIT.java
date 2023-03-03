@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -12,7 +12,7 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsInRelativeOrder;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import io.carbynestack.amphora.common.Metadata;
@@ -34,24 +34,25 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.Base58;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = RANDOM_PORT,
     classes = {AmphoraServiceApplication.class})
 @ActiveProfiles(profiles = {"test"})
+@Testcontainers
 public class FilterPagingAndNestedSortingIT {
   public static final String LONG_KEY = "LONG_KEY";
 
@@ -64,15 +65,15 @@ public class FilterPagingAndNestedSortingIT {
   private final Tag testTagLongValue99 = Tag.builder().key(LONG_KEY).value("99").build();
   private final Tag testTagLongValue100 = Tag.builder().key(LONG_KEY).value("100").build();
 
-  @ClassRule
+  @Container
   public static ReusableRedisContainer reusableRedisContainer =
       ReusableRedisContainer.getInstance();
 
-  @ClassRule
+  @Container
   public static ReusableMinioContainer reusableMinioContainer =
       ReusableMinioContainer.getInstance();
 
-  @ClassRule
+  @Container
   public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =
       ReusablePostgreSQLContainer.getInstance();
 
@@ -82,7 +83,7 @@ public class FilterPagingAndNestedSortingIT {
 
   @Autowired private PersistenceTestEnvironment testEnvironment;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     testEnvironment.clearAllData();
   }
@@ -93,7 +94,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
+  void
       givenMultipleObjectsStoredButOnlyOneMatchingTagFilter_whenGetObjectListWithFilter_thenReturnExpectedContent() {
     persistObjectWithIdAndTags(testSecretId, testTag, testTag2);
     persistObjectWithIdAndTags(testSecretId2, testTag, testTag3);
@@ -107,7 +108,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
+  void
       givenMultipleObjectsStoredButNoneMatchingFilterCriteria_whenGetObjectListWithFilter_thenReturnExpectedContent() {
     persistObjectWithIdAndTags(testSecretId, testTag, testTag2);
     persistObjectWithIdAndTags(testSecretId2, testTag, testTag3);
@@ -120,7 +121,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
+  void
       givenMultipleObjectsStoredMatchingFilterCriteria_whenGetObjectListWithFilter_thenReturnExpectedContent() {
     Metadata[] expectedMetadataItems = {
       Metadata.builder().secretId(testSecretId).tags(asList(testTag, testTag2)).build(),
@@ -143,7 +144,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
+  void
       givenObjectTagsWithLongValues_whenGetObjectListWithLongLessThanFilter_thenReturnExpectedResult() {
     persistObjectWithIdAndTags(testSecretId, testTagLongValue99);
     persistObjectWithIdAndTags(testSecretId2, testTagLongValue100);
@@ -160,8 +161,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
-      givenObjectsWithMixedTagValueTypes_whenGetObjectListWithFilter_thenReturnExpectedContent() {
+  void givenObjectsWithMixedTagValueTypes_whenGetObjectListWithFilter_thenReturnExpectedContent() {
     persistObjectWithIdAndTags(testSecretId, testTagLongValue99);
     persistObjectWithIdAndTags(testSecretId2, testTag, testTagLongValue100);
     List<TagFilter> tagFilters =
@@ -177,7 +177,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
+  void
       givenObjectTagsWithLongValues_whenGetObjectListWithLongGreaterThanFilter_thenReturnExpectedResult() {
     persistObjectWithIdAndTags(testSecretId, testTag2, testTagLongValue99);
     persistObjectWithIdAndTags(testSecretId2, testTagLongValue100);
@@ -191,7 +191,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
+  void
       givenTagValueEqualToGreaterThanFilterValue_whenGetObjectListWithFilter_thenDoNotReturnRelatedObject() {
     persistObjectWithIdAndTags(testSecretId, testTag, testTagLongValue99);
     persistObjectWithIdAndTags(testSecretId2, testTag, testTagLongValue100);
@@ -205,7 +205,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
+  void
       givenNumberComparisonFilterWithNonParsableValue_whenCreateTagFilter_thenThrowIllegalArgumentException() {
     persistObjectWithIdAndTags(testSecretId, testTagLongValue99);
     persistObjectWithIdAndTags(testSecretId2, testTagLongValue100);
@@ -216,7 +216,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void givenTagsWithLongValue_whenRequestingAscSortedList_thenReturnProperResult() {
+  void givenTagsWithLongValue_whenRequestingAscSortedList_thenReturnProperResult() {
     String tagKey = Base58.randomString(5);
     Metadata[] expectedMetadata = getSortLongTestMetadata(tagKey, Sort.Direction.ASC);
     Page<Metadata> actualMetadataPage = storageService.getSecretList(Sort.by(tagKey).ascending());
@@ -229,7 +229,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void givenTagsWithLongValue_whenRequestingDescSortedList_thenReturnProperResult() {
+  void givenTagsWithLongValue_whenRequestingDescSortedList_thenReturnProperResult() {
     String tagKey = Base58.randomString(5);
     Metadata[] expectedMetadata = getSortLongTestMetadata(tagKey, Sort.Direction.DESC);
     Page<Metadata> actualMetadataPage = storageService.getSecretList(Sort.by(tagKey).descending());
@@ -239,7 +239,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void givenTagsWithStringValue_whenRequestingAscSortedList_thenReturnProperResult() {
+  void givenTagsWithStringValue_whenRequestingAscSortedList_thenReturnProperResult() {
     String tagKey = Base58.randomString(5);
     Metadata[] expectedMetadata = getSortStringTestMetadata(tagKey, Sort.Direction.ASC);
     Page<Metadata> actualMetadataPage = storageService.getSecretList(Sort.by(tagKey).ascending());
@@ -252,7 +252,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void givenTagsWithStringValue_whenRequestingDescSortedList_thenReturnProperResult() {
+  void givenTagsWithStringValue_whenRequestingDescSortedList_thenReturnProperResult() {
     String tagKey = Base58.randomString(5);
     Metadata[] expectedMetadata = getSortStringTestMetadata(tagKey, Sort.Direction.DESC);
     Page<Metadata> actualMetadataPage = storageService.getSecretList(Sort.by(tagKey).descending());
@@ -265,8 +265,7 @@ public class FilterPagingAndNestedSortingIT {
   }
 
   @Test
-  public void
-      givenMultipleEntitiesButMixedValueTypes_whenRequestingSortedList_thenThrowException() {
+  void givenMultipleEntitiesButMixedValueTypes_whenRequestingSortedList_thenThrowException() {
     String tagKey = Base58.randomString(5);
     Metadata longTypeMetadata =
         Metadata.builder()
@@ -299,15 +298,14 @@ public class FilterPagingAndNestedSortingIT {
     }
     Sort sortConfig = Sort.by(tagKey).ascending();
     AmphoraServiceException ase =
-        Assert.assertThrows(
-            AmphoraServiceException.class, () -> storageService.getSecretList(sortConfig));
+        assertThrows(AmphoraServiceException.class, () -> storageService.getSecretList(sortConfig));
     assertEquals(
         "The TagValueType of the tags used for sorting have different configurations.",
         ase.getMessage());
   }
 
   @Test
-  public void givenNoTagWithSortingKey_whenRequestingSortedList_thenActAsNoSortingApplied() {
+  void givenNoTagWithSortingKey_whenRequestingSortedList_thenActAsNoSortingApplied() {
     String actualTagKey = Base58.randomString(5);
     String wrongTagKey = Base58.randomString(5) + "wrong";
     Metadata[] expectedMetadata = getUnorderedStringTestMetadata(actualTagKey);

@@ -14,14 +14,16 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.util.CollectionUtils;
 
 @Entity
 @Table(name = TagEntity.TABLE_NAME)
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
 @EntityListeners(AuditingEntityListener.class)
 public class TagEntity implements Serializable {

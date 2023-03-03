@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -11,8 +11,8 @@ import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.SECRET
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
-import static org.junit.Assert.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 import io.carbynestack.amphora.common.Metadata;
 import io.carbynestack.amphora.common.MetadataPage;
@@ -30,37 +30,39 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = RANDOM_PORT,
     classes = {AmphoraServiceApplication.class})
 @ActiveProfiles(profiles = {"test"})
 @Slf4j
+@Testcontainers
 public class AmphoraServiceSystemTest {
   private final UUID testSecretId1 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb26");
   private final UUID testSecretId2 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb27");
   private final UUID testSecretId3 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb28");
   private final UUID testSecretId4 = UUID.fromString("82a73814-321c-4261-abcd-27c6c0ebfb29");
 
-  @ClassRule
+  @Container
   public static ReusableRedisContainer reusableRedisContainer =
       ReusableRedisContainer.getInstance();
 
-  @ClassRule
+  @Container
   public static ReusableMinioContainer reusableMinioContainer =
       ReusableMinioContainer.getInstance();
 
-  @ClassRule
+  @Container
   public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =
       ReusablePostgreSQLContainer.getInstance();
 
@@ -109,13 +111,13 @@ public class AmphoraServiceSystemTest {
           .tags(Collections.singletonList(Tag.builder().key("empty-value").value("").build()))
           .build();
 
-  @Before
+  @BeforeEach
   public void setUp() {
     testEnvironment.clearAllData();
   }
 
   @Test
-  public void givenSuccessfulRequest_whenPostSecretShares_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenPostSecretShares_thenReturnExpectedContent() {
     String expectedPath =
         INTRA_VCP_OPERATIONS_SEGMENT
             + SECRET_SHARES_ENDPOINT
@@ -128,7 +130,7 @@ public class AmphoraServiceSystemTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenListSecrets_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecrets_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response = restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
     assertEquals(
@@ -139,7 +141,7 @@ public class AmphoraServiceSystemTest {
   }
 
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListSecretsWithNumberComparisonFilter_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
@@ -153,8 +155,7 @@ public class AmphoraServiceSystemTest {
   }
 
   @Test
-  public void
-      givenSuccessfulRequest_whenListSecretsWithStringEqualFilter_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecretsWithStringEqualFilter_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(
@@ -167,7 +168,7 @@ public class AmphoraServiceSystemTest {
   }
 
   @Test
-  public void
+  void
       givenSuccessfulRequest_whenListSecretsWithStringAndNumberComparisonFilters_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
@@ -181,8 +182,7 @@ public class AmphoraServiceSystemTest {
   }
 
   @Test
-  public void
-      givenSuccessfulRequest_whenListSecretsWithNPaginationConfig_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecretsWithNPaginationConfig_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(
@@ -196,7 +196,7 @@ public class AmphoraServiceSystemTest {
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenDeleteSecret_thenReturnRemoveAndDoNoLongerReturn() {
+  void givenSuccessfulRequest_whenDeleteSecret_thenReturnRemoveAndDoNoLongerReturn() {
     createTestSecretShares();
     MetadataPage responsePreDel =
         restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
@@ -216,7 +216,7 @@ public class AmphoraServiceSystemTest {
 
   @SneakyThrows
   @Test
-  public void givenUnknownSecretId_whenDeleteSecretShare_thenDoNotTouchOtherSecrets() {
+  void givenUnknownSecretId_whenDeleteSecretShare_thenDoNotTouchOtherSecrets() {
     createTestSecretShares();
     MetadataPage responsePreDel =
         restTemplate.getForObject(SECRET_SHARES_ENDPOINT, MetadataPage.class);
@@ -237,7 +237,7 @@ public class AmphoraServiceSystemTest {
   }
 
   @Test
-  public void givenSuccessfulRequest_whenListSecretsWithNSorting_thenReturnExpectedContent() {
+  void givenSuccessfulRequest_whenListSecretsWithNSorting_thenReturnExpectedContent() {
     createTestSecretShares();
     MetadataPage response =
         restTemplate.getForObject(

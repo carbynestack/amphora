@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -10,7 +10,7 @@ package io.carbynestack.amphora.service.persistence.cache;
 import static io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService.NO_INPUT_MASKS_FOUND_FOR_REQUEST_ID_EXCEPTION_MSG;
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -29,38 +29,40 @@ import io.carbynestack.castor.common.entities.TupleList;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = RANDOM_PORT,
     classes = {AmphoraServiceApplication.class})
 @ActiveProfiles(profiles = {"test"})
+@Testcontainers
 public class InputMaskStoreRedisIT {
   private final UUID testRequestId = UUID.fromString("b380f595-f301-4577-9f44-6d78728c38c3");
   private final long numberOfTuples = 42;
   private final TupleList testInputMasks1 = AmphoraTestData.getRandomInputMaskList(numberOfTuples);
   private final TupleList testInputMasks2 = AmphoraTestData.getRandomInputMaskList(numberOfTuples);
 
-  @ClassRule
+  @Container
   public static ReusableRedisContainer reusableRedisContainer =
       ReusableRedisContainer.getInstance();
 
-  @ClassRule
+  @Container
   public static ReusableMinioContainer reusableMinioContainer =
       ReusableMinioContainer.getInstance();
 
-  @ClassRule
+  @Container
   public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =
       ReusablePostgreSQLContainer.getInstance();
 
@@ -78,7 +80,7 @@ public class InputMaskStoreRedisIT {
 
   @MockBean private CastorIntraVcpClient castorClient;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     if (inputMaskCache == null) {
       inputMaskCache = cacheManager.getCache(cacheProperties.getInputMaskStore());
@@ -87,7 +89,7 @@ public class InputMaskStoreRedisIT {
   }
 
   @Test
-  public void givenNoDataForKeyInCache_whenGetInputMasks_thenThrowAmphoraServiceException() {
+  void givenNoDataForKeyInCache_whenGetInputMasks_thenThrowAmphoraServiceException() {
     AmphoraServiceException ase =
         assertThrows(
             AmphoraServiceException.class, () -> inputMaskStore.getInputMasks(testRequestId));
@@ -98,7 +100,7 @@ public class InputMaskStoreRedisIT {
 
   @SneakyThrows
   @Test
-  public void givenMultipleRequestsForSameKey_whenGetInputMasks_thenReturnSameResult() {
+  void givenMultipleRequestsForSameKey_whenGetInputMasks_thenReturnSameResult() {
     when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size()))
         .thenReturn(testInputMasks1);
     inputMaskStore.fetchAndCacheInputMasks(testRequestId, testInputMasks1.size());
@@ -112,8 +114,7 @@ public class InputMaskStoreRedisIT {
 
   @SneakyThrows
   @Test
-  public void
-      givenConsecutiveCallsForSameKey_whenFetchAndCacheInputMasks_thenReplaceExistingData() {
+  void givenConsecutiveCallsForSameKey_whenFetchAndCacheInputMasks_thenReplaceExistingData() {
     when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size()))
         .thenReturn(testInputMasks1)
         .thenReturn(testInputMasks2);
@@ -133,7 +134,7 @@ public class InputMaskStoreRedisIT {
 
   @SneakyThrows
   @Test
-  public void givenSuccessfulRequest_whenRemoveInputMasks_thenDeleteFromCache() {
+  void givenSuccessfulRequest_whenRemoveInputMasks_thenDeleteFromCache() {
     inputMaskCache.put(testRequestId, testInputMasks1);
     assertThat(
         inputMaskStore.getInputMasks(testRequestId),
