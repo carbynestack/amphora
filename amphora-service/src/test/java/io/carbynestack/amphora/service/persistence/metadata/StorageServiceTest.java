@@ -616,14 +616,13 @@ class StorageServiceTest {
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.empty());
 
-    NotFoundException nfe =
-        assertThrows(
-            NotFoundException.class,
-            () -> storageService.retrieveTag(testSecretId, key),
-            String.format(
-                NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
-                testTag.getKey(),
-                existingSecretEntity.getSecretId()));
+    assertThrows(
+        NotFoundException.class,
+        () -> storageService.retrieveTag(testSecretId, key),
+        String.format(
+            NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
+            testTag.getKey(),
+            existingSecretEntity.getSecretId()));
   }
 
   @Test

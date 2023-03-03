@@ -252,7 +252,7 @@ class DefaultAmphoraClientTest {
 
   @SneakyThrows
   @Test
-  void givenOutPutDeliveryObjectsOfVariousSize_whenDownloadingObject_thenReturnExpectedContent() {
+  void givenOutputDeliveryObjectsOfVariousSize_whenDownloadingObject_thenReturnExpectedContent() {
     for (int i = 0; i < 100; i++) {
       int secretSize = random.nextInt(1000) + 1; // make sure it is no 0
       BigInteger[] secrets =

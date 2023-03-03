@@ -36,7 +36,7 @@ public class SecretShareTest {
   }
 
   @Test
-  void givenTwoSecretShareWithSameContent_whenCompareEqual_thenMatch() {
+  void givenTwoSecretSharesWithSameContent_whenCompareEqual_thenMatch() {
     byte[] data = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH];
     random.nextBytes(data);
     SecretShare secretShare1 =

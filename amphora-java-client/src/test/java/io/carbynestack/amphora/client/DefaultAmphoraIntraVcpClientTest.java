@@ -62,7 +62,7 @@ class DefaultAmphoraIntraVcpClientTest {
   }
 
   @Test
-  void givenNoServiceUriDefined_whenBuildingInterVcClient_thenThrowException() {
+  void givenNoServiceUriDefined_whenBuildingInterVcpClient_thenThrowException() {
     try (MockedStatic<AmphoraCommunicationClient> communicationClientMockedStatic =
         mockStatic(AmphoraCommunicationClient.class)) {
       DefaultAmphoraIntraVcpClient.DefaultAmphoraIntraVcpClientBuilder clientBuilder =

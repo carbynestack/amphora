@@ -7,6 +7,7 @@
 package io.carbynestack.amphora.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.carbynestack.amphora.common.exceptions.SecretVerificationException;
@@ -49,7 +50,7 @@ class SecretShareUtilTest {
         IntStream.range(0, numberOfValues)
             .mapToObj(i -> vs.get(i).multiply(rs.get(i)))
             .collect(Collectors.toList());
-    secretShareUtil.verifySecrets(secrets, rs, us, vs, ws);
+    assertDoesNotThrow(() -> secretShareUtil.verifySecrets(secrets, rs, us, vs, ws));
   }
 
   @Test

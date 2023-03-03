@@ -64,7 +64,7 @@
         <maven-license-plugin.version>2.0.0</maven-license-plugin.version>
 
         <!-- internal dependency versions -->
-        <castor.version>0.1-SNAPSHOT-4191841095-22-1721229</castor.version>
+        <castor.version>0.1-SNAPSHOT-4321261594-23-40a9faa</castor.version>
         <cs-spdz-integration.version>0.2-SNAPSHOT-3541842672-11-c754bbb</cs-spdz-integration.version>
         <cs-java-client.version>0.1-SNAPSHOT-4075044562-9-8ffab9c</cs-java-client.version>
 
