@@ -263,7 +263,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     tagRepository
         .findBySecretAndKey(secretEntityReference, tag.getKey())
         .ifPresent(
@@ -295,7 +295,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     List<TagEntity> existingReservedTags =
         RESERVED_TAG_KEYS.stream()
             .map(key -> tagRepository.findBySecretAndKey(secretEntityReference, key))
@@ -344,7 +344,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     return tagRepository
         .findBySecretAndKey(secretEntityReference, key)
         .map(TagEntity::toTag)
@@ -373,7 +373,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     TagEntity existingTag =
         tagRepository
             .findBySecretAndKey(secretEntityReference, tag.getKey())
@@ -405,7 +405,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     tagRepository.delete(
         tagRepository
             .findBySecretAndKey(secretEntityReference, key)

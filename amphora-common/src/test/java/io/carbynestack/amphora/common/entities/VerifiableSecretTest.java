@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-public class VerifiableSecretTest {
+class VerifiableSecretTest {
   private OutputDeliveryObject testOutputDeliveryObject =
       OutputDeliveryObject.builder()
           .secretShares("sShares".getBytes())
@@ -73,7 +73,7 @@ public class VerifiableSecretTest {
   private ObjectMapper objectMapper = new ObjectMapper();
 
   @Test
-  public void givenValidJsonString_whenDeserialize_thenReturnExpectedObject()
+  void givenValidJsonString_whenDeserialize_thenReturnExpectedObject()
       throws JsonProcessingException {
     VerifiableSecretShare vss =
         objectMapper.readValue(expectedJsonString, VerifiableSecretShare.class);
@@ -82,17 +82,15 @@ public class VerifiableSecretTest {
   }
 
   @Test
-  public void givenVssObject_whenSerialize_thenReturnExpectedJsonString()
-      throws JsonProcessingException {
+  void givenVssObject_whenSerialize_thenReturnExpectedJsonString() throws JsonProcessingException {
     VerifiableSecretShare vss = VerifiableSecretShare.of(testMetadata, testOutputDeliveryObject);
     assertEquals(
         expectedJsonString, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(vss));
   }
 
   @Test
-  public void
-      givenJsonMissingOutputDeliveryObjectAttribute_whenDeserialize_thenReturnThrowException()
-          throws JsonProcessingException {
+  void givenJsonMissingOutputDeliveryObjectAttribute_whenDeserialize_thenReturnThrowException()
+      throws JsonProcessingException {
     String invalidJson = expectedJsonString.replaceFirst("\"rShares\" :\\s\"\\S+\",", "");
     ValueInstantiationException vie =
         assertThrows(
@@ -102,7 +100,7 @@ public class VerifiableSecretTest {
   }
 
   @Test
-  public void givenJsonMissingMetadataAttribute_whenDeserialize_thenReturnThrowException()
+  void givenJsonMissingMetadataAttribute_whenDeserialize_thenReturnThrowException()
       throws JsonProcessingException {
     String invalidJson = expectedJsonString.replaceFirst("\"secretId\" :\\s\"\\S+\",", "");
     ValueInstantiationException vie =

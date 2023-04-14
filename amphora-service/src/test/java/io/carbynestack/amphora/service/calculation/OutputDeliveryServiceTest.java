@@ -321,8 +321,7 @@ class OutputDeliveryServiceTest {
         assertThrows(
             AmphoraServiceException.class,
             () ->
-                outputDeliveryService.computeOutputDeliveryObject(
-                    SECRET_SHARE.getData(), expectedRequestId));
+                outputDeliveryService.computeOutputDeliveryObject(SECRET_SHARE, expectedRequestId));
     assertEquals("Failed to retrieve the required Tuples form Castor", ase.getMessage());
   }
 

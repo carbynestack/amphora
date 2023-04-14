@@ -65,7 +65,7 @@ public class SecretShareController {
       @RequestParam(required = false, value = SORT_DIRECTION_PARAMETER) String sortDirection)
       throws UnsupportedEncodingException {
     List<TagFilter> tagFilters =
-        StringUtils.isEmpty(filter) ? Collections.emptyList() : parseTagFilters(filter);
+        StringUtils.hasText(filter) ? parseTagFilters(filter) : Collections.emptyList();
     Sort sort = getSort(sortProperty, sortDirection);
     Page<Metadata> secretSpringPage;
     if (isEmpty(tagFilters)) {
@@ -129,7 +129,7 @@ public class SecretShareController {
   }
 
   Sort getSort(String sortProperty, String sortDirection) {
-    if (!StringUtils.isEmpty(sortProperty)) {
+    if (StringUtils.hasText(sortProperty)) {
       return Try.of(() -> Sort.Direction.fromString(sortDirection))
           .map(direction -> Sort.by(direction, sortProperty))
           .getOrElse(Sort.by(sortProperty));

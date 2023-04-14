@@ -14,7 +14,7 @@ import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import org.junit.jupiter.api.Test;
 
-public class OutputDeliveryObjectTest {
+class OutputDeliveryObjectTest {
   @Test
   void givenValidBuilderConfiguration_whenCallingBuildOnBuilder_thenReturnObject() {
     byte[] secretShares = new byte[MpSpdzIntegrationUtils.WORD_WIDTH];
