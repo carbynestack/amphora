@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -10,10 +10,8 @@ package io.carbynestack.amphora.service.rest;
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.DOWNLOAD_INPUT_MASKS_ENDPOINT;
 import static org.springframework.util.Assert.*;
 
+import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService;
-import io.carbynestack.castor.common.entities.Field;
-import io.carbynestack.castor.common.entities.InputMask;
-import io.carbynestack.castor.common.entities.TupleList;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +33,12 @@ public class InputMaskShareController {
   private final InputMaskCachingService inputMaskCachingService;
 
   @GetMapping
-  public ResponseEntity<TupleList<InputMask<Field.Gfp>, Field.Gfp>> getInputMasks(
+  public ResponseEntity<OutputDeliveryObject> getInputMasks(
       @RequestParam UUID requestId, @RequestParam long count) {
     notNull(requestId, REQUEST_IDENTIFIER_MUST_NOT_BE_NULL_EXCEPTION_MSG);
     isTrue(count > 0, TOO_LESS_INPUT_MASKS_EXCEPTION_MSG);
     return new ResponseEntity<>(
-        inputMaskCachingService.fetchAndCacheInputMasks(requestId, count), HttpStatus.OK);
+        inputMaskCachingService.getInputMasksAsOutputDeliveryObject(requestId, count),
+        HttpStatus.OK);
   }
 }

@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.google.common.collect.Lists;
 import io.carbynestack.amphora.client.AmphoraCommunicationClient.RequestParameters;
 import io.carbynestack.amphora.client.AmphoraCommunicationClient.RequestParametersWithBody;
 import io.carbynestack.amphora.common.*;
@@ -200,9 +201,9 @@ class DefaultAmphoraClientTest {
               .longs(secretSize, 0, Long.MAX_VALUE)
               .mapToObj(BigInteger::valueOf)
               .toArray(BigInteger[]::new);
-      Map<URI, TupleList> inputMaskShares = getInputMaskShares(secretSize);
-      when(amphoraCommunicationClient.download(anyList(), eq(TupleList.class)))
-          .thenReturn(TestUtils.wrap(inputMaskShares));
+      Map<URI, OutputDeliveryObject> inputMaskOdos = getInputMaskOutputDeliveryObjects(secretSize);
+      when(amphoraCommunicationClient.download(anyList(), eq(OutputDeliveryObject.class)))
+          .thenReturn(TestUtils.wrap(inputMaskOdos));
       UUID storeResult = amphoraClient.createSecret(getObject(secrets));
       assertNotNull(storeResult);
       verify(amphoraCommunicationClient, times(1)).upload(requestCaptor.capture(), any());
@@ -215,15 +216,15 @@ class DefaultAmphoraClientTest {
       BigInteger[] recoveredObject = new BigInteger[secretSize];
       for (int j = 0; j < secretSize; j++) {
         BigInteger mask = BigInteger.ZERO;
-        int finalJ = j;
-        for (BigInteger b :
-            inputMaskShares.values().stream()
-                .map(list -> (InputMask) list.get(finalJ))
-                .map(inputMask -> inputMask.getShare(0))
-                .map(Share::getValue)
-                .map(spdzUtil::fromGfp)
-                .collect(Collectors.toList())) {
-          mask = mask.add(b).mod(spdzUtil.getPrime());
+        for (OutputDeliveryObject odo : inputMaskOdos.values()) {
+          mask =
+              mask.add(
+                      spdzUtil.fromGfp(
+                          Arrays.copyOfRange(
+                              odo.getSecretShares(),
+                              j * Field.GFP.getElementSize(),
+                              (j + 1) * Field.GFP.getElementSize())))
+                  .mod(spdzUtil.getPrime());
         }
         BigInteger maskedInputValue = spdzUtil.fromGfp(maskedInput.getData().get(j).getValue());
         recoveredObject[j] = mask.add(maskedInputValue).mod(spdzUtil.getPrime());
@@ -237,8 +238,8 @@ class DefaultAmphoraClientTest {
   @Test
   void givenUploadingMaskedInputFails_whenCreateObject_thenThrowAmphoraClientException() {
     Map<URI, Try<URI>> uriResponseMap = getErrorUriResponseMap();
-    when(amphoraCommunicationClient.download(anyList(), eq(TupleList.class)))
-        .thenReturn(TestUtils.wrap(getInputMaskShares(1)));
+    when(amphoraCommunicationClient.download(anyList(), eq(OutputDeliveryObject.class)))
+        .thenReturn(TestUtils.wrap(getInputMaskOutputDeliveryObjects(1)));
     when(amphoraCommunicationClient.upload(anyList(), eq(URI.class))).thenReturn(uriResponseMap);
     AmphoraClientException actualAce =
         assertThrows(
@@ -261,8 +262,8 @@ class DefaultAmphoraClientTest {
               .map(s -> s < 0 ? -s : s)
               .mapToObj(BigInteger::valueOf)
               .toArray(BigInteger[]::new);
-      when(amphoraCommunicationClient.download(anyList(), eq(OutputDeliveryObject.class)))
-          .thenReturn(TestUtils.wrap(getOutputDeliveryObjectsForSecrets(testSecretId, secrets)));
+      when(amphoraCommunicationClient.download(anyList(), eq(VerifiableSecretShare.class)))
+          .thenReturn(TestUtils.wrap(getVerifiableSecretSharesForSecrets(testSecretId, secrets)));
       Secret result = amphoraClient.getSecret(testSecretId);
       assertEquals(secretSize, result.getData().length);
       assertThat(result.getData()).containsExactly(secrets);
@@ -273,12 +274,12 @@ class DefaultAmphoraClientTest {
   @Test
   void givenDownloadDataFromOnePlayerFails_whenDownloadingObject_thenThrowAmphoraClientException() {
     BigInteger[] secrets = new BigInteger[] {BigInteger.valueOf(42), BigInteger.valueOf(24)};
-    Map<URI, Try<OutputDeliveryObject>> results =
-        TestUtils.wrap(getOutputDeliveryObjectsForSecrets(testSecretId, secrets));
+    Map<URI, Try<VerifiableSecretShare>> results =
+        TestUtils.wrap(getVerifiableSecretSharesForSecrets(testSecretId, secrets));
     results.put(
         results.keySet().toArray(new URI[0])[results.size() - 1],
         Try.failure(new Exception("Call failed")));
-    when(amphoraCommunicationClient.download(anyList(), eq(OutputDeliveryObject.class)))
+    when(amphoraCommunicationClient.download(anyList(), eq(VerifiableSecretShare.class)))
         .thenReturn(results);
     AmphoraClientException ace =
         assertThrows(AmphoraClientException.class, () -> amphoraClient.getSecret(testSecretId));
@@ -778,9 +779,7 @@ class DefaultAmphoraClientTest {
         .contains(expectedErrorDetails);
   }
 
-  @SneakyThrows
-  private Map<URI, OutputDeliveryObject> getOutputDeliveryObjectsForSecrets(
-      UUID id, BigInteger[] secrets) {
+  private List<OutputDeliveryObject> getOutputDeliveryObjectsForSecrets(BigInteger[] secrets) {
     ByteBuffer p0ShareData = ByteBuffer.allocate(secrets.length * WORD_WIDTH);
     ByteBuffer p0Rs = ByteBuffer.allocate(secrets.length * WORD_WIDTH);
     ByteBuffer p0Us = ByteBuffer.allocate(secrets.length * WORD_WIDTH);
@@ -803,30 +802,37 @@ class DefaultAmphoraClientTest {
       simpleShareToByteBuffer(w, p0Ws, p1Ws);
       simpleShareToByteBuffer(u, p0Us, p1Us);
     }
-    Map<URI, OutputDeliveryObject> outputObjects = new HashMap<>();
-    outputObjects.put(
-        new URI(testUri),
+    return Lists.newArrayList(
         OutputDeliveryObject.builder()
-            .secretId(id)
             .secretShares(p0ShareData.array())
             .rShares(p0Rs.array())
             .vShares(p0Vs.array())
             .wShares(p0Ws.array())
             .uShares(p0Us.array())
-            .tags(getTags())
-            .build());
-    outputObjects.put(
-        new URI(testUri2),
+            .build(),
         OutputDeliveryObject.builder()
-            .secretId(id)
             .secretShares(p1ShareData.array())
             .rShares(p1Rs.array())
             .vShares(p1Vs.array())
             .wShares(p1Ws.array())
             .uShares(p1Us.array())
-            .tags(getTags())
             .build());
-    return outputObjects;
+  }
+
+  @SneakyThrows
+  private Map<URI, VerifiableSecretShare> getVerifiableSecretSharesForSecrets(
+      UUID id, BigInteger[] secrets) {
+    List<OutputDeliveryObject> odos = getOutputDeliveryObjectsForSecrets(secrets);
+    Map<URI, VerifiableSecretShare> verifiableSecrets = new HashMap<>();
+    verifiableSecrets.put(
+        new URI(testUri),
+        VerifiableSecretShare.of(
+            Metadata.builder().secretId(id).tags(getTags()).build(), odos.get(0)));
+    verifiableSecrets.put(
+        new URI(testUri2),
+        VerifiableSecretShare.of(
+            Metadata.builder().secretId(id).tags(getTags()).build(), odos.get(1)));
+    return verifiableSecrets;
   }
 
   private void simpleShareToByteBuffer(BigInteger secret, ByteBuffer target1, ByteBuffer target2) {
@@ -836,44 +842,19 @@ class DefaultAmphoraClientTest {
   }
 
   @SneakyThrows
-  private Map<URI, TupleList> getInputMaskShares(int numberOfMasks) {
-    Map<URI, TupleList> inputMaskShares = new HashMap<>();
-    TupleList inputMaskListA =
-        new TupleList<>(
-            TupleType.INPUT_MASK_GFP.getTupleCls(), TupleType.INPUT_MASK_GFP.getField());
-    TupleList inputMaskListB =
-        new TupleList<>(
-            TupleType.INPUT_MASK_GFP.getTupleCls(), TupleType.INPUT_MASK_GFP.getField());
-    IntStream.range(0, numberOfMasks)
-        .forEach(
-            i -> {
-              if (random.nextBoolean()) {
-                inputMaskListA.add(getMaskA());
-                inputMaskListB.add(getMaskB());
-              } else {
-                inputMaskListA.add(getMaskB());
-                inputMaskListB.add(getMaskA());
-              }
-            });
-    inputMaskShares.put(new URI(testUri), inputMaskListA);
-    inputMaskShares.put(new URI(testUri2), inputMaskListB);
-    return inputMaskShares;
-  }
-
-  private InputMask<Field.Gfp> getMaskA() {
-    return new InputMask(
-        TupleType.INPUT_MASK_GFP.getField(),
-        new Share(
-            spdzUtil.toGfp(new BigInteger("82730997414791468496799367418496881908")),
-            spdzUtil.toGfp(new BigInteger("60557275363670854182192939229091375859"))));
-  }
-
-  private InputMask<Field.Gfp> getMaskB() {
-    return new InputMask(
-        TupleType.INPUT_MASK_GFP.getField(),
-        new Share(
-            spdzUtil.toGfp(new BigInteger("45359004002536205186084333850157344582")),
-            spdzUtil.toGfp(new BigInteger("48604663536222227589564560476962533035"))));
+  private Map<URI, OutputDeliveryObject> getInputMaskOutputDeliveryObjects(int numberOfMasks) {
+    BigInteger[] inputMasks =
+        IntStream.range(0, numberOfMasks)
+            .mapToObj(
+                i ->
+                    new BigInteger(spdzUtil.getPrime().bitLength(), random)
+                        .mod(spdzUtil.getPrime()))
+            .toArray(BigInteger[]::new);
+    List<OutputDeliveryObject> odoList = getOutputDeliveryObjectsForSecrets(inputMasks);
+    Map<URI, OutputDeliveryObject> inputMaskOdos = new HashMap<>();
+    inputMaskOdos.put(new URI(testUri), odoList.get(0));
+    inputMaskOdos.put(new URI(testUri2), odoList.get(1));
+    return inputMaskOdos;
   }
 
   @SneakyThrows

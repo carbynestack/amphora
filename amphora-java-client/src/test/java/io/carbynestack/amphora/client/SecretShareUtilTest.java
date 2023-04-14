@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import io.carbynestack.amphora.common.exceptions.SecretVerificationException;
+import io.carbynestack.amphora.common.exceptions.IntegrityVerificationException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Random;
@@ -77,9 +77,9 @@ class SecretShareUtilTest {
             .mapToObj(i -> vs.get(i).multiply(rs.get(i)))
             .collect(Collectors.toList());
     ws.set(numberOfValues - 1, ws.get(numberOfValues - 1).subtract(BigInteger.TEN));
-    SecretVerificationException ove =
+    IntegrityVerificationException ove =
         assertThrows(
-            SecretVerificationException.class,
+            IntegrityVerificationException.class,
             () -> secretShareUtil.verifySecrets(secrets, rs, us, vs, ws));
     assertThat(ove.getMessage()).startsWith("Verification of secret has failed");
   }

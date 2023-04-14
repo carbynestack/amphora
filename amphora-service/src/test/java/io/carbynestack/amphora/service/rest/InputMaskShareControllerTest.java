@@ -9,21 +9,16 @@ package io.carbynestack.amphora.service.rest;
 
 import static io.carbynestack.amphora.service.rest.InputMaskShareController.REQUEST_IDENTIFIER_MUST_NOT_BE_NULL_EXCEPTION_MSG;
 import static io.carbynestack.amphora.service.rest.InputMaskShareController.TOO_LESS_INPUT_MASKS_EXCEPTION_MSG;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.amphora.service.AmphoraTestData;
 import io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService;
-import io.carbynestack.castor.common.CastorServiceUri;
 import io.carbynestack.castor.common.entities.Field;
 import io.carbynestack.castor.common.entities.InputMask;
 import io.carbynestack.castor.common.entities.TupleList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -37,8 +32,8 @@ import org.springframework.http.ResponseEntity;
 @ExtendWith(MockitoExtension.class)
 class InputMaskShareControllerTest {
   private final UUID testRequestId = UUID.fromString("7520e090-1437-44da-9e4e-eea5b2200fea");
-  private final long validNumberOfTuples = 1;
-  private final long invalidNumberOfTuples = -1;
+  private final int validNumberOfTuples = 1;
+  private final int invalidNumberOfTuples = -1;
 
   @Mock private InputMaskCachingService inputMaskStore;
 
@@ -47,21 +42,19 @@ class InputMaskShareControllerTest {
   @SneakyThrows
   @Test
   void givenSuccessfulRequest_whenGetInputMasks_thenReturnExpectedResult() {
-    String testCastorServiceUri = "https://castor.carbynestack.io";
     TupleList<InputMask<Field.Gfp>, Field.Gfp> testInputMasks =
         AmphoraTestData.getRandomInputMaskList(validNumberOfTuples);
-    Map<CastorServiceUri, TupleList> inputMaskListMap = new HashMap<>();
-    CastorServiceUri castorServiceUri = new CastorServiceUri(testCastorServiceUri);
-    inputMaskListMap.put(castorServiceUri, testInputMasks);
+    OutputDeliveryObject testOdo =
+        AmphoraTestData.getRandomOutputDeliveryObject(validNumberOfTuples);
 
-    when(inputMaskStore.fetchAndCacheInputMasks(testRequestId, testInputMasks.size()))
-        .thenReturn(testInputMasks);
+    when(inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks.size()))
+        .thenReturn(testOdo);
 
-    ResponseEntity<TupleList<InputMask<Field.Gfp>, Field.Gfp>> responseEntity =
+    ResponseEntity<OutputDeliveryObject> responseEntity =
         inputMaskShareController.getInputMasks(testRequestId, validNumberOfTuples);
 
-    assertThat(responseEntity.getBody(), is(equalTo(testInputMasks)));
-    assertThat(responseEntity.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertEquals(testOdo, responseEntity.getBody());
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
   }
 
   @Test

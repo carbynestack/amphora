@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -91,7 +91,7 @@ public class StorageService {
       throw new IllegalArgumentException(TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG);
     }
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMasks =
-        inputMaskStore.getInputMasks(maskedInput.getSecretId());
+        inputMaskStore.getCachedInputMasks(maskedInput.getSecretId());
     SecretShare secretShare =
         secretShareUtil.convertToSecretShare(
             maskedInput,

@@ -1,29 +1,29 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 package io.carbynestack.amphora.common;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 
 /**
- * An entity class used send the Amphora instance's secret shares to the requesting client. <br>
+ * An entity class used by the Amphora service's to send secret and tuple shares to the requesting
+ * client. <br>
  * This format allows the client to verify the integrity of the Amphora instance as described in the
  * following paper:<br>
  * Ivan Damgård, Kasper Damgård, Kurt Nielsen, Peter Sebastian Nordholt, Tomas Toft: <br>
  * Confidential Benchmarking based on Multiparty Computation. IACR Cryptology ePrint Archive 2015:
  * 1006 (2015) <br>
- * https://eprint.iacr.org/2015/1006
+ * <a href="https://eprint.iacr.org/2015/1006">Confidential Benchmarking based on Multiparty
+ * Computation</a>
  *
  * <p>The object is composed of the following values: <br>
  *
@@ -48,11 +48,11 @@ import lombok.extern.jackson.Jacksonized;
  */
 @Getter
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@EqualsAndHashCode
+@ToString
 @Jacksonized
 @SuperBuilder(toBuilder = true)
-public class OutputDeliveryObject extends Metadata {
+public class OutputDeliveryObject {
   private static final long serialVersionUID = -8201039361986746504L;
   /** The actual share of the secret. */
   @JsonProperty(value = "secretShares", required = true)
@@ -71,28 +71,37 @@ public class OutputDeliveryObject extends Metadata {
   byte[] uShares;
 
   /**
-   * Implementation of the auto-generated {@link OutputDeliveryObjectBuilder}.<br>
-   * This class is filled with further logic by <i>lombok</i>. Only {@link
-   * OutputDeliveryObjectBuilderImpl#build()} is pre-implemented to provide custom logic.
+   * Creates a new {@link OutputDeliveryObject} with the given parameters.
+   *
+   * @throws IllegalArgumentException if the given data for the shares is not of the same length.
    */
-  static final class OutputDeliveryObjectBuilderImpl
-      extends OutputDeliveryObject.OutputDeliveryObjectBuilder<
-          OutputDeliveryObject, OutputDeliveryObject.OutputDeliveryObjectBuilderImpl> {
-    /**
-     * Creates a new {@link OutputDeliveryObject} build from the current configuration of this
-     * builder.
-     *
-     * @return The new {@link OutputDeliveryObject}
-     * @throws IllegalArgumentException if the given data for the shares is not of the same length.
-     */
-    public OutputDeliveryObject build() {
-      if (super.rShares.length != super.secretShares.length
-          || super.vShares.length != super.secretShares.length
-          || super.wShares.length != super.secretShares.length
-          || super.uShares.length != super.secretShares.length) {
-        throw new IllegalArgumentException("The provided shares must be of the same length");
-      }
-      return new OutputDeliveryObject(this);
+  @JsonCreator
+  public OutputDeliveryObject(
+      @NonNull byte[] secretShares,
+      @NonNull byte[] rShares,
+      @NonNull byte[] vShares,
+      @NonNull byte[] wShares,
+      @NonNull byte[] uShares) {
+    if (rShares.length != secretShares.length
+        || vShares.length != secretShares.length
+        || wShares.length != secretShares.length
+        || uShares.length != secretShares.length) {
+      throw new IllegalArgumentException("The provided shares must be of the same length");
     }
+    this.secretShares = secretShares;
+    this.rShares = rShares;
+    this.vShares = vShares;
+    this.wShares = wShares;
+    this.uShares = uShares;
+  }
+
+  /**
+   * Creates a new {@link OutputDeliveryObject} with the given parameters.
+   *
+   * @throws IllegalArgumentException if the given data for the shares is not of the same length.
+   */
+  @JsonCreator
+  OutputDeliveryObject(OutputDeliveryObjectBuilder<?, ?> builder) {
+    this(builder.secretShares, builder.rShares, builder.vShares, builder.wShares, builder.uShares);
   }
 }

@@ -163,10 +163,12 @@ class SecretShareControllerTest {
     when(storageService.getSecretShare(secretId)).thenReturn(secretShare);
     when(outputDeliveryService.computeOutputDeliveryObject(secretShare, requestId))
         .thenReturn(expectedOutputDeliveryObject);
-    ResponseEntity<OutputDeliveryObject> responseEntity =
+    ResponseEntity<VerifiableSecretShare> responseEntity =
         secretShareController.getSecretShare(secretId, requestId);
     assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    assertEquals(expectedOutputDeliveryObject, responseEntity.getBody());
+    assertEquals(
+        VerifiableSecretShare.of(secretShare, expectedOutputDeliveryObject),
+        responseEntity.getBody());
   }
 
   @Test

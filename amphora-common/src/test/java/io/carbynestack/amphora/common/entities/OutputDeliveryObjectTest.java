@@ -12,13 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 public class OutputDeliveryObjectTest {
   @Test
   void givenValidBuilderConfiguration_whenCallingBuildOnBuilder_thenReturnObject() {
-    UUID secretId = UUID.fromString("80fbba1b-3da8-4b1e-8a2c-cebd65229fad");
     byte[] secretShares = new byte[MpSpdzIntegrationUtils.WORD_WIDTH];
     byte[] rShares = new byte[MpSpdzIntegrationUtils.WORD_WIDTH];
     byte[] wShares = new byte[MpSpdzIntegrationUtils.WORD_WIDTH];
@@ -26,14 +24,12 @@ public class OutputDeliveryObjectTest {
     byte[] vShares = new byte[MpSpdzIntegrationUtils.WORD_WIDTH];
     OutputDeliveryObject odo =
         OutputDeliveryObject.builder()
-            .secretId(secretId)
             .secretShares(secretShares)
             .rShares(rShares)
             .wShares(wShares)
             .uShares(uShares)
             .vShares(vShares)
             .build();
-    assertEquals(secretId, odo.getSecretId());
     assertEquals(secretShares, odo.getSecretShares());
     assertEquals(rShares, odo.getRShares());
     assertEquals(wShares, odo.getWShares());
@@ -44,7 +40,7 @@ public class OutputDeliveryObjectTest {
   @Test
   void
       givenRSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
-    OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
+    OutputDeliveryObject.OutputDeliveryObjectBuilder outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().rShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, outputDeliveryObjectBuilder::build);
@@ -54,7 +50,7 @@ public class OutputDeliveryObjectTest {
   @Test
   void
       givenWSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
-    OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
+    OutputDeliveryObject.OutputDeliveryObjectBuilder outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().wShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, outputDeliveryObjectBuilder::build);
@@ -64,7 +60,7 @@ public class OutputDeliveryObjectTest {
   @Test
   void
       givenUSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
-    OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
+    OutputDeliveryObject.OutputDeliveryObjectBuilder outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().uShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, outputDeliveryObjectBuilder::build);
@@ -74,7 +70,7 @@ public class OutputDeliveryObjectTest {
   @Test
   void
       givenVSharesOfDifferentLengthThanSecretShares_whenCallingBuildOnBuilder_thenThrowException() {
-    OutputDeliveryObject.OutputDeliveryObjectBuilder<?, ?> outputDeliveryObjectBuilder =
+    OutputDeliveryObject.OutputDeliveryObjectBuilder outputDeliveryObjectBuilder =
         getValidTestODO(2).toBuilder().vShares(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]);
     IllegalArgumentException actualIae =
         assertThrows(IllegalArgumentException.class, outputDeliveryObjectBuilder::build);
@@ -84,7 +80,6 @@ public class OutputDeliveryObjectTest {
   private OutputDeliveryObject getValidTestODO(int shareLength) {
     byte[] shares = new byte[shareLength * MpSpdzIntegrationUtils.WORD_WIDTH];
     return OutputDeliveryObject.builder()
-        .secretId(UUID.fromString("80fbba1b-3da8-4b1e-8a2c-cebd65229fad"))
         .secretShares(shares)
         .rShares(shares)
         .wShares(shares)

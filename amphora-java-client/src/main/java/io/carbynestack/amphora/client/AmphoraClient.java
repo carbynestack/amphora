@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -11,7 +11,7 @@ import io.carbynestack.amphora.common.MetadataPage;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.common.TagFilter;
 import io.carbynestack.amphora.common.exceptions.AmphoraClientException;
-import io.carbynestack.amphora.common.exceptions.SecretVerificationException;
+import io.carbynestack.amphora.common.exceptions.IntegrityVerificationException;
 import io.carbynestack.amphora.common.paging.PageRequest;
 import io.carbynestack.amphora.common.paging.Sort;
 import java.util.List;
@@ -57,8 +57,8 @@ public interface AmphoraClient {
    *
    * @param secretId The id of the secret
    * @return The requested secret
-   * @throws SecretVerificationException if the vefification of the reassembled secret fails. This
-   *     could either happen based on errors during transmition or at least one of the parties
+   * @throws IntegrityVerificationException if the vefification of the reassembled secret fails.
+   *     This could either happen based on errors during transmition or at least one of the parties
    *     behaving dishonest.
    * @throws AmphoraClientException if the communication with at least one of the defined
    *     <i>Amphora</i> services failed or if no secret with the given id exists.

@@ -7,6 +7,7 @@
 
 package io.carbynestack.amphora.service.persistence.cache;
 
+import static io.carbynestack.amphora.service.AmphoraTestData.extractTupleValuesFromInputMaskList;
 import static io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService.NO_INPUT_MASKS_FOUND_FOR_REQUEST_ID_EXCEPTION_MSG;
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -14,9 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
+import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.AmphoraServiceApplication;
 import io.carbynestack.amphora.service.AmphoraTestData;
+import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
 import io.carbynestack.amphora.service.config.AmphoraCacheProperties;
 import io.carbynestack.amphora.service.config.CastorClientProperties;
 import io.carbynestack.amphora.service.testconfig.PersistenceTestEnvironment;
@@ -24,6 +27,7 @@ import io.carbynestack.amphora.service.testconfig.ReusableMinioContainer;
 import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainer;
 import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
+import io.carbynestack.castor.common.entities.Field;
 import io.carbynestack.castor.common.entities.InputMask;
 import io.carbynestack.castor.common.entities.TupleList;
 import java.util.UUID;
@@ -50,9 +54,15 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public class InputMaskStoreRedisIT {
   private final UUID testRequestId = UUID.fromString("b380f595-f301-4577-9f44-6d78728c38c3");
-  private final long numberOfTuples = 42;
-  private final TupleList testInputMasks1 = AmphoraTestData.getRandomInputMaskList(numberOfTuples);
-  private final TupleList testInputMasks2 = AmphoraTestData.getRandomInputMaskList(numberOfTuples);
+  private final int numberOfTuples = 42;
+  private final TupleList<InputMask<Field.Gfp>, Field.Gfp> testInputMasks1 =
+      AmphoraTestData.getRandomInputMaskList(numberOfTuples);
+  private final TupleList<InputMask<Field.Gfp>, Field.Gfp> testInputMasks2 =
+      AmphoraTestData.getRandomInputMaskList(numberOfTuples);
+  private final OutputDeliveryObject testOutputDeliveryObject1 =
+      AmphoraTestData.getRandomOutputDeliveryObject(numberOfTuples);
+  private final OutputDeliveryObject testOutputDeliveryObject2 =
+      AmphoraTestData.getRandomOutputDeliveryObject(numberOfTuples);
 
   @Container
   public static ReusableRedisContainer reusableRedisContainer =
@@ -79,6 +89,7 @@ public class InputMaskStoreRedisIT {
   private Cache inputMaskCache;
 
   @MockBean private CastorIntraVcpClient castorClient;
+  @MockBean private OutputDeliveryService outputDeliveryService;
 
   @BeforeEach
   public void setUp() {
@@ -92,7 +103,7 @@ public class InputMaskStoreRedisIT {
   void givenNoDataForKeyInCache_whenGetInputMasks_thenThrowAmphoraServiceException() {
     AmphoraServiceException ase =
         assertThrows(
-            AmphoraServiceException.class, () -> inputMaskStore.getInputMasks(testRequestId));
+            AmphoraServiceException.class, () -> inputMaskStore.getCachedInputMasks(testRequestId));
     assertEquals(
         String.format(NO_INPUT_MASKS_FOUND_FOR_REQUEST_ID_EXCEPTION_MSG, testRequestId),
         ase.getMessage());
@@ -103,33 +114,41 @@ public class InputMaskStoreRedisIT {
   void givenMultipleRequestsForSameKey_whenGetInputMasks_thenReturnSameResult() {
     when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size()))
         .thenReturn(testInputMasks1);
-    inputMaskStore.fetchAndCacheInputMasks(testRequestId, testInputMasks1.size());
+    inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks1.size());
     assertThat(
-        inputMaskStore.getInputMasks(testRequestId),
+        inputMaskStore.getCachedInputMasks(testRequestId),
         Matchers.containsInRelativeOrder(testInputMasks1.toArray(new InputMask[0])));
     assertThat(
-        inputMaskStore.getInputMasks(testRequestId),
+        inputMaskStore.getCachedInputMasks(testRequestId),
         Matchers.containsInRelativeOrder(testInputMasks1.toArray(new InputMask[0])));
   }
 
   @SneakyThrows
   @Test
   void givenConsecutiveCallsForSameKey_whenFetchAndCacheInputMasks_thenReplaceExistingData() {
+    UUID testOdoRequestId =
+        UUID.nameUUIDFromBytes(String.format("%s_odo-computation", testRequestId).getBytes());
     when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size()))
         .thenReturn(testInputMasks1)
         .thenReturn(testInputMasks2);
+    byte[] testInputMasks1Values = extractTupleValuesFromInputMaskList(testInputMasks1);
+    byte[] testInputMasks2Values = extractTupleValuesFromInputMaskList(testInputMasks2);
+    when(outputDeliveryService.computeOutputDeliveryObject(testInputMasks1Values, testOdoRequestId))
+        .thenReturn(testOutputDeliveryObject1);
+    when(outputDeliveryService.computeOutputDeliveryObject(testInputMasks2Values, testOdoRequestId))
+        .thenReturn(testOutputDeliveryObject2);
+    assertEquals(
+        testOutputDeliveryObject1,
+        inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks1.size()));
+    assertEquals(
+        testOutputDeliveryObject2,
+        inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks2.size()));
     assertThat(
-        inputMaskStore.fetchAndCacheInputMasks(testRequestId, testInputMasks1.size()),
-        Matchers.containsInRelativeOrder(testInputMasks1.toArray(new InputMask[0])));
-    assertThat(
-        inputMaskStore.fetchAndCacheInputMasks(testRequestId, testInputMasks2.size()),
-        Matchers.containsInRelativeOrder(testInputMasks2.toArray(new InputMask[0])));
-    assertThat(
-        inputMaskStore.getInputMasks(testRequestId),
+        inputMaskStore.getCachedInputMasks(testRequestId),
         Matchers.containsInRelativeOrder(testInputMasks2.toArray(new InputMask[0])));
     assertNotEquals(
         testInputMasks1.toArray(new InputMask[0]),
-        inputMaskStore.getInputMasks(testRequestId).toArray(new InputMask[0]));
+        inputMaskStore.getCachedInputMasks(testRequestId).toArray(new InputMask[0]));
   }
 
   @SneakyThrows
@@ -137,12 +156,12 @@ public class InputMaskStoreRedisIT {
   void givenSuccessfulRequest_whenRemoveInputMasks_thenDeleteFromCache() {
     inputMaskCache.put(testRequestId, testInputMasks1);
     assertThat(
-        inputMaskStore.getInputMasks(testRequestId),
+        inputMaskStore.getCachedInputMasks(testRequestId),
         Matchers.containsInRelativeOrder(testInputMasks1.toArray(new InputMask[0])));
     inputMaskStore.removeInputMasks(testRequestId);
     AmphoraServiceException ase =
         assertThrows(
-            AmphoraServiceException.class, () -> inputMaskStore.getInputMasks(testRequestId));
+            AmphoraServiceException.class, () -> inputMaskStore.getCachedInputMasks(testRequestId));
     assertEquals(
         String.format(NO_INPUT_MASKS_FOUND_FOR_REQUEST_ID_EXCEPTION_MSG, testRequestId),
         ase.getMessage());

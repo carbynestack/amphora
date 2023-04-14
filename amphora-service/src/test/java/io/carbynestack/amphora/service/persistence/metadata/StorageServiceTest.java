@@ -120,7 +120,8 @@ class StorageServiceTest {
     ArgumentCaptor<SecretEntity> secretEntityArgumentCaptor =
         ArgumentCaptor.forClass(SecretEntity.class);
 
-    when(inputMaskStore.getInputMasks(maskedInput.getSecretId())).thenReturn(expectedInputMasks);
+    when(inputMaskStore.getCachedInputMasks(maskedInput.getSecretId()))
+        .thenReturn(expectedInputMasks);
     when(secretShareUtil.convertToSecretShare(maskedInput, null, expectedInputMasks, false))
         .thenReturn(expectedSecretShare);
     when(secretEntityRepository.save(secretEntityArgumentCaptor.capture()))
@@ -164,7 +165,8 @@ class StorageServiceTest {
         ArgumentCaptor.forClass(SecretEntity.class);
 
     when(secretEntityRepository.save(any())).thenReturn(persistedSecretEntity);
-    when(inputMaskStore.getInputMasks(maskedInput.getSecretId())).thenReturn(expectedInputMasks);
+    when(inputMaskStore.getCachedInputMasks(maskedInput.getSecretId()))
+        .thenReturn(expectedInputMasks);
     when(secretShareUtil.convertToSecretShare(maskedInput, null, expectedInputMasks, false))
         .thenReturn(expectedSecretShare);
     when(secretEntityRepository.save(secretEntityArgumentCaptor.capture()))
@@ -172,7 +174,7 @@ class StorageServiceTest {
 
     assertEquals(maskedInput.getSecretId().toString(), storageService.createSecret(maskedInput));
     verify(secretEntityRepository, times(1)).existsById(maskedInput.getSecretId().toString());
-    verify(inputMaskStore, times(1)).getInputMasks(maskedInput.getSecretId());
+    verify(inputMaskStore, times(1)).getCachedInputMasks(maskedInput.getSecretId());
     verify(secretEntityRepository, times(1)).save(secretEntityArgumentCaptor.capture());
     verify(secretShareDataStore, times(1))
         .storeSecretShareData(expectedSecretShare.getSecretId(), expectedSecretShare.getData());
