@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -14,11 +14,9 @@ import io.carbynestack.amphora.client.AmphoraCommunicationClient.RequestParamete
 import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.common.exceptions.AmphoraClientException;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
-import io.carbynestack.amphora.common.exceptions.SecretVerificationException;
+import io.carbynestack.amphora.common.exceptions.IntegrityVerificationException;
 import io.carbynestack.amphora.common.paging.PageRequest;
 import io.carbynestack.amphora.common.paging.Sort;
-import io.carbynestack.castor.common.entities.InputMask;
-import io.carbynestack.castor.common.entities.TupleList;
 import io.carbynestack.httpclient.BearerTokenUtils;
 import io.vavr.CheckedFunction1;
 import io.vavr.control.Option;
@@ -31,7 +29,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.EqualsAndHashCode;
@@ -65,7 +62,8 @@ import org.apache.http.message.BasicNameValuePair;
  * <p>(1) Ivan Damgård, Kasper Damgård, Kurt Nielsen, Peter Sebastian Nordholt, Tomas Toft: <br>
  * Confidential Benchmarking based on Multiparty Computation; IACR Cryptology ePrint Archive 2015:
  * 1006 (2015) <br>
- * https://eprint.iacr.org/2015/1006
+ * <a href="https://eprint.iacr.org/2015/1006">Confidential Benchmarking based on Multiparty
+ * Computation</a>
  */
 @Slf4j
 @ToString(callSuper = true)
@@ -144,36 +142,24 @@ public class DefaultAmphoraClient implements AmphoraClient {
    * @return The id of the uploaded secret
    * @throws AmphoraClientException if the communication with at least one of the defined
    *     <i>Amphora</i> services failed or if there already exists a secret f the given id.
+   * @throws IntegrityVerificationException if the verification of the reassembled shared input
+   *     masks fails. This could either happen based on errors during transfer or when at least one
+   *     of the parties is behaving dishonestly.
    */
   @Override
   public UUID createSecret(Secret secret) throws AmphoraClientException {
-    List<TupleList> inputMaskListMap =
+    List<OutputDeliveryObject> inputMaskOutputDeliveryObjects =
         downloadInputMasks(secret.size(), secret.getSecretId().toString());
-    TupleList[] inputMaskLists = inputMaskListMap.toArray(new TupleList[0]);
-    Map<Integer, BigInteger> zippedInputMasks =
-        IntStream.range(0, secret.size())
-            .boxed()
-            .parallel()
-            .collect(
-                Collectors.toMap(
-                    Function.identity(),
-                    i ->
-                        IntStream.range(0, inputMaskLists.length)
-                            .parallel()
-                            .mapToObj(
-                                j -> ((InputMask) inputMaskLists[j].get(i)).getShare(0).getValue())
-                            .collect(secretShareUtil.summingGfpAsBigInteger())));
-    List<MaskedInputData> maskedInputData =
-        secretShareUtil.zippedMapToOrderedList(
-            zippedInputMasks.entrySet().parallelStream()
-                .collect(
-                    Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry ->
-                            secretShareUtil.maskInput(
-                                secret.getData()[entry.getKey()], entry.getValue()))));
+    List<BigInteger> inputMasks = verifyOutputDeliveryObjects(inputMaskOutputDeliveryObjects);
+    MaskedInputData[] maskedInputData = new MaskedInputData[secret.size()];
+    IntStream.range(0, secret.size())
+        .parallel()
+        .forEach(
+            i ->
+                maskedInputData[i] =
+                    secretShareUtil.maskInput(secret.getData()[i], inputMasks.get(i)));
     MaskedInput maskedInput =
-        new MaskedInput(secret.getSecretId(), maskedInputData, secret.getTags());
+        new MaskedInput(secret.getSecretId(), Arrays.asList(maskedInputData), secret.getTags());
     List<RequestParametersWithBody<MaskedInput>> params =
         mapServiceUris(
             uri ->
@@ -210,43 +196,24 @@ public class DefaultAmphoraClient implements AmphoraClient {
    *
    * @param secretId The id of the secret
    * @return The requested secret
-   * @throws SecretVerificationException if the vefification of the reassembled secret fails. This
-   *     could either happen based on errors during transmition or at least one of the parties
-   *     behaving dishonest.
+   * @throws IntegrityVerificationException if the verification of the reassembled secret fails.
+   *     This could either happen based on errors during transfer or at least one of the parties
+   *     behaving dishonestly.
    * @throws AmphoraClientException if the communication with at least one of the defined
    *     <i>Amphora</i> services failed or if no secret with the given id exists.
    */
   @Override
   public Secret getSecret(UUID secretId) throws AmphoraClientException {
-    List<OutputDeliveryObject> outputObjects = getOutputDeliveryObjects(secretId);
-    List<BigInteger> secrets =
-        secretShareUtil.recombineObject(
-            outputObjects.stream()
-                .map(OutputDeliveryObject::getSecretShares)
-                .collect(Collectors.toList()));
-    List<BigInteger> rs =
-        secretShareUtil.recombineObject(
-            outputObjects.stream()
-                .map(OutputDeliveryObject::getRShares)
-                .collect(Collectors.toList()));
-    List<BigInteger> us =
-        secretShareUtil.recombineObject(
-            outputObjects.stream()
-                .map(OutputDeliveryObject::getUShares)
-                .collect(Collectors.toList()));
-    List<BigInteger> vs =
-        secretShareUtil.recombineObject(
-            outputObjects.stream()
-                .map(OutputDeliveryObject::getVShares)
-                .collect(Collectors.toList()));
-    List<BigInteger> ws =
-        secretShareUtil.recombineObject(
-            outputObjects.stream()
-                .map(OutputDeliveryObject::getWShares)
-                .collect(Collectors.toList()));
-    secretShareUtil.verifySecrets(secrets, rs, us, vs, ws);
-    log.debug("Secret verified.");
-    return Secret.of(secretId, outputObjects.get(0).getTags(), secrets.toArray(new BigInteger[0]));
+    List<VerifiableSecretShare> verifiableSecretShares = getVerifiableSecretShare(secretId);
+    List<OutputDeliveryObject> outputDeliveryObjects =
+        verifiableSecretShares.stream()
+            .map(VerifiableSecretShare::getOutputDeliveryObject)
+            .collect(Collectors.toList());
+    List<BigInteger> secrets = verifyOutputDeliveryObjects(outputDeliveryObjects);
+    return Secret.of(
+        secretId,
+        verifiableSecretShares.get(0).getMetadata().getTags(),
+        secrets.toArray(new BigInteger[0]));
   }
 
   /**
@@ -497,13 +464,54 @@ public class DefaultAmphoraClient implements AmphoraClient {
   }
 
   /**
+   * Verifies the integrity of the shared data received and returns the recombined data (secret) on
+   * successful verification. If verification fails, a {@link IntegrityVerificationException} is
+   * thrown.
+   *
+   * @param outputDeliveryObjects list of {@link OutputDeliveryObject} that contain the individual
+   *     shares of the secret
+   * @return the recombined secret after successful verification of integrity
+   * @throws IntegrityVerificationException if the verification fails
+   */
+  private List<BigInteger> verifyOutputDeliveryObjects(
+      List<OutputDeliveryObject> outputDeliveryObjects) throws IntegrityVerificationException {
+    List<BigInteger> secrets =
+        secretShareUtil.recombineObject(
+            outputDeliveryObjects.stream()
+                .map(OutputDeliveryObject::getSecretShares)
+                .collect(Collectors.toList()));
+    List<BigInteger> rs =
+        secretShareUtil.recombineObject(
+            outputDeliveryObjects.stream()
+                .map(OutputDeliveryObject::getRShares)
+                .collect(Collectors.toList()));
+    List<BigInteger> us =
+        secretShareUtil.recombineObject(
+            outputDeliveryObjects.stream()
+                .map(OutputDeliveryObject::getUShares)
+                .collect(Collectors.toList()));
+    List<BigInteger> vs =
+        secretShareUtil.recombineObject(
+            outputDeliveryObjects.stream()
+                .map(OutputDeliveryObject::getVShares)
+                .collect(Collectors.toList()));
+    List<BigInteger> ws =
+        secretShareUtil.recombineObject(
+            outputDeliveryObjects.stream()
+                .map(OutputDeliveryObject::getWShares)
+                .collect(Collectors.toList()));
+    secretShareUtil.verifySecrets(secrets, rs, us, vs, ws);
+    return secrets;
+  }
+
+  /**
    * Retrieves the {@link OutputDeliveryObject}s from all services for a secret with the given ID
    *
    * @param secretId The ID of the secret
    * @throws AmphoraClientException if the communication with at least one of the defined
    *     <i>Amphora</i> services failed
    */
-  private List<OutputDeliveryObject> getOutputDeliveryObjects(UUID secretId)
+  private List<VerifiableSecretShare> getVerifiableSecretShare(UUID secretId)
       throws AmphoraClientException {
     UUID requestId = UUID.randomUUID();
     return Lists.newArrayList(
@@ -516,7 +524,7 @@ public class DefaultAmphoraClient implements AmphoraClient {
                                     .addParameter(REQUEST_ID_PARAMETER, requestId.toString())
                                     .build(),
                                 getHeaders(uri))),
-                    OutputDeliveryObject.class))
+                    VerifiableSecretShare.class))
             .values());
   }
 
@@ -629,7 +637,7 @@ public class DefaultAmphoraClient implements AmphoraClient {
     }
   }
 
-  private List<TupleList> downloadInputMasks(long count, String requestId)
+  private List<OutputDeliveryObject> downloadInputMasks(long count, String requestId)
       throws AmphoraClientException {
     List<NameValuePair> queryParams =
         Lists.newArrayList(
@@ -656,7 +664,7 @@ public class DefaultAmphoraClient implements AmphoraClient {
                                                     + " \"%s\"",
                                                 uri),
                                             throwable))),
-                    TupleList.class))
+                    OutputDeliveryObject.class))
             .values());
   }
 

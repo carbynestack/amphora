@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -8,7 +8,9 @@
 package io.carbynestack.amphora.service;
 
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
+import static io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils.WORD_WIDTH;
 
+import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.castor.common.entities.*;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.RandomUtils;
 
 public class AmphoraTestData {
@@ -34,6 +37,36 @@ public class AmphoraTestData {
       inputMaskList.add(inputMask);
     }
     return inputMaskList;
+  }
+
+  public static OutputDeliveryObject getRandomOutputDeliveryObject(int size) {
+    byte[] shareData = new byte[size * WORD_WIDTH];
+    byte[] rData = new byte[size * WORD_WIDTH];
+    byte[] vData = new byte[size * WORD_WIDTH];
+    byte[] wData = new byte[size * WORD_WIDTH];
+    byte[] uData = new byte[size * WORD_WIDTH];
+    random.nextBytes(shareData);
+    random.nextBytes(rData);
+    random.nextBytes(vData);
+    random.nextBytes(wData);
+    random.nextBytes(uData);
+    return new OutputDeliveryObject(shareData, rData, vData, wData, uData);
+  }
+
+  public static byte[] extractTupleValuesFromInputMaskList(
+      TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMasks) {
+    byte[] tupleData = new byte[inputMasks.size() * Field.GFP.getElementSize()];
+    IntStream.range(0, inputMasks.size())
+        .parallel()
+        .forEach(
+            i ->
+                System.arraycopy(
+                    inputMasks.get(i).getShare(0).getValue(),
+                    0,
+                    tupleData,
+                    i * Field.GFP.getElementSize(),
+                    Field.GFP.getElementSize()));
+    return tupleData;
   }
 
   public static SecretShare getRandomSecretShare(UUID secretShareId) {

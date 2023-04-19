@@ -330,7 +330,6 @@ class OutputDeliveryServiceTest {
   void givenSuccessfulRequest_whenComputingOutputDeliveryObject_thenReturnExpectedContent() {
     final OutputDeliveryObject expectedOutputDeliveryObject =
         OutputDeliveryObject.builder()
-            .secretId(SECRET_SHARE.getSecretId())
             .secretShares(bigIntegerListToGfpByteArray(testSecretShareSecretValues))
             .rShares(
                 bigIntegerListToGfpByteArray(
@@ -356,7 +355,6 @@ class OutputDeliveryServiceTest {
                         .filter(i -> i % 2 == 1)
                         .mapToObj(expectedPrivateProductShares::get)
                         .collect(Collectors.toList())))
-            .tags(SECRET_SHARE.getTags())
             .build();
 
     when(amphoraServicePropertiesMock.getPlayerId()).thenReturn(testPlayerId);

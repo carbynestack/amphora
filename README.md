@@ -30,7 +30,7 @@ an Amphora service or how to interact with it using the Java client:
 
 ## Namesake
 
-As of [wikipedia](https://en.wikipedia.org/wiki/Amphora) an _amphora_ (from
+As of [wikipedia](https://en.wikipedia.org/wiki/Amphora) an *amphora* (from
 Greek amphoras) is a type of container of a characteristic shape and size.
 Amphorae were used in vast numbers for the transport and storage of various
 products, both liquid and dry, but mostly for wine.
@@ -38,16 +38,17 @@ products, both liquid and dry, but mostly for wine.
 ## Secure Secret Sharing and Recombination
 
 The Amphora client and service use an additive secret sharing scheme and
-implement the _Input Supply_ and _Output Delivery_ Protocol \[1\] of Damgard et
+implement the *Input Supply* and *Output Delivery* Protocol \[1\] of Damgard et
 al. to provide secure secret sharing and recombination methods in the
-client/server model of MPC. Therefore, sharing a secret will consume one _Input
-Mask_ for each word (BigInteger) to be shared and two _InputMasks_ as well as
-two _Multiplication Triples_ for each secret word to be retrieved.
+client/server model of MPC. Therefore, sharing a secret will consume three
+*Input Masks* as well as two *Multiplication Triples* for each word (BigInteger)
+to be shared, and two *InputMasks* as well as two *Multiplication Triples* for
+each secret word to be retrieved.
 
-By this, retrieving a secret comes at higher cost in terms of _tuple_
-consumption, but will reveal if any of the MPC parties behaves malicious when
-providing secret shares. The `DefaultAmphoraClient` will throw an exception in
-case the verification fails according to the _Output Delivery Protocol_.
+By this, providing and retrieving a secret comes at high cost in terms of
+*tuple* consumption, but will reveal if any of the MPC parties behaves malicious
+when providing shared data. The `DefaultAmphoraClient` will throw an exception
+in case the verification fails according to the *Output Delivery Protocol*.
 
 ## License
 
@@ -69,6 +70,6 @@ Please see the Carbyne Stack
 ## References
 
 1. Ivan Damgård, Kasper Damgård, Kurt Nielsen, Peter Sebastian Nordholt, Tomas
-   Toft: _Confidential Benchmarking based on Multiparty Computation_. IACR
+   Toft: *Confidential Benchmarking based on Multiparty Computation*. IACR
    Cryptology ePrint Archive 2015: 1006 (2015)
    [https://eprint.iacr.org/2015/1006](https://eprint.iacr.org/2015/1006)

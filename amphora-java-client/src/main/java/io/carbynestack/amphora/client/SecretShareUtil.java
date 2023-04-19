@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -10,7 +10,7 @@ package io.carbynestack.amphora.client;
 import static io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils.WORD_WIDTH;
 
 import io.carbynestack.amphora.common.MaskedInputData;
-import io.carbynestack.amphora.common.exceptions.SecretVerificationException;
+import io.carbynestack.amphora.common.exceptions.IntegrityVerificationException;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -94,9 +94,10 @@ class SecretShareUtil {
    * Damgård, Kasper Damgård, Kurt Nielsen, Peter Sebastian Nordholt, Tomas Toft: <br>
    * Confidential Benchmarking based on Multiparty Computation; IACR Cryptology ePrint Archive 2015:
    * 1006 (2015) <br>
-   * https://eprint.iacr.org/2015/1006
+   * <a href="https://eprint.iacr.org/2015/1006">Confidential Benchmarking based on Multiparty
+   * Computation</a>
    *
-   * @throws SecretVerificationException If the verification fails
+   * @throws IntegrityVerificationException If the verification fails
    */
   void verifySecrets(
       List<BigInteger> secrets,
@@ -111,7 +112,7 @@ class SecretShareUtil {
               BigInteger actualW = secrets.get(i).multiply(rs.get(i)).mod(prime);
               BigInteger actualU = vs.get(i).multiply(rs.get(i)).mod(prime);
               if (!ws.get(i).equals(actualW) || !us.get(i).equals(actualU)) {
-                throw new SecretVerificationException(
+                throw new IntegrityVerificationException(
                     String.format(
                         "Verification of secret has failed:%n"
                             + "\t%s = %s * %s   &&   %s = %s * %s%n"

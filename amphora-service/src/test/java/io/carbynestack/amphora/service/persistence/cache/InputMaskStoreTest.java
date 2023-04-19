@@ -6,6 +6,7 @@
  */
 package io.carbynestack.amphora.service.persistence.cache;
 
+import static io.carbynestack.amphora.service.AmphoraTestData.extractTupleValuesFromInputMaskList;
 import static io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService.NO_INPUT_MASKS_FOUND_FOR_REQUEST_ID_EXCEPTION_MSG;
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 import static java.util.Collections.singletonList;
@@ -13,8 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.AmphoraTestData;
+import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
 import io.carbynestack.amphora.service.config.AmphoraCacheProperties;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
 import io.carbynestack.castor.common.CastorServiceUri;
@@ -39,11 +42,14 @@ class InputMaskStoreTest {
       new CastorServiceUri("https://castor.carbynestack.io");
   private final List<CastorServiceUri> castorServiceUris = singletonList(castorServiceUri);
   private final UUID testRequestId = UUID.fromString("93448822-fc76-4989-a927-450486ae0a08");
+  private final UUID testOdoRequestId =
+      UUID.nameUUIDFromBytes(String.format("%s_odo-computation", testRequestId).getBytes());
 
   @Mock private CastorIntraVcpClient interVcpClientMock;
   @Mock RedisTemplate<String, Object> redisTemplateMock;
   @Mock AmphoraCacheProperties amphoraCachePropertiesMock;
   @Mock private ValueOperations<String, Object> valueOperationsMock;
+  @Mock private OutputDeliveryService outputDeliveryServiceMock;
 
   private final String testCacheName = "testCache";
   private final String testCachePrefix = CacheKeyPrefix.simple().compute(testCacheName);
@@ -55,7 +61,10 @@ class InputMaskStoreTest {
     when(amphoraCachePropertiesMock.getInputMaskStore()).thenReturn(testCacheName);
     inputMaskCache =
         new InputMaskCachingService(
-            interVcpClientMock, redisTemplateMock, amphoraCachePropertiesMock);
+            interVcpClientMock,
+            redisTemplateMock,
+            amphoraCachePropertiesMock,
+            outputDeliveryServiceMock);
   }
 
   @SneakyThrows
@@ -63,12 +72,16 @@ class InputMaskStoreTest {
   void givenSuccessfulRequest_whenPutInputMasks_thenStoreInCacheAndReturnList() {
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMasks =
         AmphoraTestData.getRandomInputMaskList(5);
+    OutputDeliveryObject odo = AmphoraTestData.getRandomOutputDeliveryObject(5);
 
     when(redisTemplateMock.opsForValue()).thenReturn(valueOperationsMock);
     when(interVcpClientMock.downloadTupleShares(testRequestId, INPUT_MASK_GFP, inputMasks.size()))
         .thenReturn(inputMasks);
+    when(outputDeliveryServiceMock.computeOutputDeliveryObject(
+            extractTupleValuesFromInputMaskList(inputMasks), testOdoRequestId))
+        .thenReturn(odo);
     assertEquals(
-        inputMasks, inputMaskCache.fetchAndCacheInputMasks(testRequestId, inputMasks.size()));
+        odo, inputMaskCache.getInputMasksAsOutputDeliveryObject(testRequestId, inputMasks.size()));
     verify(valueOperationsMock, times(1)).set(testCachePrefix + testRequestId, inputMasks);
   }
 
@@ -78,7 +91,7 @@ class InputMaskStoreTest {
         AmphoraTestData.getRandomInputMaskList(5);
     when(redisTemplateMock.opsForValue()).thenReturn(valueOperationsMock);
     when(valueOperationsMock.get(testCachePrefix + testRequestId)).thenReturn(inputMasks);
-    assertEquals(inputMasks, inputMaskCache.getInputMasks(testRequestId));
+    assertEquals(inputMasks, inputMaskCache.getCachedInputMasks(testRequestId));
   }
 
   @Test
@@ -87,7 +100,7 @@ class InputMaskStoreTest {
     when(valueOperationsMock.get(testCachePrefix + testRequestId)).thenReturn(null);
     AmphoraServiceException ase =
         assertThrows(
-            AmphoraServiceException.class, () -> inputMaskCache.getInputMasks(testRequestId));
+            AmphoraServiceException.class, () -> inputMaskCache.getCachedInputMasks(testRequestId));
     assertEquals(
         String.format(NO_INPUT_MASKS_FOUND_FOR_REQUEST_ID_EXCEPTION_MSG, testRequestId),
         ase.getMessage());

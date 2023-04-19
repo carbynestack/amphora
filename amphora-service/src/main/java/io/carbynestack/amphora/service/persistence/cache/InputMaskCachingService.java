@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -9,7 +9,9 @@ package io.carbynestack.amphora.service.persistence.cache;
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 
 import io.carbynestack.amphora.client.Secret;
+import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
+import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
 import io.carbynestack.amphora.service.config.AmphoraCacheProperties;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
 import io.carbynestack.castor.common.entities.Field;
@@ -17,6 +19,7 @@ import io.carbynestack.castor.common.entities.InputMask;
 import io.carbynestack.castor.common.entities.TupleList;
 import io.carbynestack.castor.common.exceptions.CastorClientException;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.cache.CacheKeyPrefix;
@@ -44,36 +47,55 @@ public class InputMaskCachingService {
   private final RedisTemplate<String, Object> redisTemplate;
   private final CastorIntraVcpClient castorClient;
   private final String cachePrefix;
+  private final OutputDeliveryService outputDeliveryService;
 
   @Autowired
   public InputMaskCachingService(
       CastorIntraVcpClient castorClient,
       RedisTemplate<String, Object> redisTemplate,
-      AmphoraCacheProperties cacheProperties) {
+      AmphoraCacheProperties cacheProperties,
+      OutputDeliveryService outputDeliveryService) {
     this.castorClient = castorClient;
     this.redisTemplate = redisTemplate;
     this.cachePrefix = CacheKeyPrefix.simple().compute(cacheProperties.getInputMaskStore());
+    this.outputDeliveryService = outputDeliveryService;
   }
 
   /**
    * Fetches {@link InputMask}s from Castor, stores them as a {@link TupleList} in the cache,
-   * referenced by a unique identifier, and returns the {@link TupleList}.
+   * referenced by a unique identifier, and returns the {@link InputMask}s wrapped as {@link
+   * OutputDeliveryObject}. <br>
+   * The fetched {@link InputMask}s will not be stored in cache if the computation of the {@link
+   * OutputDeliveryObject} fails.
    *
    * @param requestId a unique identifier used as a key to access the stored {@link TupleList} in
    *     the cache
    * @param count number of requested {@link InputMask}s.
-   * @return the given list of {@link InputMask}s
-   * @throws CastorClientException if composing the request tuples URI failed
+   * @return the requested {@link InputMask}s wrapped in a verifiable {@link OutputDeliveryObject}
    * @throws CastorClientException if downloading the tuples from the service failed
    */
   @Transactional
-  public TupleList<InputMask<Field.Gfp>, Field.Gfp> fetchAndCacheInputMasks(
-      UUID requestId, long count) {
+  public OutputDeliveryObject getInputMasksAsOutputDeliveryObject(UUID requestId, long count) {
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMaskShares =
         castorClient.downloadTupleShares(requestId, INPUT_MASK_GFP, count);
+    byte[] tupleData = new byte[inputMaskShares.size() * Field.GFP.getElementSize()];
+    IntStream.range(0, (int) count)
+        .parallel()
+        .forEach(
+            i ->
+                System.arraycopy(
+                    inputMaskShares.get(i).getShare(0).getValue(),
+                    0,
+                    tupleData,
+                    i * Field.GFP.getElementSize(),
+                    Field.GFP.getElementSize()));
+    UUID odoRequestId =
+        UUID.nameUUIDFromBytes(String.format("%s_odo-computation", requestId).getBytes());
+    OutputDeliveryObject outputDeliveryObject =
+        outputDeliveryService.computeOutputDeliveryObject(tupleData, odoRequestId);
     ValueOperations<String, Object> ops = redisTemplate.opsForValue();
     ops.set(cachePrefix + requestId, inputMaskShares);
-    return inputMaskShares;
+    return outputDeliveryObject;
   }
 
   /**
@@ -82,10 +104,9 @@ public class InputMaskCachingService {
    * @param requestId unique identifier linked with the requested {@link InputMask}s
    * @return List of {@link InputMask}s
    * @throws AmphoraServiceException if no {@link InputMask}s were reserved fo the given requestId
-   * @throws IllegalStateException if
    */
   @Transactional(readOnly = true)
-  public TupleList<InputMask<Field.Gfp>, Field.Gfp> getInputMasks(UUID requestId) {
+  public TupleList<InputMask<Field.Gfp>, Field.Gfp> getCachedInputMasks(UUID requestId) {
     ValueOperations<String, Object> ops = redisTemplate.opsForValue();
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMasks =
         (TupleList<InputMask<Field.Gfp>, Field.Gfp>) ops.get(cachePrefix + requestId);

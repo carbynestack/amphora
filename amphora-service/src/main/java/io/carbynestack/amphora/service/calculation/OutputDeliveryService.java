@@ -1,5 +1,5 @@
-/*https://github.com/carbynestack/amphora
- * Copyright (c) 2021 - for information on the respective copyright owner
+/*
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -9,6 +9,7 @@ package io.carbynestack.amphora.service.calculation;
 
 import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 import static io.carbynestack.castor.common.entities.TupleType.MULTIPLICATION_TRIPLE_GFP;
+import static io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils.SHARE_WIDTH;
 import static io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils.WORD_WIDTH;
 
 import com.github.rholder.retry.Retryer;
@@ -61,9 +62,9 @@ public class OutputDeliveryService {
   private final InterimValueCachingService interimValueCachingService;
 
   /**
-   * Computes an {@link OutputDeliveryObject} based on the given {@link SecretShare}.
+   * Computes an {@link OutputDeliveryObject} for the given {@link SecretShare}.
    *
-   * @param secretShare the {@link SecretShare} as input to the computation.
+   * @param secretShare the secret share provided as input to the computation.
    * @param requestId a unique request id to align multiplications across all parties of the CS MPC
    *     cluster.
    * @return the computed {@link OutputDeliveryObject}
@@ -73,18 +74,42 @@ public class OutputDeliveryService {
   @Transactional
   public OutputDeliveryObject computeOutputDeliveryObject(SecretShare secretShare, UUID requestId) {
     byte[] shareData = secretShare.getData();
-    int secretSize = shareData.length / MpSpdzIntegrationUtils.SHARE_WIDTH;
+    int shareLength = shareData.length / SHARE_WIDTH;
+    byte[] shareValueData = new byte[shareLength * WORD_WIDTH];
+    IntStream.range(0, shareLength)
+        .parallel()
+        .forEach(
+            i ->
+                System.arraycopy(
+                    shareData, i * SHARE_WIDTH, shareValueData, i * WORD_WIDTH, WORD_WIDTH));
+    return computeOutputDeliveryObject(shareValueData, requestId);
+  }
+
+  /**
+   * Computes an {@link OutputDeliveryObject} for the given data. The data's length must be a
+   * multiple of {@value MpSpdzIntegrationUtils#WORD_WIDTH}.
+   *
+   * @param shareData the shared data provided as input to the computation.
+   * @param requestId a unique request id to align multiplications across all parties of the CS MPC
+   *     cluster.
+   * @return the computed {@link OutputDeliveryObject}
+   * @throws AmphoraServiceException if the service failed to retrieve the required tuples for
+   *     computation
+   */
+  @Transactional
+  public OutputDeliveryObject computeOutputDeliveryObject(byte[] shareData, UUID requestId) {
+    int secretSize = shareData.length / WORD_WIDTH;
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMaskShares =
         Try.of(() -> castorClient.downloadTupleShares(requestId, INPUT_MASK_GFP, secretSize * 2L))
             .getOrElseThrow(
                 e ->
                     new AmphoraServiceException(
                         "Failed to retrieve the required Tuples form Castor", e));
-    ByteBuffer secretShares = ByteBuffer.allocate(secretSize * WORD_WIDTH);
-    ByteBuffer rShares = ByteBuffer.allocate(secretSize * WORD_WIDTH);
-    ByteBuffer wShares = ByteBuffer.allocate(secretSize * WORD_WIDTH);
-    ByteBuffer vShares = ByteBuffer.allocate(secretSize * WORD_WIDTH);
-    ByteBuffer uShares = ByteBuffer.allocate(secretSize * WORD_WIDTH);
+    ByteBuffer secretShares = ByteBuffer.allocate(shareData.length);
+    ByteBuffer rShares = ByteBuffer.allocate(shareData.length);
+    ByteBuffer wShares = ByteBuffer.allocate(shareData.length);
+    ByteBuffer vShares = ByteBuffer.allocate(shareData.length);
+    ByteBuffer uShares = ByteBuffer.allocate(shareData.length);
 
     /*
      * each word/share requires two secret multiplications
@@ -98,10 +123,7 @@ public class OutputDeliveryService {
             .mapToObj(
                 i -> {
                   byte[] secret =
-                      ArrayUtils.subarray(
-                          shareData,
-                          i * MpSpdzIntegrationUtils.SHARE_WIDTH,
-                          i * MpSpdzIntegrationUtils.SHARE_WIDTH + WORD_WIDTH);
+                      ArrayUtils.subarray(shareData, i * WORD_WIDTH, (i + 1) * WORD_WIDTH);
                   byte[] mask1 = inputMaskShares.get(i * 2).getShare(0).getValue();
                   byte[] mask2 = inputMaskShares.get((i * 2) + 1).getShare(0).getValue();
                   BigInteger secretAsBI = spdzUtil.fromGfp(secret);
@@ -130,13 +152,11 @@ public class OutputDeliveryService {
             });
 
     return OutputDeliveryObject.builder()
-        .secretId(secretShare.getSecretId())
         .secretShares(secretShares.array())
         .rShares(rShares.array())
         .vShares(vShares.array())
         .wShares(wShares.array())
         .uShares(uShares.array())
-        .tags(secretShare.getTags())
         .build();
   }
 

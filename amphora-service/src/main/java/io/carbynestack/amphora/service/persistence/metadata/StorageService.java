@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -91,7 +91,7 @@ public class StorageService {
       throw new IllegalArgumentException(TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG);
     }
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMasks =
-        inputMaskStore.getInputMasks(maskedInput.getSecretId());
+        inputMaskStore.getCachedInputMasks(maskedInput.getSecretId());
     SecretShare secretShare =
         secretShareUtil.convertToSecretShare(
             maskedInput,
@@ -263,7 +263,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     tagRepository
         .findBySecretAndKey(secretEntityReference, tag.getKey())
         .ifPresent(
@@ -295,7 +295,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     List<TagEntity> existingReservedTags =
         RESERVED_TAG_KEYS.stream()
             .map(key -> tagRepository.findBySecretAndKey(secretEntityReference, key))
@@ -344,7 +344,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     return tagRepository
         .findBySecretAndKey(secretEntityReference, key)
         .map(TagEntity::toTag)
@@ -373,7 +373,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     TagEntity existingTag =
         tagRepository
             .findBySecretAndKey(secretEntityReference, tag.getKey())
@@ -405,7 +405,7 @@ public class StorageService {
     if (!secretEntityRepository.existsById(secretId.toString())) {
       throw new NotFoundException(String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.getOne(secretId.toString());
+    SecretEntity secretEntityReference = secretEntityRepository.getById(secretId.toString());
     tagRepository.delete(
         tagRepository
             .findBySecretAndKey(secretEntityReference, key)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2023 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -65,7 +65,7 @@ public class SecretShareController {
       @RequestParam(required = false, value = SORT_DIRECTION_PARAMETER) String sortDirection)
       throws UnsupportedEncodingException {
     List<TagFilter> tagFilters =
-        StringUtils.isEmpty(filter) ? Collections.emptyList() : parseTagFilters(filter);
+        StringUtils.hasText(filter) ? parseTagFilters(filter) : Collections.emptyList();
     Sort sort = getSort(sortProperty, sortDirection);
     Page<Metadata> secretSpringPage;
     if (isEmpty(tagFilters)) {
@@ -103,13 +103,15 @@ public class SecretShareController {
    * @throws NotFoundException if no {@link SecretShare} with the given id exists
    */
   @GetMapping(path = "/{" + SECRET_ID_PARAMETER + "}")
-  public ResponseEntity<OutputDeliveryObject> getSecretShare(
+  public ResponseEntity<VerifiableSecretShare> getSecretShare(
       @PathVariable final UUID secretId,
       @RequestParam(value = REQUEST_ID_PARAMETER) final UUID requestId) {
     Assert.notNull(requestId, "Request identifier must not be omitted");
     SecretShare secretShare = storageService.getSecretShare(secretId);
+    OutputDeliveryObject outputDeliveryObject =
+        outputDeliveryService.computeOutputDeliveryObject(secretShare, requestId);
     return new ResponseEntity<>(
-        outputDeliveryService.computeOutputDeliveryObject(secretShare, requestId), HttpStatus.OK);
+        VerifiableSecretShare.of(secretShare, outputDeliveryObject), HttpStatus.OK);
   }
 
   /**
@@ -127,7 +129,7 @@ public class SecretShareController {
   }
 
   Sort getSort(String sortProperty, String sortDirection) {
-    if (!StringUtils.isEmpty(sortProperty)) {
+    if (StringUtils.hasText(sortProperty)) {
       return Try.of(() -> Sort.Direction.fromString(sortDirection))
           .map(direction -> Sort.by(direction, sortProperty))
           .getOrElse(Sort.by(sortProperty));

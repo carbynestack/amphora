@@ -120,7 +120,8 @@ class StorageServiceTest {
     ArgumentCaptor<SecretEntity> secretEntityArgumentCaptor =
         ArgumentCaptor.forClass(SecretEntity.class);
 
-    when(inputMaskStore.getInputMasks(maskedInput.getSecretId())).thenReturn(expectedInputMasks);
+    when(inputMaskStore.getCachedInputMasks(maskedInput.getSecretId()))
+        .thenReturn(expectedInputMasks);
     when(secretShareUtil.convertToSecretShare(maskedInput, null, expectedInputMasks, false))
         .thenReturn(expectedSecretShare);
     when(secretEntityRepository.save(secretEntityArgumentCaptor.capture()))
@@ -164,7 +165,8 @@ class StorageServiceTest {
         ArgumentCaptor.forClass(SecretEntity.class);
 
     when(secretEntityRepository.save(any())).thenReturn(persistedSecretEntity);
-    when(inputMaskStore.getInputMasks(maskedInput.getSecretId())).thenReturn(expectedInputMasks);
+    when(inputMaskStore.getCachedInputMasks(maskedInput.getSecretId()))
+        .thenReturn(expectedInputMasks);
     when(secretShareUtil.convertToSecretShare(maskedInput, null, expectedInputMasks, false))
         .thenReturn(expectedSecretShare);
     when(secretEntityRepository.save(secretEntityArgumentCaptor.capture()))
@@ -172,7 +174,7 @@ class StorageServiceTest {
 
     assertEquals(maskedInput.getSecretId().toString(), storageService.createSecret(maskedInput));
     verify(secretEntityRepository, times(1)).existsById(maskedInput.getSecretId().toString());
-    verify(inputMaskStore, times(1)).getInputMasks(maskedInput.getSecretId());
+    verify(inputMaskStore, times(1)).getCachedInputMasks(maskedInput.getSecretId());
     verify(secretEntityRepository, times(1)).save(secretEntityArgumentCaptor.capture());
     verify(secretShareDataStore, times(1))
         .storeSecretShareData(expectedSecretShare.getSecretId(), expectedSecretShare.getData());
@@ -475,7 +477,7 @@ class StorageServiceTest {
     SecretEntity existingSecretEntity = new SecretEntity().setSecretId(testSecretId.toString());
     TagEntity existingTagEntity = TagEntity.fromTag(testTag);
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(existingSecretEntity.getSecretId()))
+    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
         .thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.of(existingTagEntity));
@@ -497,7 +499,7 @@ class StorageServiceTest {
     ArgumentCaptor<TagEntity> tagEntityArgumentCaptor = ArgumentCaptor.forClass(TagEntity.class);
 
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(existingSecretEntity.getSecretId()))
+    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
         .thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.empty());
@@ -555,7 +557,7 @@ class StorageServiceTest {
     ArgumentCaptor<Set<TagEntity>> tagEntitySetArgumentCaptor = ArgumentCaptor.forClass(Set.class);
 
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(existingSecretEntity.getSecretId()))
+    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
         .thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, existingCreationTagEntity.getKey()))
         .thenReturn(Optional.of(existingCreationTagEntity));
@@ -612,7 +614,7 @@ class StorageServiceTest {
     String key = testTag.getKey();
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(testSecretId.toString())).thenReturn(existingSecretEntity);
+    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.empty());
 
@@ -631,7 +633,7 @@ class StorageServiceTest {
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), singleton(existingTagEntity));
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(testSecretId.toString())).thenReturn(existingSecretEntity);
+    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, existingTagEntity.getKey()))
         .thenReturn(Optional.of(existingTagEntity));
 
@@ -664,7 +666,7 @@ class StorageServiceTest {
   void givenNoTagWithGivenKeyInDatabaseForGivenObject_whenUpdateTag_thenThrowNotFoundException() {
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
     when(secretEntityRepository.existsById(existingSecretEntity.getSecretId())).thenReturn(true);
-    when(secretEntityRepository.getOne(existingSecretEntity.getSecretId()))
+    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
         .thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.empty());
@@ -686,7 +688,7 @@ class StorageServiceTest {
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), singleton(existingTagEntity));
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(testSecretId.toString())).thenReturn(existingSecretEntity);
+    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.of(existingTagEntity));
 
@@ -726,7 +728,7 @@ class StorageServiceTest {
     String key = testTag.getKey();
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(testSecretId.toString())).thenReturn(existingSecretEntity);
+    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, key)).thenReturn(Optional.empty());
 
     assertThrows(
@@ -744,7 +746,7 @@ class StorageServiceTest {
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), singleton(tagEntityToDelete));
     when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getOne(testSecretId.toString())).thenReturn(existingSecretEntity);
+    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, tagEntityToDelete.getKey()))
         .thenReturn(Optional.of(tagEntityToDelete));
 
