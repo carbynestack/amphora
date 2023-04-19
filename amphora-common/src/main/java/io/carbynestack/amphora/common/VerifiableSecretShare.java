@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 
 /**
  * {@link VerifiableSecretShare} is the combination of {@link OutputDeliveryObject} and {@link
- * Metadata} in one object used by the Amphora Services to send their individual {@link SecretShare}
+ * Metadata} in one object used by the Amphora services to send their individual {@link SecretShare}
  * to the client. This bundles the describing attributes from {@link Metadata} with the information
  * from {@link OutputDeliveryObject} used to verify the integrity of the data.
  */

@@ -143,14 +143,14 @@ public class DefaultAmphoraClient implements AmphoraClient {
    * @throws AmphoraClientException if the communication with at least one of the defined
    *     <i>Amphora</i> services failed or if there already exists a secret f the given id.
    * @throws IntegrityVerificationException if the verification of the reassembled shared input
-   *     masks fails. This could either happen based on errors during transfer or at least one of
-   *     the parties behaving dishonest.
+   *     masks fails. This could either happen based on errors during transfer or when at least one
+   *     of the parties is behaving dishonestly.
    */
   @Override
   public UUID createSecret(Secret secret) throws AmphoraClientException {
-    List<OutputDeliveryObject> inputMaskOutputDeliverObjects =
+    List<OutputDeliveryObject> inputMaskOutputDeliveryObjects =
         downloadInputMasks(secret.size(), secret.getSecretId().toString());
-    List<BigInteger> inputMasks = verifyOutputDeliveryObject(inputMaskOutputDeliverObjects);
+    List<BigInteger> inputMasks = verifyOutputDeliveryObjects(inputMaskOutputDeliveryObjects);
     MaskedInputData[] maskedInputData = new MaskedInputData[secret.size()];
     IntStream.range(0, secret.size())
         .parallel()
@@ -198,7 +198,7 @@ public class DefaultAmphoraClient implements AmphoraClient {
    * @return The requested secret
    * @throws IntegrityVerificationException if the verification of the reassembled secret fails.
    *     This could either happen based on errors during transfer or at least one of the parties
-   *     behaving dishonest.
+   *     behaving dishonestly.
    * @throws AmphoraClientException if the communication with at least one of the defined
    *     <i>Amphora</i> services failed or if no secret with the given id exists.
    */
@@ -209,7 +209,7 @@ public class DefaultAmphoraClient implements AmphoraClient {
         verifiableSecretShares.stream()
             .map(VerifiableSecretShare::getOutputDeliveryObject)
             .collect(Collectors.toList());
-    List<BigInteger> secrets = verifyOutputDeliveryObject(outputDeliveryObjects);
+    List<BigInteger> secrets = verifyOutputDeliveryObjects(outputDeliveryObjects);
     return Secret.of(
         secretId,
         verifiableSecretShares.get(0).getMetadata().getTags(),
@@ -473,7 +473,7 @@ public class DefaultAmphoraClient implements AmphoraClient {
    * @return the recombined secret after successful verification of integrity
    * @throws IntegrityVerificationException if the verification fails
    */
-  private List<BigInteger> verifyOutputDeliveryObject(
+  private List<BigInteger> verifyOutputDeliveryObjects(
       List<OutputDeliveryObject> outputDeliveryObjects) throws IntegrityVerificationException {
     List<BigInteger> secrets =
         secretShareUtil.recombineObject(

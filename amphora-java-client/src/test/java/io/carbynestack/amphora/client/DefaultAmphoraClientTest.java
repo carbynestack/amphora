@@ -213,7 +213,7 @@ class DefaultAmphoraClientTest {
               .collect(Collectors.toList());
       assertEquals(2, capturedMaskedInputs.size());
       MaskedInput maskedInput = capturedMaskedInputs.get(0);
-      BigInteger[] recoveredObject = new BigInteger[secretSize];
+      BigInteger[] reconstructedObject = new BigInteger[secretSize];
       for (int j = 0; j < secretSize; j++) {
         BigInteger mask = BigInteger.ZERO;
         for (OutputDeliveryObject odo : inputMaskOdos.values()) {
@@ -227,9 +227,9 @@ class DefaultAmphoraClientTest {
                   .mod(spdzUtil.getPrime());
         }
         BigInteger maskedInputValue = spdzUtil.fromGfp(maskedInput.getData().get(j).getValue());
-        recoveredObject[j] = mask.add(maskedInputValue).mod(spdzUtil.getPrime());
+        reconstructedObject[j] = mask.add(maskedInputValue).mod(spdzUtil.getPrime());
       }
-      assertArrayEquals(secrets, recoveredObject);
+      assertArrayEquals(secrets, reconstructedObject);
       Mockito.reset(amphoraCommunicationClient);
     }
   }

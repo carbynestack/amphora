@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 
 /**
- * An entity class used by the Amphora service's to send secret and tuple shares to the requesting
+ * An entity class used by the Amphora services to send secret and tuple shares to the requesting
  * client. <br>
  * This format allows the client to verify the integrity of the Amphora instance as described in the
  * following paper:<br>

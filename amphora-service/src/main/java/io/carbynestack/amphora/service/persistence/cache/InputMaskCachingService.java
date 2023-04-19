@@ -104,7 +104,6 @@ public class InputMaskCachingService {
    * @param requestId unique identifier linked with the requested {@link InputMask}s
    * @return List of {@link InputMask}s
    * @throws AmphoraServiceException if no {@link InputMask}s were reserved fo the given requestId
-   * @throws IllegalStateException if
    */
   @Transactional(readOnly = true)
   public TupleList<InputMask<Field.Gfp>, Field.Gfp> getCachedInputMasks(UUID requestId) {

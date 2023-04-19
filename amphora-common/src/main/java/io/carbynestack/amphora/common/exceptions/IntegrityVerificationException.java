@@ -10,7 +10,7 @@ package io.carbynestack.amphora.common.exceptions;
  * An exception thrown in case the verification of a received shared data fails.
  *
  * <p>This can occur if either data has been falsified during transmission due to technical errors
- * or if one of the MPC parties has behaved dishonest.<br>
+ * or if one of the MPC parties has behaved dishonestly.<br>
  * The operation can possibly be repeated to narrow down the source of the error.
  */
 public class IntegrityVerificationException extends RuntimeException {
