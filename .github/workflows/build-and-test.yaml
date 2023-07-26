@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 - for information on the respective copyright owner
+# Copyright (c) 2021-2023 - for information on the respective copyright owner
 # see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -15,11 +15,11 @@ on:
       - 'master'
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '8'
           distribution: 'temurin'
@@ -41,7 +41,7 @@ jobs:
       - name: Collect Jacoco reports
         run: echo ::set-output name=reports::$(find . -regex '.*/target/site/jacoco/jacoco.xml' | tr '\n' ',' | sed 's/.$//')
         id: jacoco
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ steps.jacoco.outputs.reports }}
