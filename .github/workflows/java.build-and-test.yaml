@@ -68,3 +68,13 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ steps.jacoco.outputs.reports }}
           name: ${{ matrix.module }}
+  test-status:
+    runs-on: ubuntu-22.04
+    needs: test
+    steps:
+      - name: Tests successful
+        if: ${{ !(contains(needs.test.result, 'failure')) }}
+        run: exit 0
+      - name: Tests failed
+        if: ${{ contains(needs.test.result, 'failure') }}
+        run: exit 1
