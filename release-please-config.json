@@ -1,0 +1,25 @@
+{
+  "bump-minor-pre-major": true,
+  "separate-pull-requests": true,
+  "pull-request-title-pattern": "chore: release ${component} ${version}",
+  "pull-request-header": ":package: Staging a new release",
+  "skip-snapshot": true,
+  "packages": {
+    "amphora-common": {
+      "package-name": "common",
+      "release-type": "maven"
+    },
+    "amphora-java-client": {
+      "package-name": "java-client",
+      "release-type": "maven"
+    },
+    "amphora-service": {
+      "package-name": "service",
+      "release-type": "maven"
+    },
+    "amphora-service/charts/amphora": {
+      "package-name": "chart",
+      "release-type": "helm"
+    }
+  }
+}

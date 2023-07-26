@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>amphora</artifactId>
     <groupId>io.carbynestack</groupId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
     <name>Carbyne Stack Amphora Secret Share Store</name>
     <description>An open source object store for secret shared data and part of Carbyne Stack.</description>
