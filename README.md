@@ -2,6 +2,7 @@
 
 [![codecov](https://codecov.io/gh/carbynestack/amphora/branch/master/graph/badge.svg?token=Oc5cDCTJsB)](https://codecov.io/gh/carbynestack/amphora)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/eb2caa9e77074e1384789ae168fdcb29)](https://www.codacy.com?utm_source=github.com&utm_medium=referral&utm_content=carbynestack/amphora&utm_campaign=Badge_Grade)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 [![Known Vulnerabilities](https://snyk.io/test/github/carbynestack/amphora/badge.svg)](https://snyk.io/test/github/carbynestack/amphora)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
