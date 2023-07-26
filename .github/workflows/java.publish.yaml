@@ -8,6 +8,7 @@ name: Publish and Release Java
 on:
   push:
     tags:
+      - "parent-v[0-9]+.[0-9]+.[0-9]+"
       - "common-v[0-9]+.[0-9]+.[0-9]+"
       - "java-client-v[0-9]+.[0-9]+.[0-9]+"
       - "service-v[0-9]+.[0-9]+.[0-9]+"
@@ -17,14 +18,23 @@ jobs:
   prepare:
     runs-on: ubuntu-22.04
     outputs:
-      MODULE: "${GITHUB_REPOSITORY#*/}-${{ steps.package.outputs.name }}"
+      MODULE: "${{ steps.module.outputs.identifier }}"
       VERSION: "${{ steps.release.outputs.version }}"
     steps:
       - name: Get Release Package Name
         id: package
         run: |
           echo ::set-output name=name::\
-          $(echo "${GITHUB_REPOSITORY#*/}-${GITHUB_REF_NAME}" | sed -E 's/-v[0-9]+\.[0-9]+\.[0-9]+//')
+          $(echo ${GITHUB_REF_NAME} | sed -E 's/-v[0-9]+\.[0-9]+\.[0-9]+//')
+      - name: Get Module Identifier
+        id: module
+        run: |
+          if [ "${{ steps.package.outputs.name }}" = "parent" ]; then
+            module="."
+          else
+            module=${GITHUB_REPOSITORY#*/}-${{ steps.package.outputs.name }}
+          fi
+          echo ::set-output name=identifier::${module}
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Get Release Version
