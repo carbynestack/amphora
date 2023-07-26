@@ -4,7 +4,7 @@
          <name>amphora-common</name>
          <groupId>io.carbynestack</groupId>
          <artifactId>amphora-common</artifactId>
-         <version>0.1-SNAPSHOT</version>
+         <version>0.1-SNAPSHOT-4741225899-24-4a99be8</version>
          <licenses>
             <license>
                <name>Apache-2.0</name>

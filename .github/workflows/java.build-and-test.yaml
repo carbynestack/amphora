@@ -14,7 +14,27 @@ on:
     branches:
       - 'master'
 jobs:
+  changes:
+    runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: read
+    outputs:
+      # Expose matched filters as job 'packages' output variable
+      modules: ${{ steps.filter.outputs.changes }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          amphora-parent: '(amphora-parent|.github)/**'
+          amphora-common: '(amphora-common|.github)/**'
+          amphora-java-client: '(amphora-java-client|.github)/**'
+          amphora-service: '(amphora-service|.github)/**'
   test:
+    needs: changes
+    strategy:
+      matrix:
+        module: ${{ fromJSON(needs.changes.outputs.modules) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -36,9 +56,9 @@ jobs:
               "password": "${{ secrets.GITHUB_TOKEN }}"
             }]
       - name: Build with Maven
-        run: ./mvnw install -Dskip.tests --batch-mode --update-snapshots --no-transfer-progress
+        run: ./mvnw install -pl ${{ matrix.module }} -Dskip.tests --batch-mode --update-snapshots --no-transfer-progress
       - name: Run Tests
-        run: ./mvnw verify --activate-profiles coverage --batch-mode --no-transfer-progress
+        run: ./mvnw verify -pl ${{ matrix.module }} --activate-profiles coverage --batch-mode --no-transfer-progress
       - name: Collect Jacoco reports
         run: echo ::set-output name=reports::$(find . -regex '.*/target/site/jacoco/jacoco.xml' | tr '\n' ',' | sed 's/.$//')
         id: jacoco
@@ -47,4 +67,4 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ steps.jacoco.outputs.reports }}
-          name: codecov
+          name: ${{ matrix.module }}
