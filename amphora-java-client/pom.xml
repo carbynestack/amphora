@@ -13,11 +13,21 @@
     <version>0.1.0</version>
     <parent>
         <groupId>io.carbynestack</groupId>
-        <artifactId>amphora-parent</artifactId>
-        <version>0.1.0</version>
-        <relativePath>../pom.xml</relativePath>
+        <artifactId>amphora</artifactId>
+        <version>0.1-SNAPSHOT-4741225899-24-4a99be8</version>
     </parent>
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>github</id>
+            <name>Github Packages</name>
+            <url>https://maven.pkg.github.com/carbynestack/*</url>
+        </repository>
+    </repositories>
     <properties>
+        <amphora-common.version>0.1-SNAPSHOT-4741225899-24-4a99be8</amphora-common.version>
         <!-- external dependencies -->
         <guava.version>31.1-jre</guava.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
@@ -27,7 +37,7 @@
         <dependency>
             <groupId>io.carbynestack</groupId>
             <artifactId>amphora-common</artifactId>
-            <version>${project.version}</version>
+            <version>${amphora-common.version}</version>
         </dependency>
         <dependency>
             <groupId>io.carbynestack</groupId>
@@ -113,7 +123,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <fileTemplate>${project.parent.basedir}/.github/templates/sbom.ftl</fileTemplate>
+                    <fileTemplate>${project.basedir}/../.github/templates/sbom.ftl</fileTemplate>
                 </configuration>
             </plugin>
         </plugins>
