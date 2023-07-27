@@ -29,7 +29,7 @@
     </repositories>
     <properties>
         <amphora-common.version>0.1.1</amphora-common.version>
-        <amphora-java-client.version>0.1-SNAPSHOT-4741225899-24-4a99be8</amphora-java-client.version>
+        <amphora-java-client.version>0.1.1</amphora-java-client.version>
         <!-- skip docker build by default -->
         <dockerfile.skip>true</dockerfile.skip>
         <docker.baseImage>ghcr.io/carbynestack/ubuntu-java-openjre:8-dev</docker.baseImage>
