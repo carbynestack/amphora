@@ -13,8 +13,8 @@
     <version>0.1.0</version>
     <parent>
         <groupId>io.carbynestack</groupId>
-        <artifactId>amphora</artifactId>
-        <version>0.1-SNAPSHOT-4741225899-24-4a99be8</version>
+        <artifactId>amphora-parent</artifactId>
+        <version>0.1.2</version>
     </parent>
     <repositories>
         <repository>
