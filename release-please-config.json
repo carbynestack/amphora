@@ -5,21 +5,21 @@
   "pull-request-header": ":package: Staging a new release",
   "skip-snapshot": true,
   "packages": {
-    ".": {
+    "amphora-parent": {
       "package-name": "parent",
-      "release-type": "maven"
+      "release-type": "java-yoshi"
     },
     "amphora-common": {
       "package-name": "common",
-      "release-type": "maven"
+      "release-type": "java-yoshi"
     },
     "amphora-java-client": {
       "package-name": "java-client",
-      "release-type": "maven"
+      "release-type": "java-yoshi"
     },
     "amphora-service": {
       "package-name": "service",
-      "release-type": "maven"
+      "release-type": "java-yoshi"
     },
     "amphora-service/charts/amphora": {
       "package-name": "chart",

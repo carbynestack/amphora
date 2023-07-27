@@ -1,0 +1,7 @@
+# Format:
+# module:released-version:current-version
+
+amphora-parent:0.1.0
+amphora-common:0.1.0
+amphora-java-client:0.1.0
+amphora-service:0.1.0

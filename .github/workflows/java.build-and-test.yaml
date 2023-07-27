@@ -26,10 +26,10 @@ jobs:
       id: filter
       with:
         filters: |
-          amphora-parent: '(amphora-parent|.github)/**'
-          amphora-common: '(amphora-common|.github)/**'
-          amphora-java-client: '(amphora-java-client|.github)/**'
-          amphora-service: '(amphora-service|.github)/**'
+          parent: '(amphora-parent|.github)/**'
+          common: '(amphora-common|.github)/**'
+          java-client: '(amphora-java-client|.github)/**'
+          service: '(amphora-service|.github)/**'
   test:
     needs: changes
     strategy:
@@ -56,9 +56,9 @@ jobs:
               "password": "${{ secrets.GITHUB_TOKEN }}"
             }]
       - name: Build with Maven
-        run: ./mvnw install -pl ${{ matrix.module }} -Dskip.tests --batch-mode --update-snapshots --no-transfer-progress
+        run: ./mvnw install -pl ${GITHUB_REPOSITORY#*/}-${{ matrix.module }} -Dskip.tests --batch-mode --update-snapshots --no-transfer-progress
       - name: Run Tests
-        run: ./mvnw verify -pl ${{ matrix.module }} --activate-profiles coverage --batch-mode --no-transfer-progress
+        run: ./mvnw verify -pl ${GITHUB_REPOSITORY#*/}-${{ matrix.module }} --activate-profiles coverage --batch-mode --no-transfer-progress
       - name: Collect Jacoco reports
         run: echo ::set-output name=reports::$(find . -regex '.*/target/site/jacoco/jacoco.xml' | tr '\n' ',' | sed 's/.$//')
         id: jacoco
@@ -68,6 +68,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ steps.jacoco.outputs.reports }}
           name: ${{ matrix.module }}
+          flags: ${{ matrix.module }}
   test-status:
     runs-on: ubuntu-22.04
     needs: test
