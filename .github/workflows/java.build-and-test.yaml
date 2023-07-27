@@ -22,7 +22,10 @@ jobs:
       # Expose matched filters as job 'packages' output variable
       modules: ${{ steps.filter.outputs.changes }}
     steps:
-    - uses: dorny/paths-filter@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Check which modules are affected
+      uses: dorny/paths-filter@v2
       id: filter
       with:
         filters: |
