@@ -27,7 +27,7 @@
         </repository>
     </repositories>
     <properties>
-        <amphora-common.version>0.1-SNAPSHOT-4741225899-24-4a99be8</amphora-common.version>
+        <amphora-common.version>0.1.1</amphora-common.version>
         <!-- external dependencies -->
         <guava.version>31.1-jre</guava.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
