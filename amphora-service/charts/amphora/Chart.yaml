@@ -1,13 +1,14 @@
 apiVersion: v1
 appVersion: "1.0"
-description: A Helm chart for creating a Carbyne Stack Amphora secret storage and management service.
+description: A Helm chart for creating a Carbyne Stack Amphora secret storage
+  and management service.
 name: amphora
-version: 0.1.0
+version: 0.1.1
 keywords:
-- carbyne stack
-- amphora
+  - carbyne stack
+  - amphora
 home: https://carbynestack.io
 sources:
-- https://github.com/carbynestack/amphora
+  - https://github.com/carbynestack/amphora
 maintainers:
-- name: CarbyneStack.io
+  - name: CarbyneStack.io
