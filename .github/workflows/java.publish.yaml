@@ -32,7 +32,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Get Release Version
-        run: echo ::set-output name=version::$(${GITHUB_REF#refs/*/${{ steps.package.outputs.name }}-v}")
+        run: echo ::set-output name=version::$(${GITHUB_REF#refs/*/${{ steps.package.outputs.name }}-v})
         id: release
   publish:
     runs-on: ubuntu-22.04
