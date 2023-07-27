@@ -5,7 +5,7 @@
   "pull-request-header": ":package: Staging a new release",
   "skip-snapshot": true,
   "packages": {
-    ".": {
+    "amphora-parent": {
       "package-name": "parent",
       "release-type": "maven"
     },

@@ -1,0 +1,16 @@
+flag_management:
+  default_rules:
+    carryforward: true
+  individual_flags:
+    - name: parent
+      paths:
+        - amphora-parent/
+    - name: common
+      paths:
+        - amphora-common/
+    - name: java-client
+      paths:
+        - amphora-java-client/
+    - name: service
+      paths:
+        - amphora-service/
