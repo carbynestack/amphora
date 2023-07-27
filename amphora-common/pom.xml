@@ -13,6 +13,9 @@
         <groupId>io.carbynestack</groupId>
         <artifactId>amphora-parent</artifactId>
         <version>0.1.2</version>
+        <!-- override relativePath default '../pom.xml' to resolve pom from repository
+        see https://maven.apache.org/ref/3.8.1/maven-model/maven.html#parent -->
+        <relativePath/>
     </parent>
     <repositories>
         <repository>
