@@ -43,6 +43,7 @@
         <dependency>
             <groupId>io.carbynestack</groupId>
             <artifactId>castor-common</artifactId>
+            <version>0.1.1</version>
         </dependency>
         <dependency>
             <groupId>io.carbynestack</groupId>
@@ -51,6 +52,7 @@
         <dependency>
             <groupId>io.carbynestack</groupId>
             <artifactId>java-http-client</artifactId>
+            <version>0.1.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
