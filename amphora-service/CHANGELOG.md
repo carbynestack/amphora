@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/carbynestack/amphora/compare/service-v0.1.1...service-v0.2.0) (2024-10-09)
+
+
+### Features
+
+* **amphora-service:** upgrade dependencies ([#72](https://github.com/carbynestack/amphora/issues/72)) ([d7f5f75](https://github.com/carbynestack/amphora/commit/d7f5f753f815105533208c965949154308a42333))
+
 ## [0.1.1](https://github.com/carbynestack/amphora/compare/service-v0.1.0...service-v0.1.1) (2023-07-27)
 
 
