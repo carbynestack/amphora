@@ -10,7 +10,7 @@
     <artifactId>amphora-service</artifactId>
     <name>Amphora Service</name>
     <description>Amphora bucket/object store service.</description>
-    <version>0.1.1</version>
+    <version>0.2.0</version>
     <parent>
         <groupId>io.carbynestack</groupId>
         <artifactId>amphora-parent</artifactId>
