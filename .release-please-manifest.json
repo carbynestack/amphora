@@ -1,7 +1,7 @@
 {
   "amphora-parent": "0.2.0",
   "amphora-common": "0.2.0",
-  "amphora-java-client": "0.1.1",
+  "amphora-java-client": "0.2.0",
   "amphora-service": "0.1.1",
   "amphora-service/charts/amphora": "0.1.1"
 }

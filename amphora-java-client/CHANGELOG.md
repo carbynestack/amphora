@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/carbynestack/amphora/compare/java-client-v0.1.1...java-client-v0.2.0) (2024-10-09)
+
+
+### Features
+
+* **amphora-java-client:** upgrade dependencies ([#70](https://github.com/carbynestack/amphora/issues/70)) ([987a594](https://github.com/carbynestack/amphora/commit/987a5949f8ee0c044374ee56376c6909f1bf9cf0))
+
 ## [0.1.1](https://github.com/carbynestack/amphora/compare/java-client-v0.1.0...java-client-v0.1.1) (2023-07-27)
 
 
