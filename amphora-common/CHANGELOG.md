@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/carbynestack/amphora/compare/common-v0.1.1...common-v0.2.0) (2024-10-09)
+
+
+### Features
+
+* **amphora-common:** upgrade parent ([#68](https://github.com/carbynestack/amphora/issues/68)) ([349b49f](https://github.com/carbynestack/amphora/commit/349b49feeed0538c9908f4c3e1ecc0267763116e))
+
 ## [0.1.1](https://github.com/carbynestack/amphora/compare/common-v0.1.0...common-v0.1.1) (2023-07-27)
 
 
