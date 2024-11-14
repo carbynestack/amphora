@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 - for information on the respective copyright owner
+ * Copyright (c) 2021-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -12,14 +12,18 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
+import io.carbynestack.amphora.service.exceptions.CsOpaException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
+import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
+import io.carbynestack.amphora.service.opa.JwtReader;
 import io.vavr.control.Try;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,11 +36,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = SECRET_SHARES_ENDPOINT)
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
 public class SecretShareController {
   private final StorageService storageService;
   private final OutputDeliveryService outputDeliveryService;
+  private final JwtReader jwtReader;
 
   /**
    * Retrieves a page of all {@link Metadata} matching the given filters and criteria.
@@ -104,10 +109,12 @@ public class SecretShareController {
    */
   @GetMapping(path = "/{" + SECRET_ID_PARAMETER + "}")
   public ResponseEntity<VerifiableSecretShare> getSecretShare(
+      @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable final UUID secretId,
-      @RequestParam(value = REQUEST_ID_PARAMETER) final UUID requestId) {
+      @RequestParam(value = REQUEST_ID_PARAMETER) final UUID requestId) throws UnauthorizedException, CsOpaException {
     Assert.notNull(requestId, "Request identifier must not be omitted");
-    SecretShare secretShare = storageService.getSecretShare(secretId);
+    SecretShare secretShare = storageService.getSecretShare(secretId,
+            jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
     OutputDeliveryObject outputDeliveryObject =
         outputDeliveryService.computeOutputDeliveryObject(secretShare, requestId);
     return new ResponseEntity<>(
@@ -123,8 +130,11 @@ public class SecretShareController {
    * @throws AmphoraServiceException if the SecretEntity's data could not be deleted.
    */
   @DeleteMapping(path = "/{" + SECRET_ID_PARAMETER + "}")
-  public ResponseEntity<Void> deleteSecretShare(@PathVariable UUID secretId) {
-    storageService.deleteSecret(secretId);
+  public ResponseEntity<Void> deleteSecretShare(
+          @RequestHeader("Authorization") String authorizationHeader,
+          @PathVariable UUID secretId) throws UnauthorizedException, CsOpaException {
+    storageService.deleteSecret(secretId,
+            jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
     return new ResponseEntity<>(HttpStatus.OK);
   }
 

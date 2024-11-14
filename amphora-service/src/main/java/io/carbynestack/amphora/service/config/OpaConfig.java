@@ -7,19 +7,20 @@
 
 package io.carbynestack.amphora.service.config;
 
+import io.carbynestack.amphora.service.opa.JwtReader;
 import io.carbynestack.amphora.service.opa.OpaClient;
-import io.carbynestack.castor.client.download.CastorIntraVcpClient;
-import io.carbynestack.castor.client.download.DefaultCastorIntraVcpClient;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
 import java.net.URI;
 
 @Configuration
 public class OpaConfig {
+
+  @Bean
+  JwtReader jwtReader(AuthProperties authProperties) {
+    return new JwtReader(authProperties.getUserIdFieldName());
+  }
 
   @Bean
   OpaClient opaClient(OpaProperties opaProperties) {

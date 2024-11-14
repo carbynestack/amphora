@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -15,17 +15,17 @@ import io.carbynestack.amphora.common.MaskedInput;
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
+import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
+
+import io.carbynestack.amphora.service.opa.JwtReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Slf4j
@@ -34,6 +34,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping(path = UPLOAD_MASKED_INPUTS_ENDPOINT)
 public class MaskedInputController {
   private final StorageService storageService;
+  private final JwtReader jwtReader;
 
   /**
    * Takes a {@link MaskedInput}, converts it into an individual {@link SecretShare} and persits the
@@ -51,12 +52,16 @@ public class MaskedInputController {
    * @throws AlreadyExistsException if an {@link SecretShare} with the given id already exists.
    */
   @PostMapping
-  public ResponseEntity<URI> upload(@RequestBody MaskedInput maskedInput) {
+  public ResponseEntity<URI> upload(@RequestHeader("Authorization") String authorizationHeader,
+                                    @RequestBody MaskedInput maskedInput) throws UnauthorizedException {
     notNull(maskedInput, "MaskedInput must not be null");
     notEmpty(maskedInput.getData(), "MaskedInput data must not be empty");
     return new ResponseEntity<>(
         ServletUriComponentsBuilder.fromCurrentRequestUri()
-            .pathSegment(storageService.createSecret(maskedInput))
+            .pathSegment(
+                    storageService.createSecret(
+                            maskedInput,
+                            jwtReader.extractUserIdFromAuthHeader(authorizationHeader)))
             .build()
             .toUri(),
         CREATED);

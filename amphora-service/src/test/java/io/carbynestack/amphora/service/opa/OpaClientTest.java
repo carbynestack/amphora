@@ -14,8 +14,8 @@ import io.carbynestack.httpclient.CsHttpClient;
 import io.carbynestack.httpclient.CsHttpClientException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -25,13 +25,15 @@ import java.net.URI;
 import java.util.List;
 
 import static io.carbynestack.amphora.service.opa.OpaService.READ_SECRET_ACTION_NAME;
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class OpaClientTest {
+class OpaClientTest {
 
     private static final URI OPA_SERVICE_URI = URI.create("http://localhost:8081");
     private static final String POLICY_PACKAGE = "play";
@@ -51,13 +53,13 @@ public class OpaClientTest {
     @Mock
     private CsHttpClient<String> csHttpClientMock = mock(CsHttpClient.class);
 
-    @Before
+    @BeforeEach
     public void setUp() {
         reset(csHttpClientMock);
     }
 
     @Test
-    public void givenValidRequest_whenEvaluate_thenReturnTrue() throws CsOpaException, CsHttpClientException {
+    void givenValidRequest_whenEvaluate_thenReturnTrue() throws CsOpaException, CsHttpClientException {
         ArgumentCaptor<URI> uriCaptor = ArgumentCaptor.forClass(URI.class);
         ArgumentCaptor<OpaRequest> requestCaptor = ArgumentCaptor.forClass(OpaRequest.class);
         when(csHttpClientMock.postForObject(uriCaptor.capture(), requestCaptor.capture(), eq(OpaResult.class)))
@@ -83,7 +85,7 @@ public class OpaClientTest {
     }
 
     @Test
-    public void givenNoPolicyPackageDefined_whenEvaluate_thenReturnUseDefaultPackage() throws CsOpaException, CsHttpClientException {
+    void givenNoPolicyPackageDefined_whenEvaluate_thenReturnUseDefaultPackage() throws CsOpaException, CsHttpClientException {
         ArgumentCaptor<URI> uriCaptor = ArgumentCaptor.forClass(URI.class);
         ArgumentCaptor<OpaRequest> requestCaptor = ArgumentCaptor.forClass(OpaRequest.class);
         when(csHttpClientMock.postForObject(uriCaptor.capture(), requestCaptor.capture(), eq(OpaResult.class)))
@@ -108,7 +110,7 @@ public class OpaClientTest {
     }
 
     @Test
-    public void givenOpaReturnsFalse_whenEvaluate_thenReturnFalse() throws CsHttpClientException, CsOpaException {
+    void givenOpaReturnsFalse_whenEvaluate_thenReturnFalse() throws CsHttpClientException, CsOpaException {
         ArgumentCaptor<URI> uriCaptor = ArgumentCaptor.forClass(URI.class);
         ArgumentCaptor<OpaRequest> requestCaptor = ArgumentCaptor.forClass(OpaRequest.class);
         when(csHttpClientMock.postForObject(uriCaptor.capture(), requestCaptor.capture(), eq(OpaResult.class)))
@@ -121,11 +123,11 @@ public class OpaClientTest {
                 .withTags(TAGS)
                 .evaluate();
 
-        assertFalse("must not be allowed", result);
+        assertFalse(result, "must not be allowed");
     }
 
     @Test
-    public void givenNoSubjectDefined_whenEvaluate_thenThrowException() {
+    void givenNoSubjectDefined_whenEvaluate_thenThrowException() {
         OpaClient opaClient = new OpaClient(csHttpClientMock, OPA_SERVICE_URI, DEFAULT_POLICY_PACKAGE);
         try {
             opaClient.newRequest()
@@ -139,7 +141,7 @@ public class OpaClientTest {
     }
 
     @Test
-    public void givenNoActionDefined_whenEvaluate_thenThrowException() {
+    void givenNoActionDefined_whenEvaluate_thenThrowException() {
         OpaClient opaClient = new OpaClient(csHttpClientMock, OPA_SERVICE_URI, DEFAULT_POLICY_PACKAGE);
         try {
             opaClient.newRequest()
@@ -153,7 +155,7 @@ public class OpaClientTest {
     }
 
     @Test
-    public void givenClientThrows_whenEvaluate_thenReturnFalse() throws CsHttpClientException, CsOpaException {
+    void givenClientThrows_whenEvaluate_thenReturnFalse() throws CsHttpClientException, CsOpaException {
         when(csHttpClientMock.postForObject(any(), any(), eq(OpaResult.class)))
                 .thenThrow(new CsHttpClientException(""));
 
@@ -163,6 +165,6 @@ public class OpaClientTest {
                 .withSubject(SUBJECT)
                 .withTags(TAGS)
                 .evaluate();
-        assertFalse("must not be allowed", result);
+        assertFalse(result, "must not be allowed");
     }
 }

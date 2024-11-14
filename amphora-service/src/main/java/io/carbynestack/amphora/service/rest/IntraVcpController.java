@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 package io.carbynestack.amphora.service.rest;
-
-import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
 
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
@@ -14,8 +12,6 @@ import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
-import java.net.URI;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.UUID;
+
+import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
 
 @Slf4j
 @RestController
@@ -67,6 +68,6 @@ public class IntraVcpController {
    */
   @GetMapping(path = "/{" + SECRET_ID_PARAMETER + "}")
   public ResponseEntity<SecretShare> downloadSecretShare(@PathVariable UUID secretId) {
-    return new ResponseEntity<>(storageService.getSecretShare(secretId), HttpStatus.OK);
+    return new ResponseEntity<>(storageService.getSecretShareAuthorized(secretId), HttpStatus.OK);
   }
 }

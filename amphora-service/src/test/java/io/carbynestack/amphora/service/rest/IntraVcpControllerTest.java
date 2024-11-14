@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 - for information on the respective copyright owner
+ * Copyright (c) 2023-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -63,7 +63,7 @@ class IntraVcpControllerTest {
     UUID secretShareId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     SecretShare expectedSecretShare = SecretShare.builder().secretId(secretShareId).build();
 
-    when(storageService.getSecretShare(secretShareId)).thenReturn(expectedSecretShare);
+    when(storageService.getSecretShareAuthorized(secretShareId)).thenReturn(expectedSecretShare);
 
     ResponseEntity<SecretShare> actualResponse =
         intraVcpController.downloadSecretShare(secretShareId);

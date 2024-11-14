@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
+import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.castor.common.exceptions.CastorServiceException;
 import java.io.UnsupportedEncodingException;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,14 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
     logger.debug("Handling BadRequest Error", e);
     return new ResponseEntity<>(
         OBJECT_WRITER.writeValueAsString(e.getMessage()), HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler({UnauthorizedException.class})
+  protected ResponseEntity<String> handleUnauthorizedException(UnauthorizedException e)
+      throws JsonProcessingException {
+      logger.debug("Handling Unauthorized Error", e);
+      return new ResponseEntity<>(
+          OBJECT_WRITER.writeValueAsString(e.getMessage()), HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler({AmphoraServiceException.class, CastorServiceException.class, Exception.class})

@@ -42,7 +42,7 @@ public class OpaClient {
      * @param tags The tags describing the accessed object.
      * @return True if the subject can perform the action, false otherwise (or if an error occurred).
      */
-    boolean isAllowed(String policyPackage, String action, String subject, List<Tag> tags) {
+    public boolean isAllowed(String policyPackage, String action, String subject, List<Tag> tags) {
         OpaRequestBody body = OpaRequestBody.builder()
                 .subject(subject)
                 .tags(tags)

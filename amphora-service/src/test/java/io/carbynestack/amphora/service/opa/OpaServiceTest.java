@@ -10,8 +10,8 @@ package io.carbynestack.amphora.service.opa;
 import com.google.common.collect.Lists;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.service.exceptions.CsOpaException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -47,7 +47,7 @@ public class OpaServiceTest {
     @Mock
     private OpaClient opaClientMock = mock(OpaClient.class);
 
-    @Before
+    @BeforeEach
     public void setUp() {
         reset(opaClientMock);
         when(opaClientMock.newRequest()).thenReturn(new OpaClientRequest(opaClientMock, DEFAULT_POLICY_PACKAGE));

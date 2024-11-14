@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -13,6 +13,7 @@ import static org.springframework.util.Assert.isTrue;
 import io.carbynestack.amphora.common.MaskedInput;
 import io.carbynestack.amphora.common.MaskedInputData;
 import io.carbynestack.amphora.common.SecretShare;
+import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.castor.common.entities.Field;
 import io.carbynestack.castor.common.entities.InputMask;
 import io.carbynestack.castor.common.entities.Share;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 - for information on the respective copyright owner
+ * Copyright (c) 2023-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -7,33 +7,25 @@
 
 package io.carbynestack.amphora.service.persistence.metadata;
 
-import static io.carbynestack.amphora.service.persistence.metadata.StorageService.*;
-import static io.carbynestack.amphora.service.util.CreationDateTagMatchers.containsCreationDateTag;
-import static io.carbynestack.castor.common.entities.Field.GFP;
-import static java.util.Arrays.asList;
-import static java.util.Collections.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.any;
-
 import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.calculation.SecretShareUtil;
 import io.carbynestack.amphora.service.config.AmphoraServiceProperties;
 import io.carbynestack.amphora.service.config.SpdzProperties;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
+import io.carbynestack.amphora.service.exceptions.CsOpaException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
+import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
+import io.carbynestack.amphora.service.opa.OpaClient;
+import io.carbynestack.amphora.service.opa.OpaService;
 import io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService;
 import io.carbynestack.amphora.service.persistence.datastore.SecretShareDataStore;
 import io.carbynestack.castor.common.entities.InputMask;
 import io.carbynestack.castor.common.entities.TupleList;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
-import java.util.*;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomUtils;
 import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -41,6 +33,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static io.carbynestack.amphora.service.opa.OpaService.OWNER_TAG_KEY;
+import static io.carbynestack.amphora.service.persistence.metadata.StorageService.*;
+import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.setToTagList;
+import static io.carbynestack.amphora.service.util.CreationDateTagMatchers.containsCreationDateTag;
+import static io.carbynestack.castor.common.entities.Field.GFP;
+import static java.util.Arrays.asList;
+import static java.util.Collections.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StorageServiceTest {
@@ -50,6 +58,7 @@ class StorageServiceTest {
   private final Tag testTag2 = Tag.builder().key("SUPER_KEY").value("MY#SUPER,VALUE").build();
   private final Tag testTagReservedCreationDateKey =
       Tag.builder().key(StorageService.RESERVED_TAG_KEYS.get(0)).value("MY#SUPER,VALUE").build();
+  private final String authorizedUserId ="afc0117f-c9cd-4d8c-acee-fa1433ca0fdd";
 
   @Mock private SecretEntityRepository secretEntityRepository;
   @Mock private InputMaskCachingService inputMaskStore;
@@ -58,6 +67,7 @@ class StorageServiceTest {
   @Mock private SpdzProperties spdzProperties;
   @Mock private AmphoraServiceProperties amphoraServiceProperties;
   @Mock private SecretShareDataStore secretShareDataStore;
+  @Mock private OpaService opaService;
 
   @InjectMocks private StorageService storageService;
 
@@ -75,7 +85,8 @@ class StorageServiceTest {
 
     AlreadyExistsException aee =
         assertThrows(
-            AlreadyExistsException.class, () -> storageService.createSecret(testMaskedInput));
+            AlreadyExistsException.class, () ->
+                        storageService.createSecret(testMaskedInput, authorizedUserId ));
     assertEquals(SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, aee.getMessage());
   }
 
@@ -97,7 +108,7 @@ class StorageServiceTest {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> storageService.createSecret(maskedInputDuplicateTagKeys));
+            () -> storageService.createSecret(maskedInputDuplicateTagKeys, authorizedUserId));
     assertEquals(TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG, iae.getMessage());
   }
 
@@ -129,11 +140,11 @@ class StorageServiceTest {
 
     assertThrows(
         RuntimeException.class,
-        () -> storageService.createSecret(maskedInput),
+        () -> storageService.createSecret(maskedInput, authorizedUserId),
         expectedAbortTestException.getMessage());
     SecretEntity capturedSecretEntity = secretEntityArgumentCaptor.getValue();
     List<Tag> actualTags = TagEntity.setToTagList(capturedSecretEntity.getTags());
-    assertEquals(2, actualTags.size());
+    assertEquals(3, actualTags.size()); // creation date, owner and test tag
     MatcherAssert.assertThat(actualTags, allOf(hasItem(testTag), containsCreationDateTag()));
     Tag actualTagWithReservedKey =
         actualTags.stream()
@@ -172,7 +183,7 @@ class StorageServiceTest {
     when(secretEntityRepository.save(secretEntityArgumentCaptor.capture()))
         .thenReturn(persistedSecretEntity);
 
-    assertEquals(maskedInput.getSecretId().toString(), storageService.createSecret(maskedInput));
+    assertEquals(maskedInput.getSecretId().toString(), storageService.createSecret(maskedInput, authorizedUserId));
     verify(secretEntityRepository, times(1)).existsById(maskedInput.getSecretId().toString());
     verify(inputMaskStore, times(1)).getCachedInputMasks(maskedInput.getSecretId());
     verify(secretEntityRepository, times(1)).save(secretEntityArgumentCaptor.capture());
@@ -182,7 +193,7 @@ class StorageServiceTest {
     SecretEntity actualSecretEntity = secretEntityArgumentCaptor.getValue();
     assertEquals(maskedInput.getSecretId().toString(), actualSecretEntity.getSecretId());
     List<Tag> actualTags = TagEntity.setToTagList(actualSecretEntity.getTags());
-    assertEquals(2, actualTags.size());
+    assertEquals(3, actualTags.size()); // creation date, owner and test tag
     MatcherAssert.assertThat(
         actualTags,
         allOf(containsCreationDateTag(), hasItems(maskedInput.getTags().toArray(new Tag[0]))));
@@ -382,27 +393,29 @@ class StorageServiceTest {
     when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.empty());
 
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () -> storageService.getSecretShare(testSecretId));
+        assertThrows(NotFoundException.class, () -> storageService.getSecretShare(testSecretId, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
 
   @Test
-  void givenDataCannotBeRetrieved_whenGetSecretShare_thenThrowAmphoraServiceException() {
+  void givenDataCannotBeRetrieved_whenGetSecretShare_thenThrowAmphoraServiceException() throws CsOpaException {
     AmphoraServiceException expectedAse = new AmphoraServiceException("Expected this one");
-    SecretEntity secretEntity = new SecretEntity();
+    TagEntity tagEntity = TagEntity.fromTag(testTag);
+    SecretEntity secretEntity = new SecretEntity(testSecretId.toString(), singleton(tagEntity));
+    when(opaService.canReadSecret(authorizedUserId, setToTagList(secretEntity.getTags()))).thenReturn(true);
     when(secretEntityRepository.findById(testSecretId.toString()))
         .thenReturn(Optional.of(secretEntity));
     when(secretShareDataStore.getSecretShareData(testSecretId)).thenThrow(expectedAse);
 
     assertThrows(
         AmphoraServiceException.class,
-        () -> storageService.getSecretShare(testSecretId),
+        () -> storageService.getSecretShare(testSecretId, authorizedUserId),
         expectedAse.getMessage());
   }
 
   @Test
-  void givenSuccessfulRequest_whenGetSecretShare_thenReturnContent() {
+  void givenSuccessfulRequest_whenGetSecretShare_thenReturnContent() throws CsOpaException, UnauthorizedException {
     List<Tag> expectedTags = singletonList(testTag);
     byte[] expectedData = RandomUtils.nextBytes(MpSpdzIntegrationUtils.SHARE_WIDTH);
     SecretEntity existingSecretEntity =
@@ -413,9 +426,11 @@ class StorageServiceTest {
     when(secretShareDataStore.getSecretShareData(
             UUID.fromString(existingSecretEntity.getSecretId())))
         .thenReturn(expectedData);
+    when(opaService.canReadSecret(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+        .thenReturn(true);
 
     SecretShare actualSecretShare =
-        storageService.getSecretShare(UUID.fromString(existingSecretEntity.getSecretId()));
+        storageService.getSecretShare(UUID.fromString(existingSecretEntity.getSecretId()), authorizedUserId);
     assertEquals(
         UUID.fromString(existingSecretEntity.getSecretId()), actualSecretShare.getSecretId());
     assertEquals(expectedTags, actualSecretShare.getTags());
@@ -423,32 +438,42 @@ class StorageServiceTest {
   }
 
   @Test
-  void givenNoSecretShareWithGivenIdInDatabase_whenDeleteObject_thenThrowNotFoundException() {
-    when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(0L);
-
-    NotFoundException nfe =
-        assertThrows(NotFoundException.class, () -> storageService.deleteSecret(testSecretId));
+  void givenNoSecretShareWithGivenIdInDatabase_whenDeleteObject_thenThrowNotFoundException() {    NotFoundException nfe =
+        assertThrows(NotFoundException.class, () -> storageService.deleteSecret(testSecretId, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
 
   @Test
-  void givenDeleteObjectDataFails_whenDeleteObject_thenThrowGivenException() {
+  void givenDeleteObjectDataFails_whenDeleteObject_thenThrowGivenException() throws CsOpaException {
     AmphoraServiceException expectedAse = new AmphoraServiceException("Expected this one");
+    TagEntity tagEntity = TagEntity.fromTag(testTag);
+    SecretEntity secretEntity = new SecretEntity(testSecretId.toString(), singleton(tagEntity));
+    when(opaService.canDeleteSecret(authorizedUserId, setToTagList(secretEntity.getTags()))).thenReturn(true);
+    when(secretEntityRepository.findById(testSecretId.toString()))
+        .thenReturn(Optional.of(secretEntity));
     when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(1L);
     when(secretShareDataStore.deleteSecretShareData(testSecretId)).thenThrow(expectedAse);
 
     assertThrows(
         AmphoraServiceException.class,
-        () -> storageService.deleteSecret(testSecretId),
+        () -> storageService.deleteSecret(testSecretId, authorizedUserId),
         expectedAse.getMessage());
   }
 
   @Test
-  void givenSuccessfulRequest_whenDeleteObject_thenDeleteObjectAndData() {
-    when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(1L);
+  void givenSuccessfulRequest_whenDeleteObject_thenDeleteObjectAndData() throws CsOpaException, UnauthorizedException {
+    TagEntity existingTagEntity = TagEntity.fromTag(testTag);
+    SecretEntity existingSecretEntity =
+            new SecretEntity(testSecretId.toString(), singleton(existingTagEntity));
 
-    storageService.deleteSecret(testSecretId);
+    when(secretEntityRepository.findById(testSecretId.toString()))
+            .thenReturn(Optional.of(existingSecretEntity));
+    when(secretEntityRepository.deleteBySecretId(testSecretId.toString())).thenReturn(1L);
+    when(opaService.canDeleteSecret(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+            .thenReturn(true);
+
+    storageService.deleteSecret(testSecretId, authorizedUserId);
     verify(secretShareDataStore, times(1)).deleteSecretShareData(testSecretId);
   }
 
@@ -457,7 +482,7 @@ class StorageServiceTest {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> storageService.storeTag(testSecretId, testTagReservedCreationDateKey));
+            () -> storageService.storeTag(testSecretId, testTagReservedCreationDateKey, authorizedUserId));
     assertEquals(
         String.format(IS_RESERVED_KEY_EXCEPTION_MSG, testTagReservedCreationDateKey.getKey()),
         iae.getMessage());
@@ -465,25 +490,24 @@ class StorageServiceTest {
 
   @Test
   void givenNoSecretShareWithGivenIdInDatabase_whenStoreTag_thenThrowNotFoundException() {
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () -> storageService.storeTag(testSecretId, testTag));
+        assertThrows(NotFoundException.class, () -> storageService.storeTag(testSecretId, testTag, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
 
   @Test
-  void givenObjectAlreadyHasTagWithGivenKey_whenStoreTag_thenThrowAlreadyExistsException() {
+  void givenObjectAlreadyHasTagWithGivenKey_whenStoreTag_thenThrowAlreadyExistsException() throws CsOpaException {
     SecretEntity existingSecretEntity = new SecretEntity().setSecretId(testSecretId.toString());
     TagEntity existingTagEntity = TagEntity.fromTag(testTag);
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
-        .thenReturn(existingSecretEntity);
+    when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.of(existingSecretEntity));
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.of(existingTagEntity));
+    when(opaService.canCreateTags(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+            .thenReturn(true);
     AlreadyExistsException aee =
         assertThrows(
-            AlreadyExistsException.class, () -> storageService.storeTag(testSecretId, testTag));
+            AlreadyExistsException.class, () -> storageService.storeTag(testSecretId, testTag, authorizedUserId));
     assertEquals(
         String.format(
             TAG_WITH_KEY_EXISTS_FOR_SECRET_EXCEPTION_MSG,
@@ -493,21 +517,21 @@ class StorageServiceTest {
   }
 
   @Test
-  void givenSuccessfulRequest_whenStoreTag_thenPersistTag() {
+  void givenSuccessfulRequest_whenStoreTag_thenPersistTag() throws CsOpaException, UnauthorizedException {
     SecretEntity existingSecretEntity = new SecretEntity().setSecretId(testSecretId.toString());
     TagEntity expectedTagEntity = TagEntity.fromTag(testTag);
     ArgumentCaptor<TagEntity> tagEntityArgumentCaptor = ArgumentCaptor.forClass(TagEntity.class);
 
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
-        .thenReturn(existingSecretEntity);
+    when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.of(existingSecretEntity));
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.empty());
     when(tagRepository.save(any())).thenReturn(expectedTagEntity);
+    when(opaService.canCreateTags(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+            .thenReturn(true);
 
     assertEquals(
         expectedTagEntity.getKey(),
-        storageService.storeTag(UUID.fromString(existingSecretEntity.getSecretId()), testTag));
+        storageService.storeTag(UUID.fromString(existingSecretEntity.getSecretId()), testTag, authorizedUserId));
 
     verify(tagRepository, times(1)).save(tagEntityArgumentCaptor.capture());
     TagEntity actualTagEntity = tagEntityArgumentCaptor.getValue();
@@ -528,23 +552,22 @@ class StorageServiceTest {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> storageService.replaceTags(testSecretId, invalidTagList));
+            () -> storageService.replaceTags(testSecretId, invalidTagList, authorizedUserId));
     assertEquals(TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG, iae.getMessage());
   }
 
   @Test
   void givenNoSecretShareWithGivenIdInDatabase_whenReplaceTags_thenThrowNotFoundException() {
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
     List<Tag> emptyTags = emptyList();
     NotFoundException nfe =
         assertThrows(
-            NotFoundException.class, () -> storageService.replaceTags(testSecretId, emptyTags));
+            NotFoundException.class, () -> storageService.replaceTags(testSecretId, emptyTags, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
 
   @Test
-  void givenListHasTagWithReservedKey_whenReplaceTags_thenReplaceByExistingTagAndPersist() {
+  void givenListHasTagWithReservedKey_whenReplaceTags_thenReplaceByExistingTagAndPersist() throws CsOpaException, UnauthorizedException {
     List<Tag> tagListWithReservedKey = asList(testTag, testTagReservedCreationDateKey);
     TagEntity existingCreationTagEntity =
         TagEntity.fromTag(
@@ -556,14 +579,14 @@ class StorageServiceTest {
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
     ArgumentCaptor<Set<TagEntity>> tagEntitySetArgumentCaptor = ArgumentCaptor.forClass(Set.class);
 
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
-        .thenReturn(existingSecretEntity);
+    when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.of(existingSecretEntity));
     when(tagRepository.findBySecretAndKey(existingSecretEntity, existingCreationTagEntity.getKey()))
         .thenReturn(Optional.of(existingCreationTagEntity));
+    when(opaService.canUpdateTags(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+            .thenReturn(true);
 
     storageService.replaceTags(
-        UUID.fromString(existingSecretEntity.getSecretId()), tagListWithReservedKey);
+        UUID.fromString(existingSecretEntity.getSecretId()), tagListWithReservedKey, authorizedUserId);
 
     verify(tagRepository, times(1)).deleteBySecret(existingSecretEntity);
     verify(tagRepository, times(1)).saveAll(tagEntitySetArgumentCaptor.capture());
@@ -581,30 +604,31 @@ class StorageServiceTest {
     when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.empty());
 
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () -> storageService.retrieveTags(testSecretId));
+        assertThrows(NotFoundException.class, () -> storageService.retrieveTags(testSecretId, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
 
   @Test
-  void givenSuccessfulRequest_whenRetrieveTags_thenReturnContent() {
+  void givenSuccessfulRequest_whenRetrieveTags_thenReturnContent() throws CsOpaException, UnauthorizedException {
     List<Tag> expectedTags = asList(testTag, testTag2);
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), TagEntity.setFromTagList(expectedTags));
     when(secretEntityRepository.findById(testSecretId.toString()))
         .thenReturn(Optional.of(existingSecretEntity));
+    when(opaService.canReadTags(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+        .thenReturn(true);
 
     MatcherAssert.assertThat(
-        storageService.retrieveTags(UUID.fromString(existingSecretEntity.getSecretId())),
+        storageService.retrieveTags(UUID.fromString(existingSecretEntity.getSecretId()), authorizedUserId),
         containsInAnyOrder(expectedTags.toArray()));
   }
 
   @Test
   void givenNoSecretShareWithGivenIdInDatabase_whenRetrieveTag_thenThrowNotFoundException() {
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
     String key = testTag.getKey();
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () -> storageService.retrieveTag(testSecretId, key));
+        assertThrows(NotFoundException.class, () -> storageService.retrieveTag(testSecretId, key, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
@@ -613,14 +637,10 @@ class StorageServiceTest {
   void givenNoTagWithGivenKeyInDatabaseForGivenObject_whenRetrieveTag_thenThrowNotFoundException() {
     String key = testTag.getKey();
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
-    when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
-        .thenReturn(Optional.empty());
 
     assertThrows(
         NotFoundException.class,
-        () -> storageService.retrieveTag(testSecretId, key),
+        () -> storageService.retrieveTag(testSecretId, key, authorizedUserId),
         String.format(
             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
             testTag.getKey(),
@@ -628,16 +648,17 @@ class StorageServiceTest {
   }
 
   @Test
-  void givenSuccessfulRequest_whenRetrieveTag_thenReturnContent() {
+  void givenSuccessfulRequest_whenRetrieveTag_thenReturnContent() throws CsOpaException, UnauthorizedException {
     TagEntity existingTagEntity = TagEntity.fromTag(testTag);
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), singleton(existingTagEntity));
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
+    when(secretEntityRepository.findById(testSecretId.toString()))
+            .thenReturn(Optional.of(existingSecretEntity));
+    when(opaService.canReadTags(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+            .thenReturn(true);
     when(tagRepository.findBySecretAndKey(existingSecretEntity, existingTagEntity.getKey()))
         .thenReturn(Optional.of(existingTagEntity));
-
-    assertEquals(testTag, storageService.retrieveTag(testSecretId, testTag.getKey()));
+    assertEquals(testTag, storageService.retrieveTag(testSecretId, testTag.getKey(), authorizedUserId));
   }
 
   @Test
@@ -645,7 +666,7 @@ class StorageServiceTest {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> storageService.updateTag(testSecretId, testTagReservedCreationDateKey));
+            () -> storageService.updateTag(testSecretId, testTagReservedCreationDateKey, authorizedUserId));
     assertEquals(
         String.format(IS_RESERVED_KEY_EXCEPTION_MSG, testTagReservedCreationDateKey.getKey()),
         iae.getMessage());
@@ -653,11 +674,9 @@ class StorageServiceTest {
 
   @Test
   void givenNoSecretShareWithGivenIdInDatabase_whenUpdateTag_thenThrowNotFoundException() {
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
-
     NotFoundException nfe =
         assertThrows(
-            NotFoundException.class, () -> storageService.updateTag(testSecretId, testTag));
+            NotFoundException.class, () -> storageService.updateTag(testSecretId, testTag, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
@@ -665,15 +684,10 @@ class StorageServiceTest {
   @Test
   void givenNoTagWithGivenKeyInDatabaseForGivenObject_whenUpdateTag_thenThrowNotFoundException() {
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
-    when(secretEntityRepository.existsById(existingSecretEntity.getSecretId())).thenReturn(true);
-    when(secretEntityRepository.getById(existingSecretEntity.getSecretId()))
-        .thenReturn(existingSecretEntity);
-    when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
-        .thenReturn(Optional.empty());
 
     assertThrows(
         NotFoundException.class,
-        () -> storageService.updateTag(testSecretId, testTag),
+        () -> storageService.updateTag(testSecretId, testTag, authorizedUserId),
         String.format(
             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
             testTag.getKey(),
@@ -681,18 +695,19 @@ class StorageServiceTest {
   }
 
   @Test
-  void givenSuccessfulRequest_whenUpdateTag_thenUpdateTag() {
+  void givenSuccessfulRequest_whenUpdateTag_thenUpdateTag() throws CsOpaException, UnauthorizedException {
     Tag newTag =
         Tag.builder().key(testTag.getKey()).value("123").valueType(TagValueType.LONG).build();
     TagEntity existingTagEntity = TagEntity.fromTag(testTag);
     SecretEntity existingSecretEntity =
         new SecretEntity(testSecretId.toString(), singleton(existingTagEntity));
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
+    when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.of(existingSecretEntity));
     when(tagRepository.findBySecretAndKey(existingSecretEntity, testTag.getKey()))
         .thenReturn(Optional.of(existingTagEntity));
+    when(opaService.canUpdateTags(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+            .thenReturn(true);
 
-    storageService.updateTag(UUID.fromString(existingSecretEntity.getSecretId()), newTag);
+    storageService.updateTag(UUID.fromString(existingSecretEntity.getSecretId()), newTag, authorizedUserId);
 
     ArgumentCaptor<TagEntity> tagEntityArgumentCaptor = ArgumentCaptor.forClass(TagEntity.class);
     verify(tagRepository, times(1)).save(tagEntityArgumentCaptor.capture());
@@ -704,10 +719,11 @@ class StorageServiceTest {
   @Test
   void givenTagHasReservedKey_whenDeleteTag_thenThrowIllegalArgumentException() {
     String reservedKey = testTagReservedCreationDateKey.getKey();
+
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> storageService.deleteTag(testSecretId, reservedKey));
+            () -> storageService.deleteTag(testSecretId, reservedKey, authorizedUserId));
     assertEquals(String.format(IS_RESERVED_KEY_EXCEPTION_MSG, reservedKey), iae.getMessage());
   }
 
@@ -715,10 +731,8 @@ class StorageServiceTest {
   void givenNoSecretShareWithGivenIdInDatabase_whenDeleteTag_thenThrowNotFoundException() {
     String key = testTag.getKey();
 
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(false);
-
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () -> storageService.deleteTag(testSecretId, key));
+        assertThrows(NotFoundException.class, () -> storageService.deleteTag(testSecretId, key, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
@@ -727,13 +741,10 @@ class StorageServiceTest {
   void givenNoTagWithGivenKeyInDatabaseForGivenObject_whenDeleteTag_thenThrowNotFoundException() {
     String key = testTag.getKey();
     SecretEntity existingSecretEntity = new SecretEntity(testSecretId.toString(), emptySet());
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
-    when(tagRepository.findBySecretAndKey(existingSecretEntity, key)).thenReturn(Optional.empty());
 
     assertThrows(
         NotFoundException.class,
-        () -> storageService.deleteTag(testSecretId, key),
+        () -> storageService.deleteTag(testSecretId, key, authorizedUserId),
         String.format(
             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
             testTag.getKey(),
@@ -741,18 +752,19 @@ class StorageServiceTest {
   }
 
   @Test
-  void givenSuccessfulRequest_whenDeleteTag_thenDelete() {
+  void givenSuccessfulRequest_whenDeleteTag_thenDelete() throws CsOpaException, UnauthorizedException {
     TagEntity tagEntityToDelete = TagEntity.fromTag(testTag);
     SecretEntity existingSecretEntity =
-        new SecretEntity(testSecretId.toString(), singleton(tagEntityToDelete));
-    when(secretEntityRepository.existsById(testSecretId.toString())).thenReturn(true);
-    when(secretEntityRepository.getById(testSecretId.toString())).thenReturn(existingSecretEntity);
+        new SecretEntity(testSecretId.toString(), new HashSet<>(singleton(tagEntityToDelete)));
+    when(secretEntityRepository.findById(testSecretId.toString())).thenReturn(Optional.of(existingSecretEntity));
     when(tagRepository.findBySecretAndKey(existingSecretEntity, tagEntityToDelete.getKey()))
         .thenReturn(Optional.of(tagEntityToDelete));
+    when(opaService.canDeleteTags(authorizedUserId, setToTagList(existingSecretEntity.getTags())))
+            .thenReturn(true);
 
+    assertEquals(1, existingSecretEntity.getTags().size());
     storageService.deleteTag(
-        UUID.fromString(existingSecretEntity.getSecretId()), tagEntityToDelete.getKey());
-
-    verify(tagRepository, times(1)).delete(tagEntityToDelete);
+        UUID.fromString(existingSecretEntity.getSecretId()), tagEntityToDelete.getKey(), authorizedUserId);
+    assertEquals(0, existingSecretEntity.getTags().size());
   }
 }

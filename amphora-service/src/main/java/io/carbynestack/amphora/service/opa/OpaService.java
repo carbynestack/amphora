@@ -17,6 +17,8 @@ import java.util.List;
 @Service
 public class OpaService {
     public static final String POLICY_PACKAGE_TAG_KEY = "accessPolicy";
+    public static final String OWNER_TAG_KEY = "owner";
+
     static final String READ_SECRET_ACTION_NAME = "read";
     static final String DELETE_SECRET_ACTION_NAME = "delete";
     static final String CREATE_TAG_ACTION_NAME = "tag/create";
