@@ -220,16 +220,20 @@ public class StorageService {
    *     if no secret with the given id exists.
    * @throws AmphoraServiceException if an {@link SecretShare} exists but could not be retrieved.
    * @throws NotFoundException if no {@link SecretShare} with the given id exists
+   * @throws UnauthorizedException if the requesting program is not authorized to access the {@link SecretShare}
    */
   @Transactional(readOnly = true)
-  public SecretShare getSecretShareAuthorized(UUID secretId) {
-    return secretEntityRepository
-            .findById(secretId.toString())
-            .map(this::getSecretShareForEntity)
-            .orElseThrow(
-                    () ->
-                            new NotFoundException(
-                                    String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+  public SecretShare useSecretShare(UUID secretId, String programId) throws UnauthorizedException, CsOpaException {
+    SecretEntity secretEntity = secretEntityRepository
+          .findById(secretId.toString())
+          .orElseThrow(
+                  () ->
+                          new NotFoundException(
+                                  String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+    if (!opaService.canUseSecret(programId, setToTagList(secretEntity.getTags()))) {
+      throw new UnauthorizedException("Requesting program is not authorized to access the secret");
+    }
+    return getSecretShareForEntity(secretEntity);
   }
 
   /**

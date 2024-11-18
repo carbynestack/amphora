@@ -20,13 +20,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static io.carbynestack.amphora.service.opa.OpaService.READ_SECRET_ACTION_NAME;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static io.carbynestack.amphora.service.opa.OpaService.USE_SECRET_ACTION_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class OpaServiceTest {
+class OpaServiceTest {
 
     private static final String POLICY_PACKAGE = "play";
     private static final String DEFAULT_POLICY_PACKAGE = "default";
@@ -54,7 +55,7 @@ public class OpaServiceTest {
     }
 
     @Test
-    public void givenPolicyDefinedInTag_whenIsAllowed_thenUsePolicyPackageProvided() throws CsOpaException {
+    void givenPolicyDefinedInTag_whenIsAllowed_thenUsePolicyPackageProvided() throws CsOpaException {
         ArgumentCaptor<String> packageCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> actionCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> subjectCaptor = ArgumentCaptor.forClass(String.class);
@@ -68,7 +69,7 @@ public class OpaServiceTest {
         testTags.add(POLICY_TAG);
         boolean result = service.isAllowed(SUBJECT, READ_SECRET_ACTION_NAME, testTags);
 
-        assertTrue("must be allowed", result);
+        assertTrue(result, "must be allowed");
         String actualPackage = packageCaptor.getValue();
         assertEquals(POLICY_TAG.getValue(), actualPackage);
         String actualAction = actionCaptor.getValue();
@@ -90,7 +91,7 @@ public class OpaServiceTest {
         OpaService service = new OpaService(opaClientMock);
         boolean result = service.isAllowed(READ_SECRET_ACTION_NAME, SUBJECT, TAGS);
 
-        assertTrue("must be allowed", result);
+        assertTrue(result, "must be allowed");
         String actualPackage = packageCaptor.getValue();
         assertEquals(DEFAULT_POLICY_PACKAGE, actualPackage);
         List<Tag> actualTags = tagsCaptor.getValue();
@@ -109,6 +110,21 @@ public class OpaServiceTest {
 
         String actualAction = actionCaptor.getValue();
         assertEquals(READ_SECRET_ACTION_NAME, actualAction);
+
+    }
+
+    @Test
+    public void whenCanUseSecret_thenUseProperAction() throws CsOpaException {
+        ArgumentCaptor<String> actionCaptor = ArgumentCaptor.forClass(String.class);
+        when(opaClientMock.isAllowed(
+                any(), actionCaptor.capture(), any(), any()))
+                .thenReturn(true);
+
+        OpaService service = new OpaService(opaClientMock);
+        service.canUseSecret(SUBJECT, TAGS);
+
+        String actualAction = actionCaptor.getValue();
+        assertEquals(USE_SECRET_ACTION_NAME, actualAction);
 
     }
 

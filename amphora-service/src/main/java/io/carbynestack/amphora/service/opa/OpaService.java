@@ -20,6 +20,7 @@ public class OpaService {
     public static final String OWNER_TAG_KEY = "owner";
 
     static final String READ_SECRET_ACTION_NAME = "read";
+    static final String USE_SECRET_ACTION_NAME = "use";
     static final String DELETE_SECRET_ACTION_NAME = "delete";
     static final String CREATE_TAG_ACTION_NAME = "tag/create";
     static final String READ_TAG_ACTION_NAME = "tag/read";
@@ -44,6 +45,19 @@ public class OpaService {
      */
     public boolean canReadSecret(String subject, List<Tag> tags) throws CsOpaException {
         return isAllowed(subject, READ_SECRET_ACTION_NAME, tags);
+    }
+
+    /**
+     * Check if the subject can use the secret described by the given tags evaluating the OPA policy package.
+     * The policy package is extracted from the tags if present. If not present, the default policy package is used.
+     *
+     * @param subject The subject attempting to use the secret.
+     * @param tags The tags describing the referenced secret.
+     * @return True if the subject can use the secret, false otherwise.
+     * @throws CsOpaException If an error occurred while evaluating the policy.
+     */
+    public boolean canUseSecret(String subject, List<Tag> tags) throws CsOpaException {
+        return isAllowed(subject, USE_SECRET_ACTION_NAME, tags);
     }
 
     /**
