@@ -32,8 +32,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -535,20 +533,5 @@ public class StorageService {
                                             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
                                             key,
                                             secretId))));
-//    SecretEntity secretEntityReference = secretEntityRepository.findById(secretId.toString())
-//            .orElseThrow(() ->
-//                    new NotFoundException(
-//                            String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
-//    if (!opaService.canDeleteTags(authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
-//      throw new UnauthorizedException("User is not authorized to delete tags for this secret");
-//    }
-//    TagEntity tagEntity = tagRepository.findBySecretAndKey(secretEntityReference, key)
-//            .orElseThrow(() ->
-//                    new NotFoundException(
-//                            String.format(
-//                                    NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
-//                                    key,
-//                                    secretId)));
-//    tagRepository.delete(tagEntity);
   }
 }

@@ -16,19 +16,11 @@ import java.util.List;
 @Value
 public class OpaRequestBody {
     String subject;
-    long currentTime;
     List<Tag> tags;
 
     @Builder
     public OpaRequestBody(String subject, List<Tag> tags) {
         this.subject = subject;
-        this.currentTime = System.currentTimeMillis();
-        this.tags = tags;
-    }
-
-    OpaRequestBody(String subject, long currentTime, List<Tag> tags) {
-        this.subject = subject;
-        this.currentTime = currentTime;
         this.tags = tags;
     }
 }

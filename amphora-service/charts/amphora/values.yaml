@@ -78,5 +78,5 @@ auth:
   userIdFieldName: "sub"
 
 opa:
-  defaultPolicyPackage: "default"
+  defaultPolicyPackage: "carbynestack.def"
   endpoint: "http://opa.default.svc.cluster.local:8081/"

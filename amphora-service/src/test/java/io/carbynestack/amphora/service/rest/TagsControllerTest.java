@@ -69,7 +69,7 @@ class TagsControllerTest {
   }
 
   @Test
-  void givenSuccessfulRequest_whenCreateTag_thenReturnCreatedWithExpectedContent() throws UnauthorizedException {
+  void givenSuccessfulRequest_whenCreateTag_thenReturnCreatedWithExpectedContent() throws UnauthorizedException, CsOpaException {
     URI expectedUri =
         URI.create(
             "https://amphora.carbynestack.io" + INTRA_VCP_OPERATIONS_SEGMENT + "/" + testSecretId);
@@ -82,13 +82,14 @@ class TagsControllerTest {
             ResponseEntity<URI> actualResponse = null;
             try {
                 actualResponse = tagsController.createTag(authHeader, testSecretId, testTag);
-                verify(storageService, times(1)).storeTag(testSecretId, testTag, authorizedUserId);
             } catch (UnauthorizedException | CsOpaException e) {
                 Assertions.fail("unexpected exception thrown: " + e);
             }
           assertEquals(HttpStatus.CREATED, actualResponse.getStatusCode());
           assertEquals(expectedUri, actualResponse.getBody());
         });
+
+    verify(storageService, times(1)).storeTag(testSecretId, testTag, authorizedUserId);
   }
 
   @Test

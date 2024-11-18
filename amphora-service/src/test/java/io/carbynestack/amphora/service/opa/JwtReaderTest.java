@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JwtReaderTest {
 
@@ -40,5 +41,28 @@ class JwtReaderTest {
                 String.format(
                         "Bearer header.%s.signature",
                         Base64.toBase64String(invalidToken.getBytes(StandardCharsets.UTF_8)))));
+    }
+
+    @Test
+    void givenJwtOfInvalidFormat_whenExtractSubject_thenThrowUnauthorizedException() {
+        JwtReader jwtReader = new JwtReader("sub");
+        assertThrows(UnauthorizedException.class, () ->
+                jwtReader.extractUserIdFromAuthHeader("Bearer invalid.jwt_missing_dot_token"));
+    }
+
+    @Test
+    void givenJwtDataFieldOfInvalidFormat_whenExtractSubject_thenThrowUnauthorizedException() {
+        JwtReader jwtReader = new JwtReader("sub");
+        String invalidDataJson = "{";
+        assertThrows(UnauthorizedException.class, () ->
+                jwtReader.extractUserIdFromAuthHeader(
+                        String.format("header.%s.signature", Base64.toBase64String(invalidDataJson.getBytes(StandardCharsets.UTF_8)))));
+    }
+
+    @Test
+    void givenInvalidAuthHeader_whenExtractSubject_thenThrowUnauthorizedException() {
+        JwtReader jwtReader = new JwtReader("sub");
+        assertThrows(UnauthorizedException.class, () ->
+                jwtReader.extractUserIdFromAuthHeader("invalid_auth_header missing Bearer prefix"));
     }
 }

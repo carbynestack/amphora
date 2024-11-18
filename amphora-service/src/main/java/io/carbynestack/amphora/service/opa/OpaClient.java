@@ -48,10 +48,13 @@ public class OpaClient {
                 .tags(tags)
                 .build();
         try {
-            return csHttpClient.postForObject(
-                    opaServiceUri.resolve(String.format("/v1/data/%s/%s", policyPackage, action)),
-                    new OpaRequest(body),
-                    OpaResult.class).isAllowed();
+            return csHttpClient.postForObject(opaServiceUri.resolve(
+                                              String.format("/v1/data/%s/%s",
+                                                    policyPackage.replace(".", "/"),
+                                                    action)),
+                                              new OpaRequest(body),
+                                              OpaResult.class)
+                        .isAllowed();
         } catch (CsHttpClientException e) {
             log.error("Error occurred while evaluating OPA policy package: {}", e.getMessage());
         }
