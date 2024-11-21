@@ -135,7 +135,12 @@ public class StorageService {
     if (hasDuplicateKey(secretShare.getTags())) {
       throw new IllegalArgumentException(TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG);
     }
-    return persistSecretShare(secretShare, Collections.emptyList());
+    List<Tag> reservedTags = new ArrayList<>();
+    secretShare.getTags().stream()
+            .filter(t -> t.getKey().equals(OWNER_TAG_KEY))
+            .findFirst()
+            .ifPresent(reservedTags::add);
+    return persistSecretShare(secretShare, reservedTags);
   }
 
   /**
