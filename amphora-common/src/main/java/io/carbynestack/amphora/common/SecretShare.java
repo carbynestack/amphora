@@ -40,6 +40,7 @@ public final class SecretShare extends Metadata implements Serializable {
   private static final long serialVersionUID = -6504284210830334441L;
   public static final String INVALID_LENGTH_EXCEPTION_MSG =
       "Length of a SecretShare's data must e a multiple of %s bytes!";
+
   /**
    * The actual data of the {@link SecretShare} stored in the gfp byte representation as used by the
    * SPDZ based MPC implementations.<br>
@@ -78,10 +79,6 @@ public final class SecretShare extends Metadata implements Serializable {
      *     MpSpdzIntegrationUtils#WORD_WIDTH}
      */
     public SecretShareBuilder<C, B> data(byte[] data) {
-      if (data.length % MpSpdzIntegrationUtils.SHARE_WIDTH != 0) {
-        throw new IllegalArgumentException(
-            String.format(INVALID_LENGTH_EXCEPTION_MSG, MpSpdzIntegrationUtils.SHARE_WIDTH));
-      }
       this.data = data;
       return this;
     }

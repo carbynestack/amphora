@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2023-2024 - for information on the respective copyright owner
+  ~ Copyright (c) 2023 - for information on the respective copyright owner
   ~ see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
   ~
   ~ SPDX-License-Identifier: Apache-2.0
@@ -8,14 +8,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>amphora-common</artifactId>
-    <version>0.2.0</version>
+    <version>1.2.3</version>
     <parent>
         <groupId>io.carbynestack</groupId>
         <artifactId>amphora-parent</artifactId>
-        <version>0.2.0</version>
-        <!-- override relativePath default '../pom.xml' to resolve pom from repository
-        see https://maven.apache.org/ref/3.8.1/maven-model/maven.html#parent -->
-        <relativePath/>
+        <version>1.2.3</version>
+        <relativePath>../amphora-parent</relativePath>
     </parent>
     <repositories>
         <repository>

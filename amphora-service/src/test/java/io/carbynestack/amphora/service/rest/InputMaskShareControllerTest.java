@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import io.carbynestack.amphora.common.OutputDeliveryObject;
+import io.carbynestack.amphora.common.ShareFamily;
 import io.carbynestack.amphora.service.AmphoraTestData;
 import io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService;
 import io.carbynestack.castor.common.entities.Field;
@@ -47,11 +48,11 @@ class InputMaskShareControllerTest {
     OutputDeliveryObject testOdo =
         AmphoraTestData.getRandomOutputDeliveryObject(validNumberOfTuples);
 
-    when(inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks.size()))
+    when(inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks.size(), ShareFamily.COWGEAR))
         .thenReturn(testOdo);
 
     ResponseEntity<OutputDeliveryObject> responseEntity =
-        inputMaskShareController.getInputMasks(testRequestId, validNumberOfTuples);
+        inputMaskShareController.getInputMasks(testRequestId, validNumberOfTuples, ShareFamily.COWGEAR.name());
 
     assertEquals(testOdo, responseEntity.getBody());
     assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -62,7 +63,7 @@ class InputMaskShareControllerTest {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> inputMaskShareController.getInputMasks(null, validNumberOfTuples));
+            () -> inputMaskShareController.getInputMasks(null, validNumberOfTuples, ShareFamily.COWGEAR.getFamilyName()));
     assertEquals(REQUEST_IDENTIFIER_MUST_NOT_BE_NULL_EXCEPTION_MSG, iae.getMessage());
   }
 
@@ -71,7 +72,7 @@ class InputMaskShareControllerTest {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> inputMaskShareController.getInputMasks(testRequestId, invalidNumberOfTuples));
+            () -> inputMaskShareController.getInputMasks(testRequestId, invalidNumberOfTuples, ShareFamily.COWGEAR.getFamilyName()));
     assertEquals(TOO_LESS_INPUT_MASKS_EXCEPTION_MSG, iae.getMessage());
   }
 }

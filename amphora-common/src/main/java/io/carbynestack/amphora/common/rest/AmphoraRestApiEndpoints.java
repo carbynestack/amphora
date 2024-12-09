@@ -41,6 +41,9 @@ public final class AmphoraRestApiEndpoints {
   /** Parameter for specifying the number of requested items */
   public static final String COUNT_PARAMETER = "count";
 
+  /** Parameter for specifying the family of requested items */
+  public static final String FAMILY_PARAMETER = "shareFamily";
+
   /** Id to identify Secrets for download */
   public static final String SECRET_ID_PARAMETER = "secretId";
 

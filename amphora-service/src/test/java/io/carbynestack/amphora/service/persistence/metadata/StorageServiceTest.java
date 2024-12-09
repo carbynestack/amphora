@@ -20,7 +20,8 @@ import static org.mockito.Mockito.any;
 
 import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
-import io.carbynestack.amphora.service.calculation.SecretShareUtil;
+import io.carbynestack.amphora.service.calculation.SecretShareConverter;
+import io.carbynestack.amphora.service.calculation.SecretShareConverterFactory;
 import io.carbynestack.amphora.service.config.AmphoraServiceProperties;
 import io.carbynestack.amphora.service.config.SpdzProperties;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
@@ -54,9 +55,8 @@ class StorageServiceTest {
   @Mock private SecretEntityRepository secretEntityRepository;
   @Mock private InputMaskCachingService inputMaskStore;
   @Mock private TagRepository tagRepository;
-  @Mock private SecretShareUtil secretShareUtil;
-  @Mock private SpdzProperties spdzProperties;
-  @Mock private AmphoraServiceProperties amphoraServiceProperties;
+  @Mock private SecretShareConverterFactory converterFactory;
+  @Mock private SecretShareConverter converter;
   @Mock private SecretShareDataStore secretShareDataStore;
 
   @InjectMocks private StorageService storageService;
@@ -109,7 +109,8 @@ class StorageServiceTest {
             singletonList(
                 MaskedInputData.of(RandomUtils.nextBytes(MpSpdzIntegrationUtils.WORD_WIDTH))),
             asList(testTag, testTagReservedCreationDateKey));
-    TupleList expectedInputMasks = new TupleList<>(InputMask.class, GFP);
+    TupleList expectedInputMasks =
+        new TupleList<>(InputMask.class, ShareFamily.COWGEAR.getFamilyName(), GFP);
     SecretShare expectedSecretShare =
         SecretShare.builder()
             .secretId(maskedInput.getSecretId())
@@ -122,7 +123,8 @@ class StorageServiceTest {
 
     when(inputMaskStore.getCachedInputMasks(maskedInput.getSecretId()))
         .thenReturn(expectedInputMasks);
-    when(secretShareUtil.convertToSecretShare(maskedInput, null, expectedInputMasks, false))
+    when(converterFactory.createShareConverter(Optional.empty())).thenReturn(converter);
+    when(converter.convert(maskedInput, expectedInputMasks, ShareFamily.COWGEAR))
         .thenReturn(expectedSecretShare);
     when(secretEntityRepository.save(secretEntityArgumentCaptor.capture()))
         .thenThrow(expectedAbortTestException);
@@ -151,7 +153,8 @@ class StorageServiceTest {
             singletonList(
                 MaskedInputData.of(RandomUtils.nextBytes(MpSpdzIntegrationUtils.WORD_WIDTH))),
             singletonList(testTag));
-    TupleList expectedInputMasks = new TupleList<>(InputMask.class, GFP);
+    TupleList expectedInputMasks =
+        new TupleList<>(InputMask.class, ShareFamily.COWGEAR.getFamilyName(), GFP);
     SecretShare expectedSecretShare =
         SecretShare.builder()
             .secretId(maskedInput.getSecretId())
@@ -167,7 +170,8 @@ class StorageServiceTest {
     when(secretEntityRepository.save(any())).thenReturn(persistedSecretEntity);
     when(inputMaskStore.getCachedInputMasks(maskedInput.getSecretId()))
         .thenReturn(expectedInputMasks);
-    when(secretShareUtil.convertToSecretShare(maskedInput, null, expectedInputMasks, false))
+    when(converterFactory.createShareConverter(Optional.empty())).thenReturn(converter);
+    when(converter.convert(maskedInput, expectedInputMasks, ShareFamily.COWGEAR))
         .thenReturn(expectedSecretShare);
     when(secretEntityRepository.save(secretEntityArgumentCaptor.capture()))
         .thenReturn(persistedSecretEntity);

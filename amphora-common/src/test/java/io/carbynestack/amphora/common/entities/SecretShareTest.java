@@ -24,18 +24,6 @@ public class SecretShareTest {
   final UUID testSecretId = UUID.fromString("80fbba1b-3da8-4b1e-8a2c-cebd65229fad");
 
   @Test
-  void givenDataOfInvalidLength_whenBuildSecretShare_thenThrowIllegalArgumentException() {
-    byte[] dataInvalidLength = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH - 1];
-    SecretShare.SecretShareBuilder<?, ?> secretShareBuilder = SecretShare.builder();
-    IllegalArgumentException iae =
-        assertThrows(
-            IllegalArgumentException.class, () -> secretShareBuilder.data(dataInvalidLength));
-    assertEquals(
-        String.format(INVALID_LENGTH_EXCEPTION_MSG, MpSpdzIntegrationUtils.SHARE_WIDTH),
-        iae.getMessage());
-  }
-
-  @Test
   void givenTwoSecretSharesWithSameContent_whenCompareEqual_thenMatch() {
     byte[] data = new byte[MpSpdzIntegrationUtils.SHARE_WIDTH];
     random.nextBytes(data);

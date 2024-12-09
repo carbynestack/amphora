@@ -10,12 +10,14 @@ import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 
 import io.carbynestack.amphora.client.Secret;
 import io.carbynestack.amphora.common.OutputDeliveryObject;
+import io.carbynestack.amphora.common.ShareFamily;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
 import io.carbynestack.amphora.service.config.AmphoraCacheProperties;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
 import io.carbynestack.castor.common.entities.Field;
 import io.carbynestack.castor.common.entities.InputMask;
+import io.carbynestack.castor.common.entities.TupleFamily;
 import io.carbynestack.castor.common.entities.TupleList;
 import io.carbynestack.castor.common.exceptions.CastorClientException;
 import java.util.UUID;
@@ -75,9 +77,9 @@ public class InputMaskCachingService {
    * @throws CastorClientException if downloading the tuples from the service failed
    */
   @Transactional
-  public OutputDeliveryObject getInputMasksAsOutputDeliveryObject(UUID requestId, long count) {
+  public OutputDeliveryObject getInputMasksAsOutputDeliveryObject(UUID requestId, long count, ShareFamily shareFamily) {
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMaskShares =
-        castorClient.downloadTupleShares(requestId, INPUT_MASK_GFP, count);
+        castorClient.downloadTupleShares(requestId, INPUT_MASK_GFP, count, TupleFamily.valueOf(shareFamily.name()));
     byte[] tupleData = new byte[inputMaskShares.size() * Field.GFP.getElementSize()];
     IntStream.range(0, (int) count)
         .parallel()
@@ -92,7 +94,7 @@ public class InputMaskCachingService {
     UUID odoRequestId =
         UUID.nameUUIDFromBytes(String.format("%s_odo-computation", requestId).getBytes());
     OutputDeliveryObject outputDeliveryObject =
-        outputDeliveryService.computeOutputDeliveryObject(tupleData, odoRequestId);
+        outputDeliveryService.computeOutputDeliveryObject(tupleData, odoRequestId, shareFamily);
     ValueOperations<String, Object> ops = redisTemplate.opsForValue();
     ops.set(cachePrefix + requestId, inputMaskShares);
     return outputDeliveryObject;

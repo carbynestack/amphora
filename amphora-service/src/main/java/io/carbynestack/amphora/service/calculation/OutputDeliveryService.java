@@ -16,21 +16,16 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import io.carbynestack.amphora.client.DefaultAmphoraInterVcpClient;
-import io.carbynestack.amphora.common.FactorPair;
-import io.carbynestack.amphora.common.MultiplicationExchangeObject;
-import io.carbynestack.amphora.common.OutputDeliveryObject;
-import io.carbynestack.amphora.common.SecretShare;
+import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.config.AmphoraServiceProperties;
 import io.carbynestack.amphora.service.persistence.cache.InterimValueCachingService;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
-import io.carbynestack.castor.common.entities.Field;
-import io.carbynestack.castor.common.entities.InputMask;
-import io.carbynestack.castor.common.entities.MultiplicationTriple;
-import io.carbynestack.castor.common.entities.TupleList;
+import io.carbynestack.castor.common.entities.*;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import io.vavr.concurrent.Future;
 import io.vavr.control.Try;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -39,6 +34,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -73,16 +69,21 @@ public class OutputDeliveryService {
    */
   @Transactional
   public OutputDeliveryObject computeOutputDeliveryObject(SecretShare secretShare, UUID requestId) {
+    ShareFamily shareFamily =
+        secretShare
+            .getTagByKey("ShareFamily")
+            .map(tag -> ShareFamily.getShareFamilyByName(tag.getValue()))
+            .orElse(ShareFamily.COWGEAR);
     byte[] shareData = secretShare.getData();
-    int shareLength = shareData.length / SHARE_WIDTH;
+    int shareLength = shareData.length / shareFamily.getShareSize();
     byte[] shareValueData = new byte[shareLength * WORD_WIDTH];
     IntStream.range(0, shareLength)
         .parallel()
         .forEach(
             i ->
                 System.arraycopy(
-                    shareData, i * SHARE_WIDTH, shareValueData, i * WORD_WIDTH, WORD_WIDTH));
-    return computeOutputDeliveryObject(shareValueData, requestId);
+                    shareData, i * shareFamily.getShareSize(), shareValueData, i * WORD_WIDTH, WORD_WIDTH));
+    return computeOutputDeliveryObject(shareValueData, requestId, shareFamily);
   }
 
   /**
@@ -97,19 +98,38 @@ public class OutputDeliveryService {
    *     computation
    */
   @Transactional
-  public OutputDeliveryObject computeOutputDeliveryObject(byte[] shareData, UUID requestId) {
-    int secretSize = shareData.length / WORD_WIDTH;
-    TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMaskShares =
-        Try.of(() -> castorClient.downloadTupleShares(requestId, INPUT_MASK_GFP, secretSize * 2L))
-            .getOrElseThrow(
-                e ->
-                    new AmphoraServiceException(
-                        "Failed to retrieve the required Tuples form Castor", e));
+  public OutputDeliveryObject computeOutputDeliveryObject(
+      byte[] shareData, UUID requestId, ShareFamily shareFamily) {
+
     ByteBuffer secretShares = ByteBuffer.allocate(shareData.length);
     ByteBuffer rShares = ByteBuffer.allocate(shareData.length);
     ByteBuffer wShares = ByteBuffer.allocate(shareData.length);
     ByteBuffer vShares = ByteBuffer.allocate(shareData.length);
     ByteBuffer uShares = ByteBuffer.allocate(shareData.length);
+
+    if (!shareFamily.isVerifiable()) {
+      return OutputDeliveryObject.builder()
+          .secretShares(shareData)
+          .rShares(rShares.array())
+          .vShares(vShares.array())
+          .wShares(wShares.array())
+          .uShares(uShares.array())
+          .build();
+    }
+
+    int secretSize = shareData.length / WORD_WIDTH;
+    TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMaskShares =
+        Try.of(
+                () ->
+                    castorClient.downloadTupleShares(
+                        requestId,
+                        INPUT_MASK_GFP,
+                        secretSize * 2L,
+                        TupleFamily.valueOf(shareFamily.name())))
+            .getOrElseThrow(
+                e ->
+                    new AmphoraServiceException(
+                        "Failed to retrieve the required Tuples form Castor", e));
 
     /*
      * each word/share requires two secret multiplications
@@ -143,7 +163,7 @@ public class OutputDeliveryService {
         "Using operationId #{} to perform multiplications on Amphora get request with id #{}",
         operationId,
         requestId);
-    List<BigInteger> products = multiplyShares(operationId, factorPairs);
+    List<BigInteger> products = multiplyShares(operationId, factorPairs, shareFamily);
     IntStream.range(0, secretSize)
         .forEach(
             i -> {
@@ -173,12 +193,16 @@ public class OutputDeliveryService {
    *       <li>The Service was unable to fetch the required Tuples from Castor
    *     </ul>
    */
-  List<BigInteger> multiplyShares(UUID operationId, List<FactorPair> factorPairs) {
+  List<BigInteger> multiplyShares(
+      UUID operationId, List<FactorPair> factorPairs, ShareFamily shareFamily) {
     TupleList<MultiplicationTriple<Field.Gfp>, Field.Gfp> tripleShares =
         Try.of(
                 () ->
                     castorClient.downloadTupleShares(
-                        operationId, MULTIPLICATION_TRIPLE_GFP, factorPairs.size()))
+                        operationId,
+                        MULTIPLICATION_TRIPLE_GFP,
+                        factorPairs.size(),
+                        TupleFamily.valueOf(shareFamily.name())))
             .getOrElseThrow(
                 e ->
                     new AmphoraServiceException(

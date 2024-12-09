@@ -6,7 +6,6 @@
  */
 package io.carbynestack.amphora.service.config;
 
-import io.carbynestack.amphora.service.calculation.SecretShareUtil;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -17,10 +16,5 @@ public class UtilsConfig {
   public MpSpdzIntegrationUtils spdzUtil(SpdzProperties spdzProperties) {
     return MpSpdzIntegrationUtils.of(
         spdzProperties.getPrime(), spdzProperties.getR(), spdzProperties.getRInv());
-  }
-
-  @Bean
-  public SecretShareUtil secretShareUtil(MpSpdzIntegrationUtils spdzUtil) {
-    return new SecretShareUtil(spdzUtil);
   }
 }

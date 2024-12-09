@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import io.carbynestack.amphora.common.OutputDeliveryObject;
+import io.carbynestack.amphora.common.ShareFamily;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.AmphoraTestData;
 import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
@@ -23,6 +24,7 @@ import io.carbynestack.castor.client.download.CastorIntraVcpClient;
 import io.carbynestack.castor.common.CastorServiceUri;
 import io.carbynestack.castor.common.entities.Field;
 import io.carbynestack.castor.common.entities.InputMask;
+import io.carbynestack.castor.common.entities.TupleFamily;
 import io.carbynestack.castor.common.entities.TupleList;
 import java.util.List;
 import java.util.UUID;
@@ -75,13 +77,13 @@ class InputMaskStoreTest {
     OutputDeliveryObject odo = AmphoraTestData.getRandomOutputDeliveryObject(5);
 
     when(redisTemplateMock.opsForValue()).thenReturn(valueOperationsMock);
-    when(interVcpClientMock.downloadTupleShares(testRequestId, INPUT_MASK_GFP, inputMasks.size()))
+    when(interVcpClientMock.downloadTupleShares(testRequestId, INPUT_MASK_GFP, inputMasks.size(), TupleFamily.COWGEAR))
         .thenReturn(inputMasks);
     when(outputDeliveryServiceMock.computeOutputDeliveryObject(
-            extractTupleValuesFromInputMaskList(inputMasks), testOdoRequestId))
+            extractTupleValuesFromInputMaskList(inputMasks), testOdoRequestId, ShareFamily.COWGEAR))
         .thenReturn(odo);
     assertEquals(
-        odo, inputMaskCache.getInputMasksAsOutputDeliveryObject(testRequestId, inputMasks.size()));
+        odo, inputMaskCache.getInputMasksAsOutputDeliveryObject(testRequestId, inputMasks.size(), ShareFamily.COWGEAR));
     verify(valueOperationsMock, times(1)).set(testCachePrefix + testRequestId, inputMasks);
   }
 

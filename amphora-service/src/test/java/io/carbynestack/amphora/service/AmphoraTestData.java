@@ -12,6 +12,7 @@ import static io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils.WORD_WID
 
 import io.carbynestack.amphora.common.OutputDeliveryObject;
 import io.carbynestack.amphora.common.SecretShare;
+import io.carbynestack.amphora.common.ShareFamily;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.castor.common.entities.*;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
@@ -27,7 +28,10 @@ public class AmphoraTestData {
 
   public static TupleList<InputMask<Field.Gfp>, Field.Gfp> getRandomInputMaskList(long size) {
     TupleList inputMaskList =
-        new TupleList(TupleType.INPUT_MASK_GFP.getTupleCls(), TupleType.INPUT_MASK_GFP.getField());
+        new TupleList(
+            TupleType.INPUT_MASK_GFP.getTupleCls(),
+            ShareFamily.COWGEAR.getFamilyName(),
+            TupleType.INPUT_MASK_GFP.getField());
     for (int i = 0; i < size; i++) {
       Share share =
           new Share(

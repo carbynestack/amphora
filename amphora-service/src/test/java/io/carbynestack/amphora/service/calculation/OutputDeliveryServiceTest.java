@@ -22,10 +22,7 @@ import io.carbynestack.amphora.service.config.AmphoraServiceProperties;
 import io.carbynestack.amphora.service.config.CastorClientProperties;
 import io.carbynestack.amphora.service.persistence.cache.InterimValueCachingService;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
-import io.carbynestack.castor.common.entities.Field;
-import io.carbynestack.castor.common.entities.InputMask;
-import io.carbynestack.castor.common.entities.MultiplicationTriple;
-import io.carbynestack.castor.common.entities.TupleList;
+import io.carbynestack.castor.common.entities.*;
 import io.carbynestack.castor.common.exceptions.CastorClientException;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import io.vavr.control.Option;
@@ -96,6 +93,7 @@ class OutputDeliveryServiceTest {
                   return (TupleList<InputMask<Field.Gfp>, Field.Gfp>)
                       TupleList.fromStream(
                           INPUT_MASK_GFP.getTupleCls(),
+                          ShareFamily.COWGEAR.getFamilyName(),
                           INPUT_MASK_GFP.getField(),
                           new ByteBufferBackedInputStream(inputMasksBb),
                           inputMasksBb.limit());
@@ -144,6 +142,7 @@ class OutputDeliveryServiceTest {
                   return (TupleList<MultiplicationTriple<Field.Gfp>, Field.Gfp>)
                       TupleList.fromStream(
                           MULTIPLICATION_TRIPLE_GFP.getTupleCls(),
+                          ShareFamily.COWGEAR.getFamilyName(),
                           MULTIPLICATION_TRIPLE_GFP.getField(),
                           new ByteBufferBackedInputStream(triplesBb),
                           triplesBb.limit());
@@ -214,14 +213,15 @@ class OutputDeliveryServiceTest {
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
-            expectedPrivateMultiplicationPairs.size()))
+            expectedPrivateMultiplicationPairs.size(),
+            TupleFamily.COWGEAR))
         .thenThrow(new CastorClientException("No tuples"));
     AmphoraServiceException ase =
         assertThrows(
             AmphoraServiceException.class,
             () ->
                 outputDeliveryService.multiplyShares(
-                    expectedOperationId, expectedPrivateMultiplicationPairs));
+                    expectedOperationId, expectedPrivateMultiplicationPairs, ShareFamily.COWGEAR));
     assertEquals("Failed to retrieve the required Tuples form Castor", ase.getMessage());
   }
 
@@ -231,7 +231,8 @@ class OutputDeliveryServiceTest {
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
-            expectedPrivateMultiplicationPairs.size()))
+            expectedPrivateMultiplicationPairs.size(),
+            TupleFamily.COWGEAR))
         .thenReturn(testTriples);
     doThrow(new AmphoraClientException("Failed"))
         .when(interVCClientMock)
@@ -241,7 +242,7 @@ class OutputDeliveryServiceTest {
             AmphoraServiceException.class,
             () ->
                 outputDeliveryService.multiplyShares(
-                    expectedOperationId, expectedPrivateMultiplicationPairs));
+                    expectedOperationId, expectedPrivateMultiplicationPairs, ShareFamily.COWGEAR));
     assertEquals(
         ase.getMessage(),
         String.format("Failed to open values for operation #%s", expectedOperationId));
@@ -258,7 +259,8 @@ class OutputDeliveryServiceTest {
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
-            expectedPrivateMultiplicationPairs.size()))
+            expectedPrivateMultiplicationPairs.size(),
+            TupleFamily.COWGEAR))
         .thenReturn(testTriples);
     when(interimValueCachingServiceMock.getInterimValuesAndEvict(expectedOperationId, testPlayerId))
         .thenReturn(Option.of(expectedPrivateOpeningInput));
@@ -270,7 +272,7 @@ class OutputDeliveryServiceTest {
             AmphoraServiceException.class,
             () ->
                 outputDeliveryService.multiplyShares(
-                    expectedOperationId, expectedPrivateMultiplicationPairs));
+                    expectedOperationId, expectedPrivateMultiplicationPairs, ShareFamily.COWGEAR));
     assertEquals(
         ase.getMessage(),
         String.format("Failed to open values for operation #%s", expectedOperationId));
@@ -291,7 +293,8 @@ class OutputDeliveryServiceTest {
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
-            expectedPrivateMultiplicationPairs.size()))
+            expectedPrivateMultiplicationPairs.size(),
+            TupleFamily.COWGEAR))
         .thenReturn(testTriples);
     when(interimValueCachingServiceMock.getInterimValuesAndEvict(expectedOperationId, testPlayerId))
         .thenReturn(Option.of(expectedPrivateOpeningInput));
@@ -300,7 +303,7 @@ class OutputDeliveryServiceTest {
         .thenReturn(Option.of(expectedPartnerOpeningInput));
     assertThat(
         outputDeliveryService.multiplyShares(
-            expectedOperationId, expectedPrivateMultiplicationPairs),
+            expectedOperationId, expectedPrivateMultiplicationPairs, ShareFamily.COWGEAR),
         Matchers.containsInAnyOrder(expectedPrivateProductShares.toArray()));
     verify(interimValueCachingServiceMock, times(1)).putInterimValues(expectedExchangeObject);
     verify(interVCClientMock, times(1)).open(expectedExchangeObject);
@@ -315,7 +318,7 @@ class OutputDeliveryServiceTest {
   void
       givenCastorClientDoesNotReturnInputMasks_whenComputingOutputDeliveryObject_thenThrowException() {
     when(castorIntraVcpClientMock.downloadTupleShares(
-            expectedRequestId, INPUT_MASK_GFP, testSecretShareDataSize * 2))
+            expectedRequestId, INPUT_MASK_GFP, testSecretShareDataSize * 2, TupleFamily.COWGEAR))
         .thenThrow(new CastorClientException("Failed fetching input masks"));
     AmphoraServiceException ase =
         assertThrows(
@@ -361,12 +364,13 @@ class OutputDeliveryServiceTest {
     when(amphoraServicePropertiesMock.getVcPartners()).thenReturn(testVcPartners);
     when(amphoraServicePropertiesMock.getOpeningTimeout()).thenReturn(10);
     when(castorIntraVcpClientMock.downloadTupleShares(
-            expectedRequestId, INPUT_MASK_GFP, testSecretShareDataSize * 2))
+            expectedRequestId, INPUT_MASK_GFP, testSecretShareDataSize * 2, TupleFamily.COWGEAR))
         .thenReturn(testInputMasks);
     when(castorIntraVcpClientMock.downloadTupleShares(
             expectedOperationId,
             MULTIPLICATION_TRIPLE_GFP,
-            expectedPrivateMultiplicationPairs.size()))
+            expectedPrivateMultiplicationPairs.size(),
+            TupleFamily.COWGEAR))
         .thenReturn(testTriples);
     when(interimValueCachingServiceMock.getInterimValuesAndEvict(expectedOperationId, testPlayerId))
         .thenReturn(Option.of(expectedPrivateOpeningInput));

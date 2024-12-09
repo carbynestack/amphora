@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import io.carbynestack.amphora.common.OutputDeliveryObject;
+import io.carbynestack.amphora.common.ShareFamily;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.AmphoraServiceApplication;
 import io.carbynestack.amphora.service.AmphoraTestData;
@@ -29,6 +30,7 @@ import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
 import io.carbynestack.castor.common.entities.Field;
 import io.carbynestack.castor.common.entities.InputMask;
+import io.carbynestack.castor.common.entities.TupleFamily;
 import io.carbynestack.castor.common.entities.TupleList;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -112,9 +114,9 @@ public class InputMaskStoreRedisIT {
   @SneakyThrows
   @Test
   void givenMultipleRequestsForSameKey_whenGetInputMasks_thenReturnSameResult() {
-    when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size()))
+    when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size(), TupleFamily.COWGEAR))
         .thenReturn(testInputMasks1);
-    inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks1.size());
+    inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks1.size(), ShareFamily.COWGEAR);
     assertThat(
         inputMaskStore.getCachedInputMasks(testRequestId),
         Matchers.containsInRelativeOrder(testInputMasks1.toArray(new InputMask[0])));
@@ -128,21 +130,21 @@ public class InputMaskStoreRedisIT {
   void givenConsecutiveCallsForSameKey_whenFetchAndCacheInputMasks_thenReplaceExistingData() {
     UUID testOdoRequestId =
         UUID.nameUUIDFromBytes(String.format("%s_odo-computation", testRequestId).getBytes());
-    when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size()))
+    when(castorClient.downloadTupleShares(testRequestId, INPUT_MASK_GFP, testInputMasks1.size(), TupleFamily.COWGEAR))
         .thenReturn(testInputMasks1)
         .thenReturn(testInputMasks2);
     byte[] testInputMasks1Values = extractTupleValuesFromInputMaskList(testInputMasks1);
     byte[] testInputMasks2Values = extractTupleValuesFromInputMaskList(testInputMasks2);
-    when(outputDeliveryService.computeOutputDeliveryObject(testInputMasks1Values, testOdoRequestId))
+    when(outputDeliveryService.computeOutputDeliveryObject(testInputMasks1Values, testOdoRequestId, ShareFamily.COWGEAR))
         .thenReturn(testOutputDeliveryObject1);
-    when(outputDeliveryService.computeOutputDeliveryObject(testInputMasks2Values, testOdoRequestId))
+    when(outputDeliveryService.computeOutputDeliveryObject(testInputMasks2Values, testOdoRequestId, ShareFamily.COWGEAR))
         .thenReturn(testOutputDeliveryObject2);
     assertEquals(
         testOutputDeliveryObject1,
-        inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks1.size()));
+        inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks1.size(), ShareFamily.COWGEAR));
     assertEquals(
         testOutputDeliveryObject2,
-        inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks2.size()));
+        inputMaskStore.getInputMasksAsOutputDeliveryObject(testRequestId, testInputMasks2.size(), ShareFamily.COWGEAR));
     assertThat(
         inputMaskStore.getCachedInputMasks(testRequestId),
         Matchers.containsInRelativeOrder(testInputMasks2.toArray(new InputMask[0])));

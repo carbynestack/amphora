@@ -7,10 +7,8 @@
 package io.carbynestack.amphora.common;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
@@ -46,11 +44,16 @@ public class Metadata implements Serializable {
    * order to match all related shares of a secret.
    */
   @NonNull UUID secretId;
+
   /**
    * A list of {@link Tag}s used to describe the stored content. <br>
    * These tags are stored in clear, shared and identical across all parties of the virtual cloud.
    */
   List<Tag> tags;
+
+  public Optional<Tag> getTagByKey(String key) {
+    return tags.stream().filter(tag -> tag.getKey().equals(key)).findFirst();
+  }
 
   /**
    * A Builder for {@link Metadata}.

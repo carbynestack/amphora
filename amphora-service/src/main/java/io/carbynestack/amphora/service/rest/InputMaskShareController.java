@@ -11,6 +11,7 @@ import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.DOWNLO
 import static org.springframework.util.Assert.*;
 
 import io.carbynestack.amphora.common.OutputDeliveryObject;
+import io.carbynestack.amphora.common.ShareFamily;
 import io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +35,13 @@ public class InputMaskShareController {
 
   @GetMapping
   public ResponseEntity<OutputDeliveryObject> getInputMasks(
-      @RequestParam UUID requestId, @RequestParam long count) {
+      @RequestParam UUID requestId, @RequestParam long count, @RequestParam String shareFamily) {
     notNull(requestId, REQUEST_IDENTIFIER_MUST_NOT_BE_NULL_EXCEPTION_MSG);
     isTrue(count > 0, TOO_LESS_INPUT_MASKS_EXCEPTION_MSG);
     return new ResponseEntity<>(
-        inputMaskCachingService.getInputMasksAsOutputDeliveryObject(requestId, count),
+        inputMaskCachingService.getInputMasksAsOutputDeliveryObject(
+            requestId, count, ShareFamily.valueOf(shareFamily.toUpperCase()
+            )),
         HttpStatus.OK);
   }
 }

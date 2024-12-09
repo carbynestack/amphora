@@ -10,10 +10,7 @@ import static io.carbynestack.castor.common.entities.TupleType.INPUT_MASK_GFP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import io.carbynestack.amphora.common.MaskedInput;
-import io.carbynestack.amphora.common.MaskedInputData;
-import io.carbynestack.amphora.common.SecretShare;
-import io.carbynestack.amphora.common.Tag;
+import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.service.config.SpdzProperties;
 import io.carbynestack.castor.common.entities.*;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
@@ -26,11 +23,11 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class SecretShareUtilTest {
+class SecretShareConverterTest {
   private final UUID testSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
 
   private SpdzProperties spdzProperties;
-  private SecretShareUtil secretShareUtil;
+  private SecretShareConverter secretShareConverter;
   private MpSpdzIntegrationUtils spdzUtil;
 
   @BeforeEach
@@ -42,7 +39,9 @@ class SecretShareUtilTest {
     spdzUtil =
         MpSpdzIntegrationUtils.of(
             spdzProperties.getPrime(), spdzProperties.getR(), spdzProperties.getRInv());
-    secretShareUtil = new SecretShareUtil(spdzUtil);
+    BigInteger macKey =
+        new BigInteger("-33717010807885571165607137982809795379").mod(spdzProperties.getPrime());
+    secretShareConverter = new AdditiveSecretShareConverter(macKey.toString(), false, spdzUtil);
   }
 
   @Test
@@ -51,7 +50,10 @@ class SecretShareUtilTest {
     List<MaskedInputData> maskedInputDataList = new ArrayList<>();
     maskedInputDataList.add(MaskedInputData.of(new byte[MpSpdzIntegrationUtils.WORD_WIDTH]));
     TupleList inputMaskList =
-        new TupleList(INPUT_MASK_GFP.getTupleCls(), INPUT_MASK_GFP.getField());
+        new TupleList(
+            INPUT_MASK_GFP.getTupleCls(),
+            ShareFamily.COWGEAR.getFamilyName(),
+            INPUT_MASK_GFP.getField());
     MaskedInput maskedInput =
         new MaskedInput(
             UUID.fromString("93448822-fc76-4989-a927-450486ae0a08"),
@@ -61,7 +63,7 @@ class SecretShareUtilTest {
     IllegalArgumentException iae =
         assertThrows(
             IllegalArgumentException.class,
-            () -> secretShareUtil.convertToSecretShare(maskedInput, "", inputMaskList, false));
+            () -> secretShareConverter.convert(maskedInput, inputMaskList, ShareFamily.COWGEAR));
     assertEquals("Received more input data than available inputMasks.", iae.getMessage());
   }
 
@@ -71,8 +73,6 @@ class SecretShareUtilTest {
         Arrays.asList(
             Tag.builder().key("key1").value("value1").build(),
             Tag.builder().key("key2").value("value3").build());
-    BigInteger macKey =
-        new BigInteger("-33717010807885571165607137982809795379").mod(spdzProperties.getPrime());
     List<MaskedInputData> maskedInputData =
         maskedInputDataToList(
             new BigInteger("37371993412255263319479925008425883363").mod(spdzProperties.getPrime()),
@@ -103,7 +103,7 @@ class SecretShareUtilTest {
                 .mod(spdzProperties.getPrime()));
     assertEquals(
         expectedSecretShare,
-        secretShareUtil.convertToSecretShare(maskedInput, macKey.toString(), inputMasks, false));
+        secretShareConverter.convert(maskedInput, inputMasks, ShareFamily.COWGEAR));
   }
 
   private List<MaskedInputData> maskedInputDataToList(BigInteger... maskedInputs) {
@@ -116,7 +116,10 @@ class SecretShareUtilTest {
 
   private TupleList inputMaskToList(InputMask... inputMasks) {
     TupleList inputMaskList =
-        new TupleList(TupleType.INPUT_MASK_GFP.getTupleCls(), TupleType.INPUT_MASK_GFP.getField());
+        new TupleList(
+            TupleType.INPUT_MASK_GFP.getTupleCls(),
+            ShareFamily.COWGEAR.getFamilyName(),
+            TupleType.INPUT_MASK_GFP.getField());
     inputMaskList.addAll(Arrays.asList(inputMasks));
     return inputMaskList;
   }

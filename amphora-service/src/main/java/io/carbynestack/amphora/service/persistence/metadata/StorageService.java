@@ -12,9 +12,7 @@ import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.set
 
 import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
-import io.carbynestack.amphora.service.calculation.SecretShareUtil;
-import io.carbynestack.amphora.service.config.AmphoraServiceProperties;
-import io.carbynestack.amphora.service.config.SpdzProperties;
+import io.carbynestack.amphora.service.calculation.SecretShareConverterFactory;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
 import io.carbynestack.amphora.service.persistence.cache.InputMaskCachingService;
@@ -61,10 +59,8 @@ public class StorageService {
   private final SecretEntityRepository secretEntityRepository;
   private final InputMaskCachingService inputMaskStore;
   private final TagRepository tagRepository;
-  private final SecretShareUtil secretShareUtil;
-  private final SpdzProperties spdzProperties;
-  private final AmphoraServiceProperties amphoraServiceProperties;
   private final SecretShareDataStore secretShareDataStore;
+  private final SecretShareConverterFactory secretShareConverterFactory;
 
   /**
    * Takes a {@link MaskedInput}, converts it into an individual {@link SecretShare} and persits the
@@ -92,12 +88,11 @@ public class StorageService {
     }
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMasks =
         inputMaskStore.getCachedInputMasks(maskedInput.getSecretId());
+    Optional<Tag> familyTag = getShareFamilyTag(maskedInput.getTags());
     SecretShare secretShare =
-        secretShareUtil.convertToSecretShare(
-            maskedInput,
-            spdzProperties.getMacKey(),
-            inputMasks,
-            amphoraServiceProperties.getPlayerId() != 0);
+        secretShareConverterFactory
+            .createShareConverter(familyTag)
+            .convert(maskedInput, inputMasks, getFamilyFromOptionalTag(familyTag));
     String secretId = persistSecretShare(secretShare);
     inputMaskStore.removeInputMasks(secretShare.getSecretId());
     return secretId;
@@ -416,5 +411,15 @@ public class StorageService {
                             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
                             key,
                             secretId))));
+  }
+
+  private Optional<Tag> getShareFamilyTag(List<Tag> tags) {
+    return tags.stream().filter(tag -> tag.getKey().equals("ShareFamily")).findFirst();
+  }
+
+  private ShareFamily getFamilyFromOptionalTag(Optional<Tag> familyTag) {
+    return familyTag
+        .map(tag -> ShareFamily.getShareFamilyByName(tag.getValue()))
+        .orElse(ShareFamily.COWGEAR);
   }
 }
