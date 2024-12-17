@@ -3,5 +3,5 @@
   "amphora-common": "0.2.0",
   "amphora-java-client": "0.2.0",
   "amphora-service": "0.2.0",
-  "amphora-service/charts/amphora": "0.2.0"
+  "amphora-service/charts/amphora": "0.3.0"
 }
