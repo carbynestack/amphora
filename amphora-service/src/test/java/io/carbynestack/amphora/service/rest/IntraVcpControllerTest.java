@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 - for information on the respective copyright owner
+ * Copyright (c) 2023-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import io.carbynestack.amphora.common.SecretShare;
+import io.carbynestack.amphora.service.exceptions.CsOpaException;
+import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
 import java.util.UUID;
@@ -26,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
 class IntraVcpControllerTest {
+  private final String authorizedSubjectId = "afc0117f-c9cd-4d8c-acee-fa1433ca0fdd";
 
   @Mock private StorageService storageService;
 
@@ -59,14 +62,16 @@ class IntraVcpControllerTest {
   }
 
   @Test
-  void givenSuccessfulRequest_whenDownloadSecretShare_thenReturnOkWithExpectedContent() {
+  void givenSuccessfulRequest_whenDownloadSecretShare_thenReturnOkWithExpectedContent()
+      throws CsOpaException, UnauthorizedException {
     UUID secretShareId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     SecretShare expectedSecretShare = SecretShare.builder().secretId(secretShareId).build();
 
-    when(storageService.getSecretShare(secretShareId)).thenReturn(expectedSecretShare);
+    when(storageService.useSecretShare(secretShareId, authorizedSubjectId))
+        .thenReturn(expectedSecretShare);
 
     ResponseEntity<SecretShare> actualResponse =
-        intraVcpController.downloadSecretShare(secretShareId);
+        intraVcpController.downloadSecretShare(secretShareId, authorizedSubjectId);
 
     assertEquals(HttpStatus.OK, actualResponse.getStatusCode());
     assertEquals(expectedSecretShare, actualResponse.getBody());

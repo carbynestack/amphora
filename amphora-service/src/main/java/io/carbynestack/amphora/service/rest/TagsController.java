@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -11,11 +11,15 @@ import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
+import io.carbynestack.amphora.service.exceptions.CsOpaException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
+import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
+import io.carbynestack.amphora.service.opa.JwtReader;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,14 +31,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @RequestMapping(path = SECRET_SHARES_ENDPOINT + "/{" + SECRET_ID_PARAMETER + "}" + TAGS_ENDPOINT)
 public class TagsController {
   private final StorageService storageService;
-
-  @Autowired
-  public TagsController(StorageService storageService) {
-    this.storageService = storageService;
-  }
+  private final JwtReader jwtReader;
 
   /**
    * Retrieves all {@link Tag}s for an {@link SecretShare} with the given id.
@@ -44,8 +45,13 @@ public class TagsController {
    * @throws NotFoundException if no {@link SecretShare} with the given id exists.
    */
   @GetMapping
-  public ResponseEntity<List<Tag>> getTags(@PathVariable UUID secretId) {
-    return new ResponseEntity<>(storageService.retrieveTags(secretId), HttpStatus.OK);
+  public ResponseEntity<List<Tag>> getTags(
+      @RequestHeader("Authorization") String authorizationHeader, @PathVariable UUID secretId)
+      throws UnauthorizedException, CsOpaException {
+    return new ResponseEntity<>(
+        storageService.retrieveTags(
+            secretId, jwtReader.extractUserIdFromAuthHeader(authorizationHeader)),
+        HttpStatus.OK);
   }
 
   /**
@@ -62,11 +68,17 @@ public class TagsController {
    */
   @Transactional
   @PostMapping
-  public ResponseEntity<URI> createTag(@PathVariable UUID secretId, @RequestBody Tag tag) {
+  public ResponseEntity<URI> createTag(
+      @RequestHeader("Authorization") String authorizationHeader,
+      @PathVariable UUID secretId,
+      @RequestBody Tag tag)
+      throws UnauthorizedException, CsOpaException {
     Assert.notNull(tag, "Tag must not be empty");
     return new ResponseEntity<>(
         ServletUriComponentsBuilder.fromCurrentRequestUri()
-            .pathSegment(storageService.storeTag(secretId, tag))
+            .pathSegment(
+                storageService.storeTag(
+                    secretId, tag, jwtReader.extractUserIdFromAuthHeader(authorizationHeader)))
             .build()
             .toUri(),
         HttpStatus.CREATED);
@@ -88,9 +100,14 @@ public class TagsController {
    */
   @Transactional
   @PutMapping
-  public ResponseEntity<Void> updateTags(@PathVariable UUID secretId, @RequestBody List<Tag> tags) {
+  public ResponseEntity<Void> updateTags(
+      @RequestHeader("Authorization") String authorizationHeader,
+      @PathVariable UUID secretId,
+      @RequestBody List<Tag> tags)
+      throws UnauthorizedException, CsOpaException {
     Assert.notEmpty(tags, "At least one tag must be given.");
-    storageService.replaceTags(secretId, tags);
+    storageService.replaceTags(
+        secretId, tags, jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
     return new ResponseEntity<>(HttpStatus.OK);
   }
 
@@ -104,8 +121,15 @@ public class TagsController {
    * @throws NotFoundException if no {@link Tag} with the given {@link Tag#getKey() key} exists.
    */
   @GetMapping(path = "/{" + TAG_KEY_PARAMETER + ":.+}")
-  public ResponseEntity<Tag> getTag(@PathVariable UUID secretId, @PathVariable String tagKey) {
-    return new ResponseEntity<>(storageService.retrieveTag(secretId, tagKey), HttpStatus.OK);
+  public ResponseEntity<Tag> getTag(
+      @RequestHeader("Authorization") String authorizationHeader,
+      @PathVariable UUID secretId,
+      @PathVariable String tagKey)
+      throws UnauthorizedException, CsOpaException {
+    return new ResponseEntity<>(
+        storageService.retrieveTag(
+            secretId, tagKey, jwtReader.extractUserIdFromAuthHeader(authorizationHeader)),
+        HttpStatus.OK);
   }
 
   /**
@@ -126,13 +150,18 @@ public class TagsController {
   @Transactional
   @PutMapping(path = "/{" + TAG_KEY_PARAMETER + ":.+}")
   public ResponseEntity<Void> putTag(
-      @PathVariable UUID secretId, @PathVariable String tagKey, @RequestBody Tag tag) {
+      @RequestHeader("Authorization") String authorizationHeader,
+      @PathVariable UUID secretId,
+      @PathVariable String tagKey,
+      @RequestBody Tag tag)
+      throws UnauthorizedException, CsOpaException {
     Assert.notNull(tag, "Tag must not be empty");
     if (!tagKey.equals(tag.getKey())) {
       throw new IllegalArgumentException(
           String.format("The defined key and tag data do not match.%n%s <> %s", tagKey, tag));
     }
-    storageService.updateTag(secretId, tag);
+    storageService.updateTag(
+        secretId, tag, jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
     return new ResponseEntity<>(HttpStatus.OK);
   }
 
@@ -149,8 +178,13 @@ public class TagsController {
    */
   @Transactional
   @DeleteMapping(path = "/{" + TAG_KEY_PARAMETER + ":.+}")
-  public ResponseEntity<Void> deleteTag(@PathVariable UUID secretId, @PathVariable String tagKey) {
-    storageService.deleteTag(secretId, tagKey);
+  public ResponseEntity<Void> deleteTag(
+      @RequestHeader("Authorization") String authorizationHeader,
+      @PathVariable UUID secretId,
+      @PathVariable String tagKey)
+      throws UnauthorizedException, CsOpaException {
+    storageService.deleteTag(
+        secretId, tagKey, jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
     return new ResponseEntity<>(HttpStatus.OK);
   }
 }

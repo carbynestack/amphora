@@ -44,6 +44,12 @@ spec:
               value: {{ .Values.amphora.springActiveProfiles }}
             - name: CASTOR_SERVICE_URI
               value: "{{ .Values.amphora.castor.serviceUri }}"
+            - name: AMPHORA_USER_ID_FIELD_NAME
+              value: "{{ .Values.auth.userIdFieldName }}"
+            - name: AMPHORA_OPA_DEFAULT_POLICY_PACKAGE
+              value: "{{ .Values.opa.defaultPolicyPackage }}"
+            - name: AMPHORA_OPA_URL
+              value: "{{ .Values.opa.endpoint }}"
             - name: MAC_KEY
               value: "{{ .Values.spdz.macKey }}"
             - name: SPDZ_PRIME

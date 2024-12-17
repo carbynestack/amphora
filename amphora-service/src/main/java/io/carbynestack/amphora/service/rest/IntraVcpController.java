@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - for information on the respective copyright owner
+ * Copyright (c) 2021-2024 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -7,12 +7,15 @@
 package io.carbynestack.amphora.service.rest;
 
 import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.*;
+import static org.springframework.util.Assert.notNull;
 
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
+import io.carbynestack.amphora.service.exceptions.CsOpaException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
+import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
 import java.util.UUID;
@@ -61,12 +64,20 @@ public class IntraVcpController {
    * Retrieves an {@link SecretShare} with a given id.
    *
    * @param secretId id of the {@link SecretShare} to retrieve
+   * @param programId id of the Program requesting the {@link SecretShare}
    * @return {@link HttpStatus#OK} with the {@link SecretShare} if successful.
    * @throws AmphoraServiceException if an {@link SecretShare} exists but could not be retrieved.
    * @throws NotFoundException if no {@link SecretShare} with the given id exists
+   * @throws UnauthorizedException if the requesting Program is not authorized to access the {@link
+   *     SecretShare}
+   * @throws CsOpaException if an error occurred while evaluating the OPA policy
    */
   @GetMapping(path = "/{" + SECRET_ID_PARAMETER + "}")
-  public ResponseEntity<SecretShare> downloadSecretShare(@PathVariable UUID secretId) {
-    return new ResponseEntity<>(storageService.getSecretShare(secretId), HttpStatus.OK);
+  public ResponseEntity<SecretShare> downloadSecretShare(
+      @PathVariable UUID secretId, @RequestParam String programId)
+      throws UnauthorizedException, CsOpaException {
+
+    notNull(programId, "ProgramId must not be null");
+    return new ResponseEntity<>(storageService.useSecretShare(secretId, programId), HttpStatus.OK);
   }
 }
