@@ -9,10 +9,9 @@ package io.carbynestack.amphora.service.config;
 
 import io.carbynestack.amphora.service.opa.JwtReader;
 import io.carbynestack.amphora.service.opa.OpaClient;
+import java.net.URI;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.net.URI;
 
 @Configuration
 public class OpaConfig {
@@ -25,8 +24,8 @@ public class OpaConfig {
   @Bean
   OpaClient opaClient(OpaProperties opaProperties) {
     return OpaClient.builder()
-            .opaServiceUri(URI.create(opaProperties.getEndpoint()))
-            .defaultPolicyPackage(opaProperties.getDefaultPolicyPackage())
-            .build();
+        .opaServiceUri(URI.create(opaProperties.getEndpoint()))
+        .defaultPolicyPackage(opaProperties.getDefaultPolicyPackage())
+        .build();
   }
 }

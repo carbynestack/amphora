@@ -53,9 +53,9 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
   @ExceptionHandler({UnauthorizedException.class})
   protected ResponseEntity<String> handleUnauthorizedException(UnauthorizedException e)
       throws JsonProcessingException {
-      logger.debug("Handling Unauthorized Error", e);
-      return new ResponseEntity<>(
-          OBJECT_WRITER.writeValueAsString(e.getMessage()), HttpStatus.UNAUTHORIZED);
+    logger.debug("Handling Unauthorized Error", e);
+    return new ResponseEntity<>(
+        OBJECT_WRITER.writeValueAsString(e.getMessage()), HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler({AmphoraServiceException.class, CastorServiceException.class, Exception.class})

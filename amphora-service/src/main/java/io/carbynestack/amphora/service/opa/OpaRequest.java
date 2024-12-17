@@ -11,10 +11,9 @@ import lombok.Getter;
 
 @Getter
 class OpaRequest {
-    OpaRequestBody input;
+  OpaRequestBody input;
 
-    public OpaRequest(OpaRequestBody input) {
-        this.input = input;
-    }
-
+  public OpaRequest(OpaRequestBody input) {
+    this.input = input;
+  }
 }

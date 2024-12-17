@@ -7,6 +7,10 @@
 
 package io.carbynestack.amphora.service.persistence.metadata;
 
+import static io.carbynestack.amphora.service.opa.OpaService.OWNER_TAG_KEY;
+import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.setFromTagList;
+import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.setToTagList;
+
 import com.google.common.collect.Lists;
 import io.carbynestack.amphora.common.*;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
@@ -24,6 +28,8 @@ import io.carbynestack.castor.common.entities.Field;
 import io.carbynestack.castor.common.entities.InputMask;
 import io.carbynestack.castor.common.entities.TupleList;
 import io.vavr.control.Option;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +41,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static io.carbynestack.amphora.service.opa.OpaService.OWNER_TAG_KEY;
-import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.setFromTagList;
-import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.setToTagList;
-
 /**
  * A service to persist and manipulate {@link SecretEntity SecretEntities} and related data like
  * {@link TagEntity TagEntities} and {@link SecretShare SecretShares}.
@@ -51,20 +50,19 @@ import static io.carbynestack.amphora.service.persistence.metadata.TagEntity.set
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class StorageService {
   public static final String CREATION_DATE_KEY = "creation-date";
-  public static final List<String> RESERVED_TAG_KEYS = Lists.newArrayList(
-          CREATION_DATE_KEY,
-          OWNER_TAG_KEY);
+  public static final List<String> RESERVED_TAG_KEYS =
+      Lists.newArrayList(CREATION_DATE_KEY, OWNER_TAG_KEY);
   public static final String TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG =
-          "Two or more tags with the same key defined.";
+      "Two or more tags with the same key defined.";
   public static final String SECRET_WITH_ID_EXISTS_EXCEPTION_MSG =
-          "A secret with the given id already exists.";
+      "A secret with the given id already exists.";
   public static final String IS_RESERVED_KEY_EXCEPTION_MSG = "\"%s\" is a reserved key.";
   public static final String NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG =
-          "No secret with the given id #%s exists.";
+      "No secret with the given id #%s exists.";
   public static final String NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG =
-          "No tag with key \"%s\" exists for secret with id #%s.";
+      "No tag with key \"%s\" exists for secret with id #%s.";
   public static final String TAG_WITH_KEY_EXISTS_FOR_SECRET_EXCEPTION_MSG =
-          "A tag with key \"%s\" already exists for secret #%s";
+      "A tag with key \"%s\" already exists for secret #%s";
 
   private final SecretEntityRepository secretEntityRepository;
   private final InputMaskCachingService inputMaskStore;
@@ -83,7 +81,8 @@ public class StorageService {
    * persisting the secret without further notice.
    *
    * @param maskedInput the {@link MaskedInput} to persist
-   * @param authorizedUserId the id of the authenticated user becoming the owner of the persisted {@link SecretShare}
+   * @param authorizedUserId the id of the authenticated user becoming the owner of the persisted
+   *     {@link SecretShare}
    * @return the id of the new {@link SecretShare} as {@link String}
    * @throws AlreadyExistsException if an {@link SecretShare} with the given id already exists.
    * @throws IllegalArgumentException if one or more {@link Tag}s with the same {@link Tag#getKey()
@@ -101,15 +100,18 @@ public class StorageService {
       throw new IllegalArgumentException(TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG);
     }
     TupleList<InputMask<Field.Gfp>, Field.Gfp> inputMasks =
-            inputMaskStore.getCachedInputMasks(maskedInput.getSecretId());
+        inputMaskStore.getCachedInputMasks(maskedInput.getSecretId());
     SecretShare secretShare =
-            secretShareUtil.convertToSecretShare(
-                    maskedInput,
-                    spdzProperties.getMacKey(),
-                    inputMasks,
-                    amphoraServiceProperties.getPlayerId() != 0);
-    String secretId = persistSecretShare(secretShare,
-            Collections.singletonList(Tag.builder().key(OWNER_TAG_KEY).value(authorizedUserId).build()));
+        secretShareUtil.convertToSecretShare(
+            maskedInput,
+            spdzProperties.getMacKey(),
+            inputMasks,
+            amphoraServiceProperties.getPlayerId() != 0);
+    String secretId =
+        persistSecretShare(
+            secretShare,
+            Collections.singletonList(
+                Tag.builder().key(OWNER_TAG_KEY).value(authorizedUserId).build()));
     inputMaskStore.removeInputMasks(secretShare.getSecretId());
     return secretId;
   }
@@ -137,9 +139,9 @@ public class StorageService {
     }
     List<Tag> reservedTags = new ArrayList<>();
     secretShare.getTags().stream()
-            .filter(t -> t.getKey().equals(OWNER_TAG_KEY))
-            .findFirst()
-            .ifPresent(reservedTags::add);
+        .filter(t -> t.getKey().equals(OWNER_TAG_KEY))
+        .findFirst()
+        .ifPresent(reservedTags::add);
     return persistSecretShare(secretShare, reservedTags);
   }
 
@@ -150,18 +152,18 @@ public class StorageService {
   private String persistSecretShare(SecretShare secretShare, List<Tag> reservedTags) {
     List<Tag> tags = dropReservedTags(new ArrayList<>(secretShare.getTags()));
     tags.add(
-            Tag.builder()
-                    .key(StorageService.CREATION_DATE_KEY)
-                    .value(Long.toString(System.currentTimeMillis()))
-                    .build());
+        Tag.builder()
+            .key(StorageService.CREATION_DATE_KEY)
+            .value(Long.toString(System.currentTimeMillis()))
+            .build());
     tags.addAll(reservedTags);
     Set<TagEntity> tagEntities = setFromTagList(tags);
     String persistedSecretId =
-            secretEntityRepository
-                    .save(new SecretEntity(secretShare.getSecretId().toString(), tagEntities))
-                    .getSecretId();
+        secretEntityRepository
+            .save(new SecretEntity(secretShare.getSecretId().toString(), tagEntities))
+            .getSecretId();
     secretShareDataStore.storeSecretShareData(
-            UUID.fromString(persistedSecretId), secretShare.getData());
+        UUID.fromString(persistedSecretId), secretShare.getData());
     return persistedSecretId;
   }
 
@@ -181,12 +183,12 @@ public class StorageService {
   private static List<Tag> dropReservedTags(List<Tag> tags) {
     if (!CollectionUtils.isEmpty(tags)) {
       List<Tag> itemsToDrop =
-              tags.stream().filter(StorageService::tagIsReserved).collect(Collectors.toList());
+          tags.stream().filter(StorageService::tagIsReserved).collect(Collectors.toList());
       itemsToDrop.forEach(
-              t -> {
-                log.debug("Dropped tag {} for using reserved key.", t.toString());
-                tags.remove(t);
-              });
+          t -> {
+            log.debug("Dropped tag {} for using reserved key.", t.toString());
+            tags.remove(t);
+          });
     }
     return tags;
   }
@@ -208,8 +210,8 @@ public class StorageService {
   @Transactional(readOnly = true)
   public Page<Metadata> getSecretList(List<TagFilter> tagFilters, Pageable pageable) {
     return secretEntityRepository
-            .findAll(SecretEntitySpecification.with(tagFilters), pageable)
-            .map(SecretEntity::toMetadata);
+        .findAll(SecretEntitySpecification.with(tagFilters), pageable)
+        .map(SecretEntity::toMetadata);
   }
 
   @Transactional(readOnly = true)
@@ -225,16 +227,19 @@ public class StorageService {
    *     if no secret with the given id exists.
    * @throws AmphoraServiceException if an {@link SecretShare} exists but could not be retrieved.
    * @throws NotFoundException if no {@link SecretShare} with the given id exists
-   * @throws UnauthorizedException if the requesting program is not authorized to access the {@link SecretShare}
+   * @throws UnauthorizedException if the requesting program is not authorized to access the {@link
+   *     SecretShare}
    */
   @Transactional(readOnly = true)
-  public SecretShare useSecretShare(UUID secretId, String programId) throws UnauthorizedException, CsOpaException {
-    SecretEntity secretEntity = secretEntityRepository
-          .findById(secretId.toString())
-          .orElseThrow(
-                  () ->
-                          new NotFoundException(
-                                  String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+  public SecretShare useSecretShare(UUID secretId, String programId)
+      throws UnauthorizedException, CsOpaException {
+    SecretEntity secretEntity =
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
+                    new NotFoundException(
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
     if (!opaService.canUseSecret(programId, setToTagList(secretEntity.getTags()))) {
       throw new UnauthorizedException("Requesting program is not authorized to access the secret");
     }
@@ -243,10 +248,10 @@ public class StorageService {
 
   /**
    * Retrieves an {@link SecretShare} with a given id.
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canReadSecret(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canReadSecret(String, List)} method using the
+   * {@link Tag}s of the related {@link SecretEntity}.
    *
    * @param secretId id of the {@link SecretShare} to retrieve
    * @param authorizedUserId the id of the authenticated user requesting the operation
@@ -258,15 +263,17 @@ public class StorageService {
    * @throws CsOpaException if an error occurred while evaluating the policy
    */
   @Transactional(readOnly = true)
-  public SecretShare getSecretShare(UUID secretId, String authorizedUserId) throws CsOpaException, UnauthorizedException {
-    SecretEntity secretEntity = secretEntityRepository
+  public SecretShare getSecretShare(UUID secretId, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
+    SecretEntity secretEntity =
+        secretEntityRepository
             .findById(secretId.toString())
             .orElseThrow(
-                    () ->
-                            new NotFoundException(
-                                    String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+                () ->
+                    new NotFoundException(
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
 
-    if(!opaService.canReadSecret(authorizedUserId, setToTagList(secretEntity.getTags()))) {
+    if (!opaService.canReadSecret(authorizedUserId, setToTagList(secretEntity.getTags()))) {
       throw new UnauthorizedException("User is not authorized to read this secret");
     }
     return getSecretShareForEntity(secretEntity);
@@ -274,19 +281,19 @@ public class StorageService {
 
   private SecretShare getSecretShareForEntity(SecretEntity entity) {
     return SecretShare.builder()
-            .secretId(UUID.fromString(entity.getSecretId()))
-            .data(secretShareDataStore.getSecretShareData(UUID.fromString(entity.getSecretId())))
-            .tags(setToTagList(entity.getTags()))
-            .build();
+        .secretId(UUID.fromString(entity.getSecretId()))
+        .data(secretShareDataStore.getSecretShareData(UUID.fromString(entity.getSecretId())))
+        .tags(setToTagList(entity.getTags()))
+        .build();
   }
 
   /**
    * Removes an {@link SecretEntity} and all related information ({@link TagEntity tags} and {@link
    * SecretShare data}) from the storage.
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canDeleteSecret(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canDeleteSecret(String, List)} method using
+   * the {@link Tag}s of the related {@link SecretEntity}.
    *
    * @param secretId the id of the secret to be removed.
    * @param authorizedUserId the id of the authenticated user requesting the deletion
@@ -296,14 +303,18 @@ public class StorageService {
    * @throws CsOpaException if an error occurred while evaluating the policy
    */
   @Transactional
-  public void deleteSecret(UUID secretId, String authorizedUserId) throws CsOpaException, UnauthorizedException {
+  public void deleteSecret(UUID secretId, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
     // Better to accept String as input once - instead of repeatedly converting it.
-    SecretEntity secretEntity = secretEntityRepository.findById(secretId.toString())
-            .orElseThrow(() ->
-                  new NotFoundException(
-                          String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
-    if(!opaService.canDeleteSecret(authorizedUserId, setToTagList(secretEntity.getTags()))) {
-        throw new UnauthorizedException("User is not authorized to delete this secret");
+    SecretEntity secretEntity =
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
+                    new NotFoundException(
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+    if (!opaService.canDeleteSecret(authorizedUserId, setToTagList(secretEntity.getTags()))) {
+      throw new UnauthorizedException("User is not authorized to delete this secret");
     }
     secretEntityRepository.deleteBySecretId(secretId.toString());
     secretShareDataStore.deleteSecretShareData(secretId);
@@ -311,10 +322,10 @@ public class StorageService {
 
   /**
    * Persists a {@link Tag} related to a specified {@link SecretShare}
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canCreateTags(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canCreateTags(String, List)} method using the
+   * {@link Tag}s of the related {@link SecretEntity}.
    *
    * @param secretId id of the secret this {@link Tag} belongs to
    * @param tag the tag to persist
@@ -326,40 +337,41 @@ public class StorageService {
    *     exists.
    */
   @Transactional
-  public String storeTag(UUID secretId, Tag tag, String authorizedUserId) throws CsOpaException, UnauthorizedException {
+  public String storeTag(UUID secretId, Tag tag, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
     if (tagIsReserved(tag)) {
       throw new IllegalArgumentException(
-              String.format(IS_RESERVED_KEY_EXCEPTION_MSG, tag.getKey()));
+          String.format(IS_RESERVED_KEY_EXCEPTION_MSG, tag.getKey()));
     }
     SecretEntity secretEntity =
-            secretEntityRepository
-                    .findById(secretId.toString())
-                    .orElseThrow(
-                            () ->
-                                    new NotFoundException(
-                                            String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
+                    new NotFoundException(
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
     if (!opaService.canCreateTags(authorizedUserId, setToTagList(secretEntity.getTags()))) {
-        throw new UnauthorizedException("User is not authorized to create tags for this secret");
+      throw new UnauthorizedException("User is not authorized to create tags for this secret");
     }
     tagRepository
-            .findBySecretAndKey(secretEntity, tag.getKey())
-            .ifPresent(
-                    t -> {
-                      throw new AlreadyExistsException(
-                              String.format(
-                                      TAG_WITH_KEY_EXISTS_FOR_SECRET_EXCEPTION_MSG, tag.getKey(), secretId));
-                    });
+        .findBySecretAndKey(secretEntity, tag.getKey())
+        .ifPresent(
+            t -> {
+              throw new AlreadyExistsException(
+                  String.format(
+                      TAG_WITH_KEY_EXISTS_FOR_SECRET_EXCEPTION_MSG, tag.getKey(), secretId));
+            });
     return tagRepository.save(TagEntity.fromTag(tag).setSecret(secretEntity)).getKey();
   }
 
   /**
    * Replaces the {@link Tag}s for a {@link SecretEntity} with the given id.
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canUpdateTags(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
-   * <p>
-   * {@link Tag}s that use a reserved tag {@link #RESERVED_TAG_KEYS} will be removed before
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canUpdateTags(String, List)} method using the
+   * {@link Tag}s of the related {@link SecretEntity}.
+   *
+   * <p>{@link Tag}s that use a reserved tag {@link #RESERVED_TAG_KEYS} will be removed before
    * persisting the secret without further notice.
    *
    * @param secretId the id of the {@link SecretEntity} whose tags should be replaced.
@@ -372,23 +384,28 @@ public class StorageService {
    * @throws CsOpaException if an error occurred while evaluating the policy
    */
   @Transactional
-  public void replaceTags(UUID secretId, List<Tag> tags, String authorizedUserId) throws CsOpaException, UnauthorizedException {
+  public void replaceTags(UUID secretId, List<Tag> tags, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
     if (hasDuplicateKey(tags)) {
       throw new IllegalArgumentException(TAGS_WITH_THE_SAME_KEY_DEFINED_EXCEPTION_MSG);
     }
-    SecretEntity secretEntityReference = secretEntityRepository.findById(secretId.toString())
-            .orElseThrow(() ->
+    SecretEntity secretEntityReference =
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
                     new NotFoundException(
-                            String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
-    if (!opaService.canUpdateTags(authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
-        throw new UnauthorizedException("User is not authorized to update tags for this secret");
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+    if (!opaService.canUpdateTags(
+        authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
+      throw new UnauthorizedException("User is not authorized to update tags for this secret");
     }
     List<TagEntity> existingReservedTags =
-            RESERVED_TAG_KEYS.stream()
-                    .map(key -> tagRepository.findBySecretAndKey(secretEntityReference, key))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .collect(Collectors.toList());
+        RESERVED_TAG_KEYS.stream()
+            .map(key -> tagRepository.findBySecretAndKey(secretEntityReference, key))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toList());
     List<Tag> newTags = dropReservedTags(new ArrayList<>(tags));
     tagRepository.deleteBySecret(secretEntityReference);
     Set<TagEntity> newTagList = setFromTagList(newTags);
@@ -399,10 +416,10 @@ public class StorageService {
 
   /**
    * Returns all {@link Tag}s associated to an {@link SecretEntity} with the given id.
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canReadTags(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canReadTags(String, List)} method using the
+   * {@link Tag}s of the related {@link SecretEntity}.
    *
    * @param secretId the id of the {@link SecretEntity} whose tags should be retrieved.
    * @param authorizedUserId the id of the authenticated user requesting the operation
@@ -412,16 +429,17 @@ public class StorageService {
    * @throws CsOpaException if an error occurred while evaluating the policy
    */
   @Transactional(readOnly = true)
-  public List<Tag> retrieveTags(UUID secretId, String authorizedUserId) throws CsOpaException, UnauthorizedException {
+  public List<Tag> retrieveTags(UUID secretId, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
     SecretEntity secretEntity =
-            secretEntityRepository
-                    .findById(secretId.toString())
-                    .orElseThrow(
-                            () ->
-                                    new NotFoundException(
-                                            String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
+                    new NotFoundException(
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
     if (!opaService.canReadTags(authorizedUserId, setToTagList(secretEntity.getTags()))) {
-        throw new UnauthorizedException("User is not authorized to read tags for this secret");
+      throw new UnauthorizedException("User is not authorized to read tags for this secret");
     }
     return setToTagList(secretEntity.getTags());
   }
@@ -429,10 +447,10 @@ public class StorageService {
   /**
    * Returns a single {@link Tag}s associated to an {@link SecretEntity} with the given id, and a
    * specified {@link Tag#getKey() key}.
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canReadTags(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canReadTags(String, List)} method using the
+   * {@link Tag}s of the related {@link SecretEntity}.
    *
    * @param secretId the id of the {@link SecretShare} whose {@link Tag} to be retrieved.
    * @param key the {@link Tag#getKey() key} of the {@link Tag} to be retrieved.
@@ -444,30 +462,34 @@ public class StorageService {
    * @throws CsOpaException if an error occurred while evaluating the policy
    */
   @Transactional(readOnly = true)
-  public Tag retrieveTag(UUID secretId, String key, String authorizedUserId) throws CsOpaException, UnauthorizedException {
-    SecretEntity secretEntityReference = secretEntityRepository.findById(secretId.toString())
-            .orElseThrow(() ->
+  public Tag retrieveTag(UUID secretId, String key, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
+    SecretEntity secretEntityReference =
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
                     new NotFoundException(
-                            String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
     if (!opaService.canReadTags(authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
-        throw new UnauthorizedException("User is not authorized to read tags for this secret");
+      throw new UnauthorizedException("User is not authorized to read tags for this secret");
     }
     return tagRepository
-            .findBySecretAndKey(secretEntityReference, key)
-            .map(TagEntity::toTag)
-            .orElseThrow(
-                    () ->
-                            new NotFoundException(
-                                    String.format(
-                                            NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG, key, secretId)));
+        .findBySecretAndKey(secretEntityReference, key)
+        .map(TagEntity::toTag)
+        .orElseThrow(
+            () ->
+                new NotFoundException(
+                    String.format(
+                        NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG, key, secretId)));
   }
 
   /**
    * Updates an existing {@link Tag} linked to an {@link SecretEntity} with the given id.
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canUpdateTags(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canUpdateTags(String, List)} method using the
+   * {@link Tag}s of the related {@link SecretEntity}.
    *
    * @param secretId the id of the {@link SecretShare} whose {@link Tag} to be updated.
    * @param tag the new tag
@@ -479,38 +501,43 @@ public class StorageService {
    * @throws CsOpaException if an error occurred while evaluating the policy
    */
   @Transactional
-  public void updateTag(UUID secretId, Tag tag, String authorizedUserId) throws CsOpaException, UnauthorizedException {
+  public void updateTag(UUID secretId, Tag tag, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
     if (tagIsReserved(tag)) {
       throw new IllegalArgumentException(
-              String.format(IS_RESERVED_KEY_EXCEPTION_MSG, tag.getKey()));
+          String.format(IS_RESERVED_KEY_EXCEPTION_MSG, tag.getKey()));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.findById(secretId.toString())
-            .orElseThrow(() ->
+    SecretEntity secretEntityReference =
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
                     new NotFoundException(
-                            String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
-    if (!opaService.canUpdateTags(authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
-        throw new UnauthorizedException("User is not authorized to update tags for this secret");
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+    if (!opaService.canUpdateTags(
+        authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
+      throw new UnauthorizedException("User is not authorized to update tags for this secret");
     }
     TagEntity existingTag =
-            tagRepository
-                    .findBySecretAndKey(secretEntityReference, tag.getKey())
-                    .orElseThrow(
-                            () ->
-                                    new NotFoundException(
-                                            String.format(
-                                                    NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
-                                                    tag.getKey(),
-                                                    secretId)));
+        tagRepository
+            .findBySecretAndKey(secretEntityReference, tag.getKey())
+            .orElseThrow(
+                () ->
+                    new NotFoundException(
+                        String.format(
+                            NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
+                            tag.getKey(),
+                            secretId)));
     tagRepository.save(
-            existingTag.setValue(tag.getValue()).setValueType(tag.getValueType().toString()));
+        existingTag.setValue(tag.getValue()).setValueType(tag.getValueType().toString()));
   }
 
   /**
    * Deletes an existing {@link Tag} linked to an {@link SecretEntity} with the given id.
-   * <p>
-   * This method requires the authenticated user to be authorized to perform the operation. The authorization is
-   * checked by the {@link OpaService#canDeleteTags(String, List)} method using the {@link Tag}s of
-   * the related {@link SecretEntity}.
+   *
+   * <p>This method requires the authenticated user to be authorized to perform the operation. The
+   * authorization is checked by the {@link OpaService#canDeleteTags(String, List)} method using the
+   * {@link Tag}s of the related {@link SecretEntity}.
    *
    * @param secretId the id of the {@link SecretShare} whose {@link Tag} to be deleted.
    * @param key the {@link Tag#getKey() key} of the {@link Tag} to be deleted.
@@ -522,25 +549,34 @@ public class StorageService {
    * @throws CsOpaException if an error occurred while evaluating the policy
    */
   @Transactional
-  public void deleteTag(UUID secretId, String key, String authorizedUserId) throws CsOpaException, UnauthorizedException {
+  public void deleteTag(UUID secretId, String key, String authorizedUserId)
+      throws CsOpaException, UnauthorizedException {
     if (RESERVED_TAG_KEYS.contains(key)) {
       throw new IllegalArgumentException(String.format(IS_RESERVED_KEY_EXCEPTION_MSG, key));
     }
-    SecretEntity secretEntityReference = secretEntityRepository.findById(secretId.toString())
-            .orElseThrow(() ->
+    SecretEntity secretEntityReference =
+        secretEntityRepository
+            .findById(secretId.toString())
+            .orElseThrow(
+                () ->
                     new NotFoundException(
-                            String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
+                        String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, secretId)));
 
-    if (!opaService.canDeleteTags(authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
+    if (!opaService.canDeleteTags(
+        authorizedUserId, setToTagList(secretEntityReference.getTags()))) {
       throw new UnauthorizedException("User is not authorized to delete tags for this secret");
     }
-    secretEntityReference.getTags().remove(tagRepository
-            .findBySecretAndKey(secretEntityReference, key).orElseThrow(
+    secretEntityReference
+        .getTags()
+        .remove(
+            tagRepository
+                .findBySecretAndKey(secretEntityReference, key)
+                .orElseThrow(
                     () ->
-                            new NotFoundException(
-                                    String.format(
-                                            NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
-                                            key,
-                                            secretId))));
+                        new NotFoundException(
+                            String.format(
+                                NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG,
+                                key,
+                                secretId))));
   }
 }

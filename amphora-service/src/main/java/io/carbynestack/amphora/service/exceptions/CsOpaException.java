@@ -8,7 +8,7 @@
 package io.carbynestack.amphora.service.exceptions;
 
 public class CsOpaException extends Exception {
-    public CsOpaException(String message) {
-        super(message);
-    }
+  public CsOpaException(String message) {
+    super(message);
+  }
 }

@@ -51,8 +51,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -67,7 +65,7 @@ public class StorageIT {
   private final UUID testSecretId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
   private final UUID testSecretId2 = UUID.fromString("0e7cd962-d98e-4eea-82ae-4641399c9ad7");
   private final Tag testTag = Tag.builder().key("TEST_KEY").value("TEST_VALUE").build();
-  private final String authorizedUserId ="afc0117f-c9cd-4d8c-acee-fa1433ca0fdd";
+  private final String authorizedUserId = "afc0117f-c9cd-4d8c-acee-fa1433ca0fdd";
 
   @Container
   public static ReusableRedisContainer reusableRedisContainer =
@@ -92,8 +90,7 @@ public class StorageIT {
   @Autowired private MinioClient minioClient;
   @Autowired private MinioProperties minioProperties;
 
-  @MockBean
-  private OpaClient opaClientMock;
+  @MockBean private OpaClient opaClientMock;
 
   @BeforeEach
   public void setUp() {
@@ -108,14 +105,16 @@ public class StorageIT {
   }
 
   @Test
-  void givenSuccessfulRequest_whenStoreTag_thenPersist() throws CsOpaException, UnauthorizedException {
+  void givenSuccessfulRequest_whenStoreTag_thenPersist()
+      throws CsOpaException, UnauthorizedException {
     persistObjectWithIdAndTags(testSecretId, testTag);
     storageService.storeTag(
-        testSecretId, Tag.builder().key("ANOTHER_KEY").value(testTag.getValue()).build(),
+        testSecretId,
+        Tag.builder().key("ANOTHER_KEY").value(testTag.getValue()).build(),
         authorizedUserId);
 
-    assertEquals(testTag,
-            storageService.retrieveTag(testSecretId, testTag.getKey(),authorizedUserId));
+    assertEquals(
+        testTag, storageService.retrieveTag(testSecretId, testTag.getKey(), authorizedUserId));
   }
 
   @Test
@@ -130,8 +129,9 @@ public class StorageIT {
   @Test
   void givenNoObjectWithReferencedIdDefined_whenRetrieveTags_thenThrowNotFoundException() {
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () ->
-                storageService.retrieveTags(testSecretId, authorizedUserId));
+        assertThrows(
+            NotFoundException.class,
+            () -> storageService.retrieveTags(testSecretId, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }
@@ -139,14 +139,16 @@ public class StorageIT {
   @Test
   void givenSecretIdUnknown_whenStoreTag_thenThrowNotFoundException() {
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () ->
-                storageService.storeTag(unknownId, testTag, authorizedUserId));
+        assertThrows(
+            NotFoundException.class,
+            () -> storageService.storeTag(unknownId, testTag, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, unknownId), nfe.getMessage());
   }
 
   @Test
-  void givenSuccessfulRequests_whenStoreAndRetrieveTag_thenPersistAndReturnExpectedContent() throws CsOpaException, UnauthorizedException {
+  void givenSuccessfulRequests_whenStoreAndRetrieveTag_thenPersistAndReturnExpectedContent()
+      throws CsOpaException, UnauthorizedException {
     persistObjectWithIdAndTags(testSecretId);
     storageService.storeTag(testSecretId, testTag, authorizedUserId);
     List<Tag> tags = storageService.retrieveTags(testSecretId, authorizedUserId);
@@ -155,9 +157,11 @@ public class StorageIT {
   }
 
   @Test
-  void givenObjectWithoutTagsDefined_whenRetrieveTags_thenReturnEmptyList() throws CsOpaException, UnauthorizedException {
+  void givenObjectWithoutTagsDefined_whenRetrieveTags_thenReturnEmptyList()
+      throws CsOpaException, UnauthorizedException {
     persistObjectWithIdAndTags(testSecretId);
-    assertEquals(Collections.emptyList(), storageService.retrieveTags(testSecretId, authorizedUserId));
+    assertEquals(
+        Collections.emptyList(), storageService.retrieveTags(testSecretId, authorizedUserId));
   }
 
   @SneakyThrows
@@ -170,8 +174,9 @@ public class StorageIT {
             .object(testSecretId.toString())
             .stream(new ByteArrayInputStream(new byte[0]), 0, -1)
             .build());
-    assertEquals(Collections.emptyList(),
-            storageService.getSecretShare(testSecretId, authorizedUserId).getTags());
+    assertEquals(
+        Collections.emptyList(),
+        storageService.getSecretShare(testSecretId, authorizedUserId).getTags());
   }
 
   @Test
@@ -179,8 +184,8 @@ public class StorageIT {
     persistObjectWithIdAndTags(testSecretId);
     AmphoraServiceException ase =
         assertThrows(
-            AmphoraServiceException.class, () ->
-                        storageService.getSecretShare(testSecretId, authorizedUserId));
+            AmphoraServiceException.class,
+            () -> storageService.getSecretShare(testSecretId, authorizedUserId));
     assertEquals(
         String.format(
             GET_DATA_FOR_SECRET_EXCEPTION_MSG, testSecretId, "The specified key does not exist."),
@@ -201,7 +206,8 @@ public class StorageIT {
   }
 
   @Test
-  void givenSuccessfulRequest_whenDeleteTag_thenDoNoLongerReturn() throws CsOpaException, UnauthorizedException {
+  void givenSuccessfulRequest_whenDeleteTag_thenDoNoLongerReturn()
+      throws CsOpaException, UnauthorizedException {
     SecretEntity secretEntity = persistObjectWithIdAndTags(testSecretId, testTag);
     Tag expectedTag = Tag.builder().key(testTag.getKey() + "new").value(testTag.getValue()).build();
     TagEntity expectedTagEntity = TagEntity.fromTag(expectedTag).setSecret(secretEntity);
@@ -232,8 +238,8 @@ public class StorageIT {
 
     NotFoundException nfe =
         assertThrows(
-            NotFoundException.class, () ->
-                        storageService.deleteTag(testSecretId, unknownKey, authorizedUserId));
+            NotFoundException.class,
+            () -> storageService.deleteTag(testSecretId, unknownKey, authorizedUserId));
     assertEquals(
         String.format(
             NO_TAG_WITH_KEY_EXISTS_FOR_SECRET_WITH_ID_EXCEPTION_MSG, unknownKey, testSecretId),
@@ -241,7 +247,8 @@ public class StorageIT {
   }
 
   @Test
-  void givenMultipleObjectsWIthIdenticalTag_whenDeleteTagOnOneObject_thenKeepTagForOtherObjects() throws CsOpaException, UnauthorizedException {
+  void givenMultipleObjectsWIthIdenticalTag_whenDeleteTagOnOneObject_thenKeepTagForOtherObjects()
+      throws CsOpaException, UnauthorizedException {
     persistObjectWithIdAndTags(testSecretId, testTag);
     persistObjectWithIdAndTags(testSecretId2, testTag);
     storageService.deleteTag(testSecretId, testTag.getKey(), authorizedUserId);
@@ -261,7 +268,9 @@ public class StorageIT {
   @Test
   void givenAnUnknownId_whenStoringATag_thenThrow() {
     NotFoundException nfe =
-        assertThrows(NotFoundException.class, () -> storageService.storeTag(testSecretId, testTag, authorizedUserId));
+        assertThrows(
+            NotFoundException.class,
+            () -> storageService.storeTag(testSecretId, testTag, authorizedUserId));
     assertEquals(
         String.format(NO_SECRET_WITH_ID_EXISTS_EXCEPTION_MSG, testSecretId), nfe.getMessage());
   }

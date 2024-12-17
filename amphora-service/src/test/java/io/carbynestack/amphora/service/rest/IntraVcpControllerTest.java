@@ -6,10 +6,18 @@
  */
 package io.carbynestack.amphora.service.rest;
 
+import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.INTRA_VCP_OPERATIONS_SEGMENT;
+import static io.carbynestack.amphora.service.util.ServletUriComponentsBuilderUtil.runInMockedHttpRequestContextForUri;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
 import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.service.exceptions.CsOpaException;
 import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
+import java.net.URI;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,18 +26,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.net.URI;
-import java.util.UUID;
-
-import static io.carbynestack.amphora.common.rest.AmphoraRestApiEndpoints.INTRA_VCP_OPERATIONS_SEGMENT;
-import static io.carbynestack.amphora.service.util.ServletUriComponentsBuilderUtil.runInMockedHttpRequestContextForUri;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class IntraVcpControllerTest {
-  private final String authorizedSubjectId ="afc0117f-c9cd-4d8c-acee-fa1433ca0fdd";
+  private final String authorizedSubjectId = "afc0117f-c9cd-4d8c-acee-fa1433ca0fdd";
 
   @Mock private StorageService storageService;
 
@@ -63,11 +62,13 @@ class IntraVcpControllerTest {
   }
 
   @Test
-  void givenSuccessfulRequest_whenDownloadSecretShare_thenReturnOkWithExpectedContent() throws CsOpaException, UnauthorizedException {
+  void givenSuccessfulRequest_whenDownloadSecretShare_thenReturnOkWithExpectedContent()
+      throws CsOpaException, UnauthorizedException {
     UUID secretShareId = UUID.fromString("3bcf8308-8f50-4d24-a37b-b0075bb5e779");
     SecretShare expectedSecretShare = SecretShare.builder().secretId(secretShareId).build();
 
-    when(storageService.useSecretShare(secretShareId, authorizedSubjectId)).thenReturn(expectedSecretShare);
+    when(storageService.useSecretShare(secretShareId, authorizedSubjectId))
+        .thenReturn(expectedSecretShare);
 
     ResponseEntity<SecretShare> actualResponse =
         intraVcpController.downloadSecretShare(secretShareId, authorizedSubjectId);

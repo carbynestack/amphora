@@ -104,5 +104,5 @@ DB_USER=user
 DB_PASSWORD=secret
 MINIO_ENDPOINT=http://localhost:9000
 EOF
-docker run --env-file amphora.conf iotspecs/amphora-service 
+docker run --env-file amphora.conf iotspecs/amphora-service
 ```

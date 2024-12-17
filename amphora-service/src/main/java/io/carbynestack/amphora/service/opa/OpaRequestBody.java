@@ -8,19 +8,18 @@
 package io.carbynestack.amphora.service.opa;
 
 import io.carbynestack.amphora.common.Tag;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.List;
-
 @Value
 public class OpaRequestBody {
-    String subject;
-    List<Tag> tags;
+  String subject;
+  List<Tag> tags;
 
-    @Builder
-    public OpaRequestBody(String subject, List<Tag> tags) {
-        this.subject = subject;
-        this.tags = tags;
-    }
+  @Builder
+  public OpaRequestBody(String subject, List<Tag> tags) {
+    this.subject = subject;
+    this.tags = tags;
+  }
 }

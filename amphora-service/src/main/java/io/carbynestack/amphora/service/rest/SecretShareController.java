@@ -15,8 +15,8 @@ import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
 import io.carbynestack.amphora.service.exceptions.CsOpaException;
 import io.carbynestack.amphora.service.exceptions.NotFoundException;
 import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
-import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import io.carbynestack.amphora.service.opa.JwtReader;
+import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import io.vavr.control.Try;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
@@ -111,10 +111,12 @@ public class SecretShareController {
   public ResponseEntity<VerifiableSecretShare> getSecretShare(
       @RequestHeader("Authorization") String authorizationHeader,
       @PathVariable final UUID secretId,
-      @RequestParam(value = REQUEST_ID_PARAMETER) final UUID requestId) throws UnauthorizedException, CsOpaException {
+      @RequestParam(value = REQUEST_ID_PARAMETER) final UUID requestId)
+      throws UnauthorizedException, CsOpaException {
     Assert.notNull(requestId, "Request identifier must not be omitted");
-    SecretShare secretShare = storageService.getSecretShare(secretId,
-            jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
+    SecretShare secretShare =
+        storageService.getSecretShare(
+            secretId, jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
     OutputDeliveryObject outputDeliveryObject =
         outputDeliveryService.computeOutputDeliveryObject(secretShare, requestId);
     return new ResponseEntity<>(
@@ -131,10 +133,10 @@ public class SecretShareController {
    */
   @DeleteMapping(path = "/{" + SECRET_ID_PARAMETER + "}")
   public ResponseEntity<Void> deleteSecretShare(
-          @RequestHeader("Authorization") String authorizationHeader,
-          @PathVariable UUID secretId) throws UnauthorizedException, CsOpaException {
-    storageService.deleteSecret(secretId,
-            jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
+      @RequestHeader("Authorization") String authorizationHeader, @PathVariable UUID secretId)
+      throws UnauthorizedException, CsOpaException {
+    storageService.deleteSecret(
+        secretId, jwtReader.extractUserIdFromAuthHeader(authorizationHeader));
     return new ResponseEntity<>(HttpStatus.OK);
   }
 

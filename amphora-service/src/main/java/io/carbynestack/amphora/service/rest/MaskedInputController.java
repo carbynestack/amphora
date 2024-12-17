@@ -16,10 +16,9 @@ import io.carbynestack.amphora.common.SecretShare;
 import io.carbynestack.amphora.common.Tag;
 import io.carbynestack.amphora.service.exceptions.AlreadyExistsException;
 import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
+import io.carbynestack.amphora.service.opa.JwtReader;
 import io.carbynestack.amphora.service.persistence.metadata.StorageService;
 import java.net.URI;
-
-import io.carbynestack.amphora.service.opa.JwtReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,16 +51,17 @@ public class MaskedInputController {
    * @throws AlreadyExistsException if an {@link SecretShare} with the given id already exists.
    */
   @PostMapping
-  public ResponseEntity<URI> upload(@RequestHeader("Authorization") String authorizationHeader,
-                                    @RequestBody MaskedInput maskedInput) throws UnauthorizedException {
+  public ResponseEntity<URI> upload(
+      @RequestHeader("Authorization") String authorizationHeader,
+      @RequestBody MaskedInput maskedInput)
+      throws UnauthorizedException {
     notNull(maskedInput, "MaskedInput must not be null");
     notEmpty(maskedInput.getData(), "MaskedInput data must not be empty");
     return new ResponseEntity<>(
         ServletUriComponentsBuilder.fromCurrentRequestUri()
             .pathSegment(
-                    storageService.createSecret(
-                            maskedInput,
-                            jwtReader.extractUserIdFromAuthHeader(authorizationHeader)))
+                storageService.createSecret(
+                    maskedInput, jwtReader.extractUserIdFromAuthHeader(authorizationHeader)))
             .build()
             .toUri(),
         CREATED);

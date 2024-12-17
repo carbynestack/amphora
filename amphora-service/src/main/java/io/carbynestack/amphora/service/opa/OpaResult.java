@@ -10,10 +10,9 @@ package io.carbynestack.amphora.service.opa;
 import lombok.Setter;
 
 public class OpaResult {
-    @Setter
-    private boolean result;
+  @Setter private boolean result;
 
-    boolean isAllowed() {
-        return result;
-    }
+  boolean isAllowed() {
+    return result;
+  }
 }
