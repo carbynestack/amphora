@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/carbynestack/amphora/compare/service-v0.2.0...service-v0.3.0) (2024-12-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **chart/service:** add Authorization ([#74](https://github.com/carbynestack/amphora/issues/74))
+
+### Features
+
+* **chart/service:** add Authorization ([#74](https://github.com/carbynestack/amphora/issues/74)) ([4aeac00](https://github.com/carbynestack/amphora/commit/4aeac003ea299ccc016ecceafba67b4828a12c29))
+
 ## [0.2.0](https://github.com/carbynestack/amphora/compare/service-v0.1.1...service-v0.2.0) (2024-10-09)
 
 
