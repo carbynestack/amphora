@@ -71,7 +71,7 @@ documentation for the
 | ------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------- |
 | `amphora.port    `                          | Port the Amphora service is bound to                                                      | `10000`                                       |
 | `amphora.playerId`                          | ID identifying the service in the Carbyne Stack virtual cloud                             | `0`                                           |
-| `amphora.vcPartner`                         | Defines the URI of the partner Amphora service in the virtual cloud                       | \`\`                                          |
+| `amphora.vcPartners`                        | A list of of the URLs for all partner Amphora services in the virtual cloud               | `[]`                                          |
 | `amphora.openingTimeout`                    | Number of seconds to wait for all partners to open their multiplication input             | `5000`                                        |
 | `amphora.noSslValidation`                   | Defines whether SSL verification should be disabled for inter VC communication            | `false`                                       |
 | `amphora.trustedCertificates`               | Path to certificates that should be used to verify SSL connections                        | \`\`                                          |
@@ -80,8 +80,8 @@ documentation for the
 | `amphora.image.tag`                         | Amphora Image tag                                                                         | `latest`                                      |
 | `amphora.image.pullPolicy`                  | Amphora Image pull policy                                                                 | `Never`                                       |
 | `amphora.springActiveProfiles`              | Defines the Amphora's Spring profiles to be loaded                                        | `k8s`                                         |
-| \`amphora.macKey                            | Defines the MacKey used for secret sharing                                                | \`\`                                          |
-| \`amphora.castor.serviceUri                 | Defines the URI for Castor service                                                        | `castor.default.svc.cluster.local`            |
+| `amphora.macKey`                            | Defines the MacKey used for secret sharing                                                | \`\`                                          |
+| `amphora.castor.serviceUri`                 | Defines the URI for Castor service                                                        | `castor.default.svc.cluster.local`            |
 | `amphora.redis.host`                        | The host address to the redis key/value store                                             | `redis.default.svc.cluster.local`             |
 | `amphora.redis.port`                        | The port of the redis key/value store                                                     | `6379`                                        |
 | `amphora.minio.endpoint`                    | The minio secret store endpoint                                                           | `http://minio.default.svc.cluster.local:9000` |
@@ -89,12 +89,12 @@ documentation for the
 | `amphora.db.port`                           | The postgres database port                                                                | `5432`                                        |
 | `amphora.db.userSecretName`                 | Name of an existing secret to be used for the database username                           | \`\`                                          |
 | `amphora.db.passwordSecretName`             | Name of an existing secret to be used for the database password                           | \`\`                                          |
-| \`amphora.probes.liveness.initialDelay      | Number of seconds after the container has started before the liveness probe is initiated  | `60`                                          |
-| \`amphora.probes.liveness.period            | How often (in seconds) to perform the liveness probe                                      | `10`                                          |
-| \`amphora.probes.liveness.failureThreshold  | How often to fail the liveness probe before finally be marked as unsuccessful             | `3`                                           |
-| \`amphora.probes.readiness.initialDelay     | Number of seconds after the container has started before the readiness probe is initiated | `0`                                           |
-| \`amphora.probes.readiness.period           | How often (in seconds) to perform the readiness probe                                     | `5`                                           |
-| \`amphora.probes.readiness.failureThreshold | How often to fail the readiness probe before finally be marked as unsuccessful            | `3`                                           |
+| `amphora.probes.liveness.initialDelay`      | Number of seconds after the container has started before the liveness probe is initiated  | `60`                                          |
+| `amphora.probes.liveness.period`            | How often (in seconds) to perform the liveness probe                                      | `10`                                          |
+| `amphora.probes.liveness.failureThreshold`  | How often to fail the liveness probe before finally be marked as unsuccessful             | `3`                                           |
+| `amphora.probes.readiness.initialDelay`     | Number of seconds after the container has started before the readiness probe is initiated | `0`                                           |
+| `amphora.probes.readiness.period`           | How often (in seconds) to perform the readiness probe                                     | `5`                                           |
+| `amphora.probes.readiness.failureThreshold` | How often to fail the readiness probe before finally be marked as unsuccessful            | `3`                                           |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to
 `helm install`. For example,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 - for information on the respective copyright owner
+ * Copyright (c) 2023-2025 - for information on the respective copyright owner
  * see the NOTICE file and/or the repository https://github.com/carbynestack/amphora.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -18,10 +18,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 import static org.springframework.test.util.AssertionErrors.assertTrue;
 
-import io.carbynestack.amphora.common.Metadata;
-import io.carbynestack.amphora.common.MetadataPage;
-import io.carbynestack.amphora.common.SecretShare;
-import io.carbynestack.amphora.common.Tag;
+import io.carbynestack.amphora.common.*;
+import io.carbynestack.amphora.service.config.AmphoraServiceProperties;
 import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.amphora.service.opa.OpaClient;
 import io.carbynestack.amphora.service.testconfig.PersistenceTestEnvironment;
@@ -31,11 +29,13 @@ import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
 import io.carbynestack.amphora.service.util.MetadataMatchers;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,6 +83,7 @@ public class AmphoraServiceSystemTest {
   @MockBean private OpaClient opaClientMock;
 
   @Autowired private TestRestTemplate restTemplate;
+  @Autowired private AmphoraServiceProperties amphoraServiceProperties;
 
   @Autowired private PersistenceTestEnvironment testEnvironment;
   private final SecretShare testSecretShare1 =
@@ -132,6 +133,16 @@ public class AmphoraServiceSystemTest {
     testEnvironment.clearAllData();
     when(opaClientMock.newRequest()).thenCallRealMethod();
     when(opaClientMock.isAllowed(any(), any(), eq(authorizedUserId), any())).thenReturn(true);
+  }
+
+  @Test
+  void givenMultipleVCPartnersDefined_whenInitialized_thenHoldExpectedConfiguration() {
+    assertThat(
+        amphoraServiceProperties.getVcPartners(),
+        Matchers.equalTo(
+            Arrays.asList(
+                new AmphoraServiceUri("http://amphora2.carbynestack.io"),
+                new AmphoraServiceUri("http://amphora3.carbynestack.io"))));
   }
 
   @Test
