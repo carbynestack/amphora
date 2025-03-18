@@ -30,7 +30,7 @@ affinity: {}
 
 amphora:
   playerId: 0
-  vcPartner:
+  vcPartners: []
   openingTimeout: 5000
   noSslValidation: "false"
   trustedCertificates:

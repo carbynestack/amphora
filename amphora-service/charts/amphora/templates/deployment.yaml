@@ -31,7 +31,7 @@ spec:
           imagePullPolicy: {{ .Values.amphora.image.pullPolicy }}
           env:
             - name: AMPHORA_VC_PARTNERS
-              value: {{ .Values.amphora.vcPartner }}
+              value: {{ join "," .Values.amphora.vcPartners | quote }}
             - name: AMPHORA_OPENING_TIMEOUT
               value: "{{ .Values.amphora.openingTimeout }}"
             - name: PLAYER_ID
