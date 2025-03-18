@@ -29,7 +29,6 @@ import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
 import io.carbynestack.amphora.service.util.MetadataMatchers;
 import io.carbynestack.mpspdz.integration.MpSpdzIntegrationUtils;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -140,7 +139,7 @@ public class AmphoraServiceSystemTest {
     assertThat(
         amphoraServiceProperties.getVcPartners(),
         Matchers.equalTo(
-            Arrays.asList(
+            asList(
                 new AmphoraServiceUri("http://amphora2.carbynestack.io"),
                 new AmphoraServiceUri("http://amphora3.carbynestack.io"))));
   }
