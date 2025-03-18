@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/carbynestack/amphora/compare/chart-v0.3.0...chart-v0.3.1) (2025-03-18)
+
+
+### Bug Fixes
+
+* **chart:** fix support for more than 2 parties ([#79](https://github.com/carbynestack/amphora/issues/79)) ([30d4133](https://github.com/carbynestack/amphora/commit/30d4133e44b5706d848d78860131ea663173f2b1))
+
 ## [0.3.0](https://github.com/carbynestack/amphora/compare/chart-v0.2.0...chart-v0.3.0) (2024-12-17)
 
 
