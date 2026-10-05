@@ -22,7 +22,7 @@ import io.carbynestack.amphora.common.TagValueType;
 import io.carbynestack.amphora.common.exceptions.AmphoraServiceException;
 import io.carbynestack.amphora.service.AmphoraServiceApplication;
 import io.carbynestack.amphora.service.testconfig.PersistenceTestEnvironment;
-import io.carbynestack.amphora.service.testconfig.ReusableMinioContainer;
+import io.carbynestack.amphora.service.testconfig.ReusableSeaweedFsContainer;
 import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainer;
 import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
 import io.carbynestack.amphora.service.util.MetadataMatchers;
@@ -70,8 +70,8 @@ public class FilterPagingAndNestedSortingIT {
       ReusableRedisContainer.getInstance();
 
   @Container
-  public static ReusableMinioContainer reusableMinioContainer =
-      ReusableMinioContainer.getInstance();
+  public static ReusableSeaweedFsContainer reusableSeaweedFsContainer =
+      ReusableSeaweedFsContainer.getInstance();
 
   @Container
   public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =

@@ -25,7 +25,7 @@ package manager.
 - A Docker Hub account with read access permission for the organization
   `iotspecs` and a Kubernetes Secret with your registry credentials (see the
   section on [Registry Credentials](#registry-credentials)).
-- A Redis RDS, Postgres DBMS, and MinIO cluster to serve as the persistence
+- A Redis RDS, Postgres DBMS, and S3-compatible object store (e.g. SeaweedFS) to serve as the persistence
   layer for Amphora. See the [SPECS SDK](https://github.com/carbynestack) for
   details.
 - A [Castor](https://github.com/carbynestack/castor) instance to provide Tuples
@@ -84,7 +84,8 @@ documentation for the
 | `amphora.castor.serviceUri`                 | Defines the URI for Castor service                                                        | `castor.default.svc.cluster.local`            |
 | `amphora.redis.host`                        | The host address to the redis key/value store                                             | `redis.default.svc.cluster.local`             |
 | `amphora.redis.port`                        | The port of the redis key/value store                                                     | `6379`                                        |
-| `amphora.minio.endpoint`                    | The minio secret store endpoint                                                           | `http://minio.default.svc.cluster.local:9000` |
+| `amphora.minio.endpoint` | The S3 endpoint of the object store (SeaweedFS) | `http://seaweedfs-s3.default.svc.cluster.local:8333` |
+| `amphora.minio.credentialsSecretName` | Optional Secret with `accesskey`/`secretkey` for S3 auth | `""` |
 | `amphora.db.host`                           | The postgres database host                                                                | `dbms-repl.default.svc.cluster.local`         |
 | `amphora.db.port`                           | The postgres database port                                                                | `5432`                                        |
 | `amphora.db.userSecretName`                 | Name of an existing secret to be used for the database username                           | \`\`                                          |

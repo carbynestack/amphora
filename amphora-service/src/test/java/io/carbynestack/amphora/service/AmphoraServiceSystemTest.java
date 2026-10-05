@@ -23,7 +23,7 @@ import io.carbynestack.amphora.service.config.AmphoraServiceProperties;
 import io.carbynestack.amphora.service.exceptions.UnauthorizedException;
 import io.carbynestack.amphora.service.opa.OpaClient;
 import io.carbynestack.amphora.service.testconfig.PersistenceTestEnvironment;
-import io.carbynestack.amphora.service.testconfig.ReusableMinioContainer;
+import io.carbynestack.amphora.service.testconfig.ReusableSeaweedFsContainer;
 import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainer;
 import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
 import io.carbynestack.amphora.service.util.MetadataMatchers;
@@ -72,8 +72,8 @@ public class AmphoraServiceSystemTest {
       ReusableRedisContainer.getInstance();
 
   @Container
-  public static ReusableMinioContainer reusableMinioContainer =
-      ReusableMinioContainer.getInstance();
+  public static ReusableSeaweedFsContainer reusableSeaweedFsContainer =
+      ReusableSeaweedFsContainer.getInstance();
 
   @Container
   public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =

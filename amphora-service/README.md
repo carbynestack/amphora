@@ -72,7 +72,7 @@ To build a custom Amphora docker image, run:
 In order to deploy Amphora locally, the following additional services are
 required:
 
-- **Minio**: To persist the secret share's data.
+- **SeaweedFS (S3-compatible object store)**: To persist the secret share's data.
 - **PostgreSQL**: To store the metadata (e.g. tags) of a secret share.
 - **Redis**: To cache Tuples which are required for secret sharing, or interim
   values for cluster internal communication.
@@ -102,7 +102,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 DB_USER=user
 DB_PASSWORD=secret
-MINIO_ENDPOINT=http://localhost:9000
+MINIO_ENDPOINT=http://localhost:8333
 EOF
 docker run --env-file amphora.conf iotspecs/amphora-service
 ```

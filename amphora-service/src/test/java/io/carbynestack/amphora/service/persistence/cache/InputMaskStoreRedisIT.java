@@ -23,7 +23,7 @@ import io.carbynestack.amphora.service.calculation.OutputDeliveryService;
 import io.carbynestack.amphora.service.config.AmphoraCacheProperties;
 import io.carbynestack.amphora.service.config.CastorClientProperties;
 import io.carbynestack.amphora.service.testconfig.PersistenceTestEnvironment;
-import io.carbynestack.amphora.service.testconfig.ReusableMinioContainer;
+import io.carbynestack.amphora.service.testconfig.ReusableSeaweedFsContainer;
 import io.carbynestack.amphora.service.testconfig.ReusablePostgreSQLContainer;
 import io.carbynestack.amphora.service.testconfig.ReusableRedisContainer;
 import io.carbynestack.castor.client.download.CastorIntraVcpClient;
@@ -69,8 +69,8 @@ public class InputMaskStoreRedisIT {
       ReusableRedisContainer.getInstance();
 
   @Container
-  public static ReusableMinioContainer reusableMinioContainer =
-      ReusableMinioContainer.getInstance();
+  public static ReusableSeaweedFsContainer reusableSeaweedFsContainer =
+      ReusableSeaweedFsContainer.getInstance();
 
   @Container
   public static ReusablePostgreSQLContainer reusablePostgreSQLContainer =
